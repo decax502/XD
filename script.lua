@@ -1,10 +1,10 @@
 --[[
-    C.D.T OPTIFINE - V5 SUPREME HACKER EDITION (DISCORD SMART SCROLL)
+    C.D.T OPTIFINE - V6 SMART CHAT HACKER EDITION (SUPERMAN MOTOR6D FLY)
     - Anti-Duplicación Segura.
     - TP Menu (Buscador dinámico). Corregido visual al minimizar.
-    - Menú Invisible (GHOST MODE PERFECTO: Tools visuales, ataques reales, fix sentarse).
-    - Menú de Vuelo (Superman Fly).
-    - GLOBAL CHAT SMART (Scroll idéntico a Discord, Animación suave, Botón de Perfil).
+    - Menú Invisible (GHOST MODE PERFECTO: Tools visuales, ataques reales).
+    - Menú de Vuelo (NUEVO: Motor6D Superman Fly + Velocidad Editable por texto).
+    - GLOBAL CHAT SMART (Auto-Scroll Inteligente, Botón de Perfil, Enter para enviar).
     - Consola Inteligente (Autocompletado de comandos y jugadores con TAB).
     - Textos Hacker (Morado, Blanco, Verde, Naranja, Celeste, Amarillo).
 ]]
@@ -480,7 +480,7 @@ LocalPlayer.CharacterAdded:Connect(function()
 end)
 
 -- ==================================================================
--- 4. INTERFAZ Y LÓGICA DEL MENÚ FLY (SUPERMAN FLY)
+-- 4. INTERFAZ Y LÓGICA DEL MENÚ FLY (NUEVO SUPERMAN MOTOR6D)
 -- ==================================================================
 local FlyMain = Instance.new("Frame", ScreenGui); FlyMain.Size = UDim2.new(0, 250, 0, 135); FlyMain.Position = UDim2.new(0.5, 50, 0.5, -120); FlyMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FlyMain.BorderSizePixel = 0; FlyMain.ClipsDescendants = true; FlyMain.Visible = false; Instance.new("UICorner", FlyMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", FlyMain).Color = Color3.fromRGB(45, 45, 45)
 local FlyTopBar = Instance.new("Frame", FlyMain); FlyTopBar.Size = UDim2.new(1, 0, 0, 35); FlyTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FlyTopBar.BorderSizePixel = 0; Instance.new("UICorner", FlyTopBar).CornerRadius = UDim.new(0, 6)
@@ -493,7 +493,7 @@ local FlyToggleBtn = Instance.new("TextButton", FlyMain); FlyToggleBtn.Size = UD
 local FlyKeyBtn = Instance.new("TextButton", FlyMain); FlyKeyBtn.Size = UDim2.new(0, 45, 0, 40); FlyKeyBtn.Position = UDim2.new(1, -55, 0, 45); FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FlyKeyBtn.Text = "KEY"; FlyKeyBtn.TextColor3 = tWhite; FlyKeyBtn.Font = Enum.Font.GothamBold; FlyKeyBtn.TextSize = 10; Instance.new("UICorner", FlyKeyBtn).CornerRadius = UDim.new(0, 6)
 
 local FlySpeedMinus = Instance.new("TextButton", FlyMain); FlySpeedMinus.Size = UDim2.new(0, 40, 0, 30); FlySpeedMinus.Position = UDim2.new(0, 10, 0, 95); FlySpeedMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FlySpeedMinus.Text = "-"; FlySpeedMinus.TextColor3 = tWhite; FlySpeedMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", FlySpeedMinus)
-local FlySpeedDisplay = Instance.new("TextLabel", FlyMain); FlySpeedDisplay.Size = UDim2.new(1, -110, 0, 30); FlySpeedDisplay.Position = UDim2.new(0, 55, 0, 95); FlySpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); FlySpeedDisplay.Text = "SPEED: 50"; FlySpeedDisplay.TextColor3 = tWhite; FlySpeedDisplay.Font = Enum.Font.GothamSemibold; FlySpeedDisplay.TextSize = 12; Instance.new("UICorner", FlySpeedDisplay); Instance.new("UIStroke", FlySpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
+local FlySpeedDisplay = Instance.new("TextBox", FlyMain); FlySpeedDisplay.Size = UDim2.new(1, -110, 0, 30); FlySpeedDisplay.Position = UDim2.new(0, 55, 0, 95); FlySpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); FlySpeedDisplay.Text = "SPEED: 90"; FlySpeedDisplay.TextColor3 = tWhite; FlySpeedDisplay.Font = Enum.Font.GothamSemibold; FlySpeedDisplay.TextSize = 12; FlySpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", FlySpeedDisplay); Instance.new("UIStroke", FlySpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
 local FlySpeedPlus = Instance.new("TextButton", FlyMain); FlySpeedPlus.Size = UDim2.new(0, 40, 0, 30); FlySpeedPlus.Position = UDim2.new(1, -50, 0, 95); FlySpeedPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FlySpeedPlus.Text = "+"; FlySpeedPlus.TextColor3 = tWhite; FlySpeedPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", FlySpeedPlus)
 
 MakeDraggable(FlyTopBar, FlyMain)
@@ -506,35 +506,35 @@ FlyMinBtn.MouseButton1Click:Connect(function()
     FlyFix.Visible = not flyMinimized
 end)
 
-local isFlying = false; local flySpeed = 50; local flyKeybind = nil; local isFlyBinding = false; local flyLoop = nil; local currentFlyAnim = nil
+-- Variables de Vuelo Motor6D
+local isFlying = false
+local flySpeed = 90
+local flySmoothness = 0.15
+local flyKeybind = nil
+local isFlyBinding = false
+local flyLoop = nil
+local BodyVel, BodyGyro
+local OriginalRightC0, OriginalLeftC0
 
 FlySpeedMinus.MouseButton1Click:Connect(function() flySpeed = math.max(10, flySpeed - 10); FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
 FlySpeedPlus.MouseButton1Click:Connect(function() flySpeed = flySpeed + 10; FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
 
-local function PlayFlyAnim(id)
+-- Editor de Velocidad Directo
+FlySpeedDisplay.FocusLost:Connect(function()
+    local num = tonumber(FlySpeedDisplay.Text:match("%d+"))
+    if num then flySpeed = num end
+    FlySpeedDisplay.Text = "SPEED: " .. flySpeed
+end)
+
+local function GetMotor6D()
     local char = LocalPlayer.Character
-    local hum = char and char:FindFirstChild("Humanoid")
-    local animator = hum and hum:FindFirstChildOfClass("Animator")
-    
-    if not animator then return end
-    if char:FindFirstChild("Animate") then char.Animate.Disabled = true end
-    if currentFlyAnim then currentFlyAnim:Stop(0.2) end
-    for _, track in pairs(animator:GetPlayingAnimationTracks()) do track:Stop() end
-
-    local anim = Instance.new("Animation")
-    anim.AnimationId = "rbxassetid://" .. id
-    currentFlyAnim = animator:LoadAnimation(anim)
-    currentFlyAnim.Priority = Enum.AnimationPriority.Action
-    currentFlyAnim:Play()
+    if not char then return nil, nil end
+    local Torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+    if not Torso then return nil, nil end
+    local RS = Torso:FindFirstChild("Right Shoulder") or char:FindFirstChild("RightShoulder", true)
+    local LS = Torso:FindFirstChild("Left Shoulder") or char:FindFirstChild("LeftShoulder", true)
+    return RS, LS
 end
-
-local function StopFlyAnim()
-    if currentFlyAnim then currentFlyAnim:Stop(); currentFlyAnim = nil end
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Animate") then char.Animate.Disabled = false end
-end
-
-local lastFlyDirection = "none"
 
 local function ToggleFly()
     local char = LocalPlayer.Character
@@ -549,53 +549,74 @@ local function ToggleFly()
         FlyToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
         FlyToggleBtn.Text = "VUELO: ON"
 
-        hum:ChangeState(Enum.HumanoidStateType.Physics)
+        BodyVel = Instance.new("BodyVelocity", hrp)
+        BodyVel.Name = "AK_FlyVel"
+        BodyVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+        BodyVel.Velocity = Vector3.new(0, 0, 0)
+
+        BodyGyro = Instance.new("BodyGyro", hrp)
+        BodyGyro.Name = "AK_FlyGyro"
+        BodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+        BodyGyro.P = 20000
+        BodyGyro.CFrame = hrp.CFrame
+
         hum.PlatformStand = true
         
-        local bg = Instance.new("BodyGyro", hrp)
-        bg.Name = "AK_FlyGyro"
-        bg.P = 90000
-        bg.maxTorque = Vector3.new(math.huge, math.huge, math.huge)
-        bg.CFrame = hrp.CFrame
-        
-        local bv = Instance.new("BodyVelocity", hrp)
-        bv.Name = "AK_FlyVel"
-        bv.Velocity = Vector3.new(0, 0, 0)
-        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-
-        lastFlyDirection = "idle"
-        PlayFlyAnim("619542203")
-
-        local camera = Workspace.CurrentCamera
-        local ctrl = {f = 0, b = 0, l = 0, r = 0}
+        local RS, LS = GetMotor6D()
+        if RS then OriginalRightC0 = RS.C0 end
+        if LS then OriginalLeftC0 = LS.C0 end
 
         flyLoop = RunService.RenderStepped:Connect(function()
-            if not isFlying or not char or not hrp then return end
-            
-            ctrl.f = UserInputService:IsKeyDown(Enum.KeyCode.W) and 1 or 0
-            ctrl.b = UserInputService:IsKeyDown(Enum.KeyCode.S) and -1 or 0
-            ctrl.l = UserInputService:IsKeyDown(Enum.KeyCode.A) and -1 or 0
-            ctrl.r = UserInputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0
-            local up = UserInputService:IsKeyDown(Enum.KeyCode.Space) and 1 or 0
-            local down = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) and -1 or 0
+            if not isFlying or not hrp then return end
 
-            local moveDir = Vector3.new(ctrl.l + ctrl.r, up + down, ctrl.f + ctrl.b)
+            local rs, ls = GetMotor6D()
+            local CamCF = Workspace.CurrentCamera.CFrame
+            local MoveVector = Vector3.new(0, 0, 0)
 
-            if moveDir.Magnitude > 0 then
-                bv.Velocity = ((camera.CFrame.LookVector * moveDir.Z) + (camera.CFrame.RightVector * moveDir.X) + (camera.CFrame.UpVector * moveDir.Y)) * flySpeed
-                bg.CFrame = CFrame.new(hrp.Position, hrp.Position + bv.Velocity) * CFrame.Angles(math.rad(-50), 0, 0)
-                
-                if lastFlyDirection ~= "moving" then
-                    lastFlyDirection = "moving"
-                    PlayFlyAnim("137759282507703")
+            local W = UserInputService:IsKeyDown(Enum.KeyCode.W)
+            local S = UserInputService:IsKeyDown(Enum.KeyCode.S)
+            local A = UserInputService:IsKeyDown(Enum.KeyCode.A)
+            local D = UserInputService:IsKeyDown(Enum.KeyCode.D)
+            local Space = UserInputService:IsKeyDown(Enum.KeyCode.Space)
+            local LCtrl = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
+
+            if W then MoveVector = MoveVector + CamCF.LookVector end
+            if S then MoveVector = MoveVector - CamCF.LookVector end
+            if A then MoveVector = MoveVector - CamCF.RightVector end
+            if D then MoveVector = MoveVector + CamCF.RightVector end
+            if Space then MoveVector = MoveVector + Vector3.new(0, 1, 0) end
+            if LCtrl then MoveVector = MoveVector - Vector3.new(0, 1, 0) end
+
+            if MoveVector.Magnitude > 0 then
+                BodyVel.Velocity = MoveVector.Unit * flySpeed
+            else
+                BodyVel.Velocity = Vector3.new(0, 0, 0)
+            end
+
+            if W then
+                -- POSE SUPERMAN
+                local TargetRotation = CFrame.lookAt(hrp.Position, hrp.Position + MoveVector) * CFrame.Angles(math.rad(-90), 0, 0)
+                BodyGyro.CFrame = BodyGyro.CFrame:Lerp(TargetRotation, flySmoothness)
+
+                if rs and ls then
+                    local RightGoal = CFrame.new(1, 0.5, 0) * CFrame.Angles(math.rad(175), 0, 0)
+                    local LeftGoal = CFrame.new(-1, 0.5, 0) * CFrame.Angles(0, 0, math.rad(10))
+                    rs.C0 = rs.C0:Lerp(RightGoal, flySmoothness)
+                    ls.C0 = ls.C0:Lerp(LeftGoal, flySmoothness)
                 end
             else
-                bv.Velocity = Vector3.new(0, 0, 0)
-                bg.CFrame = camera.CFrame * CFrame.Angles(0, 0, 0)
-                
-                if lastFlyDirection ~= "idle" then
-                    lastFlyDirection = "idle"
-                    PlayFlyAnim("619542203")
+                -- POSE LEVITANDO
+                local CamLook = Vector3.new(CamCF.LookVector.X, 0, CamCF.LookVector.Z)
+                if CamLook.Magnitude > 0 then
+                    local TargetRotation = CFrame.lookAt(hrp.Position, hrp.Position + CamLook)
+                    BodyGyro.CFrame = BodyGyro.CFrame:Lerp(TargetRotation, flySmoothness)
+                end
+
+                if rs and ls then
+                    local RightGoal = CFrame.new(1, 0.5, 0) * CFrame.Angles(math.rad(-10), 0, math.rad(15))
+                    local LeftGoal = CFrame.new(-1, 0.5, 0) * CFrame.Angles(math.rad(-10), 0, math.rad(-15))
+                    rs.C0 = rs.C0:Lerp(RightGoal, flySmoothness)
+                    ls.C0 = ls.C0:Lerp(LeftGoal, flySmoothness)
                 end
             end
         end)
@@ -605,12 +626,16 @@ local function ToggleFly()
         FlyToggleBtn.Text = "VUELO: OFF"
         
         if flyLoop then flyLoop:Disconnect() flyLoop = nil end
+        if BodyVel then BodyVel:Destroy() BodyVel = nil end
+        if BodyGyro then BodyGyro:Destroy() BodyGyro = nil end
         if hrp:FindFirstChild("AK_FlyGyro") then hrp.AK_FlyGyro:Destroy() end
         if hrp:FindFirstChild("AK_FlyVel") then hrp.AK_FlyVel:Destroy() end
         
         hum.PlatformStand = false
-        hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-        StopFlyAnim()
+        
+        local RS, LS = GetMotor6D()
+        if RS and OriginalRightC0 then RS.C0 = OriginalRightC0 end
+        if LS and OriginalLeftC0 then LS.C0 = OriginalLeftC0 end
     end
 end
 FlyToggleBtn.MouseButton1Click:Connect(ToggleFly)
@@ -631,7 +656,7 @@ LocalPlayer.CharacterAdded:Connect(function()
 end)
 
 -- ==================================================================
--- 5. CHAT GLOBAL V6 SMART (ESTÉTICA C.D.T OPTIFINE)
+-- 5. CHAT GLOBAL V6 (SMART SCROLL + HACKER THEME)
 -- ==================================================================
 local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 local setclipboard = setclipboard or toclipboard or set_clipboard
@@ -639,7 +664,7 @@ local setclipboard = setclipboard or toclipboard or set_clipboard
 local ChatMain = Instance.new("Frame", ScreenGui)
 ChatMain.Size = UDim2.new(0, 380, 0, 260); ChatMain.Position = UDim2.new(0.05, 0, 0.6, 0); ChatMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ChatMain.BorderSizePixel = 0; ChatMain.ClipsDescendants = true; ChatMain.Visible = false
 Instance.new("UICorner", ChatMain).CornerRadius = UDim.new(0, 6)
-Instance.new("UIStroke", ChatMain).Color = Color3.fromRGB(45, 45, 45)
+Instance.new("UIStroke", ChatMain).Color = tPurple
 
 local ChatTopBar = Instance.new("Frame", ChatMain); ChatTopBar.Size = UDim2.new(1, 0, 0, 35); ChatTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ChatTopBar.BorderSizePixel = 0; Instance.new("UICorner", ChatTopBar).CornerRadius = UDim.new(0, 6)
 local ChatFix = Instance.new("Frame", ChatTopBar); ChatFix.Size = UDim2.new(1, 0, 0, 5); ChatFix.Position = UDim2.new(0, 0, 1, -5); ChatFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ChatFix.BorderSizePixel = 0
@@ -647,13 +672,13 @@ local ChatTitle = Instance.new("TextLabel", ChatTopBar); ChatTitle.Size = UDim2.
 local ChatMinBtn = Instance.new("TextButton", ChatTopBar); ChatMinBtn.Size = UDim2.new(0, 35, 1, 0); ChatMinBtn.Position = UDim2.new(1, -70, 0, 0); ChatMinBtn.BackgroundTransparency = 1; ChatMinBtn.Text = "—"; ChatMinBtn.TextColor3 = tGreen; ChatMinBtn.Font = Enum.Font.GothamBlack; ChatMinBtn.TextSize = 14
 local ChatCloseBtn = Instance.new("TextButton", ChatTopBar); ChatCloseBtn.Size = UDim2.new(0, 35, 1, 0); ChatCloseBtn.Position = UDim2.new(1, -35, 0, 0); ChatCloseBtn.BackgroundTransparency = 1; ChatCloseBtn.Text = "X"; ChatCloseBtn.TextColor3 = tRed; ChatCloseBtn.Font = Enum.Font.GothamBlack; ChatCloseBtn.TextSize = 12
 
-local ChatScroll = Instance.new("ScrollingFrame", ChatMain); ChatScroll.Position = UDim2.new(0, 5, 0, 40); ChatScroll.Size = UDim2.new(1, -10, 0, 175); ChatScroll.BackgroundTransparency = 1; ChatScroll.ScrollBarThickness = 2; ChatScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
+local ChatScroll = Instance.new("ScrollingFrame", ChatMain); ChatScroll.Position = UDim2.new(0, 5, 0, 40); ChatScroll.Size = UDim2.new(1, -10, 0, 175); ChatScroll.BackgroundTransparency = 1; ChatScroll.ScrollBarThickness = 4; ChatScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
 local ChatLayout = Instance.new("UIListLayout", ChatScroll); ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder; ChatLayout.Padding = UDim.new(0, 4)
 
 -- Botón Smart Scroll
 local NewMsgBtn = Instance.new("TextButton", ChatMain)
 NewMsgBtn.Name = "NewMsgBtn"; NewMsgBtn.Text = "⬇ Nuevos Mensajes"
-NewMsgBtn.Size = UDim2.new(0, 140, 0, 25); NewMsgBtn.Position = UDim2.new(0.5, -70, 1, -70)
+NewMsgBtn.Size = UDim2.new(0, 140, 0, 25); NewMsgBtn.Position = UDim2.new(0.5, -70, 0.75, 0)
 NewMsgBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); NewMsgBtn.TextColor3 = tYellow; NewMsgBtn.Font = Enum.Font.GothamBold; NewMsgBtn.Visible = false; NewMsgBtn.ZIndex = 5
 Instance.new("UICorner", NewMsgBtn).CornerRadius = UDim.new(1, 0)
 Instance.new("UIStroke", NewMsgBtn).Color = tPurple
@@ -679,7 +704,7 @@ local function GetUserColor(username)
     math.randomseed(hash)
     local r = math.random(100, 255); local g = math.random(100, 255); local b = math.random(100, 255)
     math.randomseed(tick())
-    return string.format("#%02X%02X%02X", r, g, b)
+    return Color3.fromRGB(r, g, b)
 end
 
 local function OpenProfile(username)
@@ -704,7 +729,7 @@ local function CrearFilaMensaje(usuario, mensaje)
 
     local NameBtn = Instance.new("TextButton", Row)
     NameBtn.Text = usuario .. ":"
-    NameBtn.TextColor3 = Color3.fromHex(GetUserColor(usuario))
+    NameBtn.TextColor3 = GetUserColor(usuario)
     NameBtn.BackgroundTransparency = 1; NameBtn.Font = Enum.Font.GothamBold; NameBtn.TextSize = 13; NameBtn.AutomaticSize = Enum.AutomaticSize.XY
     NameBtn.MouseButton1Click:Connect(function() OpenProfile(usuario) end)
 
@@ -844,7 +869,6 @@ end
 local Comandos = {}
 local function AddCmd(cmd, desc, action) Comandos[cmd] = {Desc = desc, Accion = action} end
 
--- APLICANDO LA PALETA DE COLORES A LOS COMANDOS
 AddCmd("cmds", "Lista de comandos", function()
     LogMessage("--- COMANDOS DISPONIBLES ---", tYellow)
     for c, info in pairs(Comandos) do LogMessage(c .. " : " .. info.Desc, tCyan) end
