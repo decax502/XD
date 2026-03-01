@@ -1,5 +1,5 @@
 --[[
-    C.D.T OPTIFINE - V6 SMART CHAT HACKER EDITION
+    C.D.T OPTIFINE - V6 SMART CHAT HACKER EDITION (CHAT OPTIMIZED)
     - Anti-Duplicación Segura.
     - TP Menu (Buscador dinámico).
     - Menú Invisible (GHOST MODE PERFECTO: Tools visuales, ataques reales, fix sentarse).
@@ -413,7 +413,6 @@ local function toggleGhost()
     local root = char:FindFirstChild("HumanoidRootPart")
     local realHum = char:FindFirstChild("Humanoid")
     if not root or not realHum then return end
-    local camera = Workspace.CurrentCamera
     
     if isGhostActive then
         local startCF = root.CFrame
@@ -486,7 +485,7 @@ local FlyMain = Instance.new("Frame", ScreenGui); FlyMain.Size = UDim2.new(0, 25
 local FlyTopBar = Instance.new("Frame", FlyMain); FlyTopBar.Size = UDim2.new(1, 0, 0, 35); FlyTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FlyTopBar.BorderSizePixel = 0; Instance.new("UICorner", FlyTopBar).CornerRadius = UDim.new(0, 6)
 local FlyFix = Instance.new("Frame", FlyTopBar); FlyFix.Size = UDim2.new(1, 0, 0, 5); FlyFix.Position = UDim2.new(0, 0, 1, -5); FlyFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FlyFix.BorderSizePixel = 0
 local FlyTitle = Instance.new("TextLabel", FlyTopBar); FlyTitle.Size = UDim2.new(1, -70, 1, 0); FlyTitle.Position = UDim2.new(0, 15, 0, 0); FlyTitle.BackgroundTransparency = 1; FlyTitle.Text = "FLIGHT MODE"; FlyTitle.TextColor3 = tWhite; FlyTitle.Font = Enum.Font.GothamBold; FlyTitle.TextSize = 12; FlyTitle.TextXAlignment = Enum.TextXAlignment.Left
-local FlyMinBtn = Instance.new("TextButton", FlyTopBar); FlyMinBtn.Size = UDim2.new(0, 35, 1, 0); FlyMinBtn.Position = UDim2.new(1, -70, 0, 0); FlyMinBtn.BackgroundTransparency = 1; FlyMinBtn.Text = "—"; FlyMinBtn.TextColor3 = tGreen; FlyMinBtn.Font = Enum.Font.GothamBlack; FlyMinBtn.TextSize = 14
+local FlyMinBtn = Instance.new("TextButton", FlyTopBar); FlyMinBtn.Size = UDim2.new(0, 35, 1, 0); FlyMinBtn.Position = UDim2.new(1, -70, 0, 0); FlyMinBtn.BackgroundTransparency = 1; FlyMinBtn.Text = "—"; FlyMinBtn.TextColor3 = tGreen; FlyMinBtn.Font = Enum.Font.GothamBlack; MinBtn.TextSize = 14
 local FlyCloseBtn = Instance.new("TextButton", FlyTopBar); FlyCloseBtn.Size = UDim2.new(0, 35, 1, 0); FlyCloseBtn.Position = UDim2.new(1, -35, 0, 0); FlyCloseBtn.BackgroundTransparency = 1; FlyCloseBtn.Text = "X"; FlyCloseBtn.TextColor3 = tRed; FlyCloseBtn.Font = Enum.Font.GothamBlack; FlyCloseBtn.TextSize = 12
 
 local FlyToggleBtn = Instance.new("TextButton", FlyMain); FlyToggleBtn.Size = UDim2.new(1, -70, 0, 40); FlyToggleBtn.Position = UDim2.new(0, 10, 0, 45); FlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); FlyToggleBtn.Text = "VUELO: OFF"; FlyToggleBtn.TextColor3 = tWhite; FlyToggleBtn.Font = Enum.Font.GothamBold; FlyToggleBtn.TextSize = 12; Instance.new("UICorner", FlyToggleBtn).CornerRadius = UDim.new(0, 6)
@@ -631,15 +630,15 @@ LocalPlayer.CharacterAdded:Connect(function()
 end)
 
 -- ==================================================================
--- 5. CHAT GLOBAL V6 (SMART SCROLL + HACKER THEME)
+-- 5. CHAT GLOBAL V2 (UI ACTUALIZADA AL ESTILO DEL MENÚ)
 -- ==================================================================
 local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
-local setclipboard = setclipboard or toclipboard or set_clipboard
+local setclipboard = setclipboard or toclipboard or set_clipboard or (Synapse and Synapse.set_clipboard)
 
 local ChatMain = Instance.new("Frame", ScreenGui)
 ChatMain.Size = UDim2.new(0, 380, 0, 260); ChatMain.Position = UDim2.new(0.05, 0, 0.6, 0); ChatMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ChatMain.BorderSizePixel = 0; ChatMain.ClipsDescendants = true; ChatMain.Visible = false
 Instance.new("UICorner", ChatMain).CornerRadius = UDim.new(0, 6)
-Instance.new("UIStroke", ChatMain).Color = tPurple
+Instance.new("UIStroke", ChatMain).Color = Color3.fromRGB(45, 45, 45)
 
 local ChatTopBar = Instance.new("Frame", ChatMain); ChatTopBar.Size = UDim2.new(1, 0, 0, 35); ChatTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ChatTopBar.BorderSizePixel = 0; Instance.new("UICorner", ChatTopBar).CornerRadius = UDim.new(0, 6)
 local ChatFix = Instance.new("Frame", ChatTopBar); ChatFix.Size = UDim2.new(1, 0, 0, 5); ChatFix.Position = UDim2.new(0, 0, 1, -5); ChatFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ChatFix.BorderSizePixel = 0
@@ -649,14 +648,6 @@ local ChatCloseBtn = Instance.new("TextButton", ChatTopBar); ChatCloseBtn.Size =
 
 local ChatScroll = Instance.new("ScrollingFrame", ChatMain); ChatScroll.Position = UDim2.new(0, 5, 0, 40); ChatScroll.Size = UDim2.new(1, -10, 0, 175); ChatScroll.BackgroundTransparency = 1; ChatScroll.ScrollBarThickness = 4; ChatScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
 local ChatLayout = Instance.new("UIListLayout", ChatScroll); ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder; ChatLayout.Padding = UDim.new(0, 4)
-
--- Botón Smart Scroll
-local NewMsgBtn = Instance.new("TextButton", ChatMain)
-NewMsgBtn.Name = "NewMsgBtn"; NewMsgBtn.Text = "⬇ Nuevos Mensajes"
-NewMsgBtn.Size = UDim2.new(0, 140, 0, 25); NewMsgBtn.Position = UDim2.new(0.5, -70, 0.75, 0)
-NewMsgBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); NewMsgBtn.TextColor3 = tYellow; NewMsgBtn.Font = Enum.Font.GothamBold; NewMsgBtn.Visible = false; NewMsgBtn.ZIndex = 5
-Instance.new("UICorner", NewMsgBtn).CornerRadius = UDim.new(1, 0)
-Instance.new("UIStroke", NewMsgBtn).Color = tPurple
 
 local ChatBox = Instance.new("TextBox", ChatMain); ChatBox.Position = UDim2.new(0, 5, 0, 220); ChatBox.Size = UDim2.new(0.65, 0, 0, 30); ChatBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10); ChatBox.TextColor3 = tWhite; ChatBox.PlaceholderText = "Escribe un mensaje..."; ChatBox.Font = Enum.Font.Gotham; ChatBox.TextSize = 12; ChatBox.TextXAlignment = Enum.TextXAlignment.Left; Instance.new("UICorner", ChatBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", ChatBox).Color = Color3.fromRGB(40, 40, 40); Instance.new("UIPadding", ChatBox).PaddingLeft = UDim.new(0, 10)
 local ChatSendBtn = Instance.new("TextButton", ChatMain); ChatSendBtn.Position = UDim2.new(0.68, 0, 0, 220); ChatSendBtn.Size = UDim2.new(0.30, 0, 0, 30); ChatSendBtn.BackgroundColor3 = tGreen; ChatSendBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ChatSendBtn.Text = "ENVIAR"; ChatSendBtn.Font = Enum.Font.GothamBold; ChatSendBtn.TextSize = 11; Instance.new("UICorner", ChatSendBtn).CornerRadius = UDim.new(0, 4)
@@ -669,7 +660,6 @@ ChatMinBtn.MouseButton1Click:Connect(function()
     TweenService:Create(ChatMain, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = chatMinimized and UDim2.new(0, 380, 0, 35) or UDim2.new(0, 380, 0, 260)}):Play()
     ChatMinBtn.Text = chatMinimized and "+" or "—"
     ChatFix.Visible = not chatMinimized
-    if chatMinimized then NewMsgBtn.Visible = false end
 end)
 ChatCloseBtn.MouseButton1Click:Connect(function() ChatMain.Visible = false end)
 
@@ -679,124 +669,65 @@ local function GetUserColor(username)
     math.randomseed(hash)
     local r = math.random(100, 255); local g = math.random(100, 255); local b = math.random(100, 255)
     math.randomseed(tick())
-    return Color3.fromRGB(r, g, b)
-end
-
-local function OpenProfile(username)
-    local s, id = pcall(function() return Players:GetUserIdFromNameAsync(username) end)
-    if s and id then
-        local s2 = pcall(function() StarterGui:SetCore("PromptProfile", id) end)
-        if not s2 and setclipboard then 
-            setclipboard("https://www.roblox.com/users/"..id.."/profile") 
-            StarterGui:SetCore("SendNotification", {Title="Perfil", Text="Link copiado al portapapeles.", Duration=2})
-        end
-    end
+    return string.format("#%02X%02X%02X", r, g, b)
 end
 
 local function CrearFilaMensaje(usuario, mensaje)
-    local Row = Instance.new("Frame", ChatScroll)
-    Row.Size = UDim2.new(1, 0, 0, 0); Row.AutomaticSize = Enum.AutomaticSize.Y; Row.BackgroundTransparency = 1
+    local Fila = Instance.new("Frame", ChatScroll); Fila.Size = UDim2.new(1, 0, 0, 25); Fila.BackgroundTransparency = 1
     
-    local RowLayout = Instance.new("UIListLayout", Row)
-    RowLayout.FillDirection = Enum.FillDirection.Horizontal; RowLayout.VerticalAlignment = Enum.VerticalAlignment.Center; RowLayout.Padding = UDim.new(0, 6)
-
-    local pad = Instance.new("Frame", Row); pad.BackgroundTransparency = 1; pad.Size = UDim2.new(0, 2, 0, 20)
-
-    local NameBtn = Instance.new("TextButton", Row)
-    NameBtn.Text = usuario .. ":"
-    NameBtn.TextColor3 = GetUserColor(usuario)
-    NameBtn.BackgroundTransparency = 1; NameBtn.Font = Enum.Font.GothamBold; NameBtn.TextSize = 13; NameBtn.AutomaticSize = Enum.AutomaticSize.XY
-    NameBtn.MouseButton1Click:Connect(function() OpenProfile(usuario) end)
-
-    local MsgLbl = Instance.new("TextLabel", Row)
-    MsgLbl.Text = mensaje
-    MsgLbl.TextColor3 = tWhite; MsgLbl.BackgroundTransparency = 1; MsgLbl.Font = Enum.Font.Gotham; MsgLbl.TextSize = 12; MsgLbl.TextXAlignment = Enum.TextXAlignment.Left; MsgLbl.TextWrapped = true; MsgLbl.AutomaticSize = Enum.AutomaticSize.XY; MsgLbl.Size = UDim2.new(0, 0, 0, 0)
-    if mensaje:lower():find("http") or mensaje:lower():find("www") then MsgLbl.TextColor3 = tCyan end
-
-    local CopyBtn = Instance.new("TextButton", Row)
-    CopyBtn.Text = "📋"; CopyBtn.BackgroundTransparency = 1; CopyBtn.Size = UDim2.new(0, 20, 0, 20); CopyBtn.TextSize = 12; CopyBtn.TextColor3 = tYellow
-    CopyBtn.MouseButton1Click:Connect(function()
-        if setclipboard then 
-            setclipboard(mensaje)
-            CopyBtn.Text = "✔️"; CopyBtn.TextColor3 = tGreen
-            task.wait(1); CopyBtn.Text = "📋"; CopyBtn.TextColor3 = tYellow
-        end
+    local Texto = Instance.new("TextLabel", Fila); Texto.Size = UDim2.new(1, -30, 1, 0); Texto.Position = UDim2.new(0, 5, 0, 0); Texto.BackgroundTransparency = 1; Texto.TextXAlignment = Enum.TextXAlignment.Left; Texto.TextTruncate = Enum.TextTruncate.AtEnd; Texto.Font = Enum.Font.Gotham; Texto.TextSize = 12
+    Texto.RichText = true
+    
+    local hexColor = GetUserColor(usuario)
+    if string.find(mensaje, "http") then
+        Texto.Text = string.format("<font color='%s'>[%s]</font>: <font color='#00C8FF'>%s</font>", hexColor, usuario, mensaje)
+    else
+        Texto.Text = string.format("<font color='%s'>[%s]</font>: <font color='#FFFFFF'>%s</font>", hexColor, usuario, mensaje)
+    end
+    
+    local BtnCopia = Instance.new("TextButton", Fila); BtnCopia.Size = UDim2.new(0, 25, 0, 25); BtnCopia.Position = UDim2.new(1, -25, 0, 0); BtnCopia.BackgroundTransparency = 1; BtnCopia.TextColor3 = tYellow; BtnCopia.Text = "📋"; BtnCopia.Font = Enum.Font.GothamBold; BtnCopia.TextSize = 14
+    BtnCopia.MouseButton1Click:Connect(function()
+        if setclipboard then
+            setclipboard(mensaje); BtnCopia.Text = "✔️"; BtnCopia.TextColor3 = tGreen
+            task.wait(1); BtnCopia.Text = "📋"; BtnCopia.TextColor3 = tYellow
+        else BtnCopia.Text = "❌"; BtnCopia.TextColor3 = tRed end
     end)
 end
-
-local isUpdatingChat = false
-local lastMsgCount = 0
-
-NewMsgBtn.MouseButton1Click:Connect(function()
-    ChatScroll.CanvasPosition = Vector2.new(0, 99999)
-    NewMsgBtn.Visible = false
-end)
-
-ChatScroll.Changed:Connect(function()
-    local maxScroll = ChatScroll.CanvasSize.Y.Offset - ChatScroll.AbsoluteWindowSize.Y
-    if (maxScroll - ChatScroll.CanvasPosition.Y) < 30 then
-        NewMsgBtn.Visible = false
-    end
-end)
 
 local function ActualizarChat()
-    if isUpdatingChat or not request then return end
-    isUpdatingChat = true
-
-    local s, r = pcall(function() return request({Url = URL_NGROK .. "/leer", Method = "GET", Headers = {["ngrok-skip-browser-warning"] = "true"}}) end)
-
-    if s and r.StatusCode == 200 then
-        local data = HttpService:JSONDecode(r.Body)
-        
-        local maxScroll = ChatScroll.CanvasSize.Y.Offset - ChatScroll.AbsoluteWindowSize.Y
-        local currentScroll = ChatScroll.CanvasPosition.Y
-        local wasAtBottom = (maxScroll - currentScroll) < 30
-        if lastMsgCount == 0 then wasAtBottom = true end
-
+    if not request then return end
+    local success, response = pcall(function() return request({Url = URL_NGROK .. "/leer", Method = "GET", Headers = {["ngrok-skip-browser-warning"] = "true"}}) end)
+    if success and response.StatusCode == 200 then
+        local msgs = HttpService:JSONDecode(response.Body)
         for _, v in pairs(ChatScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
-        for _, m in pairs(data) do CrearFilaMensaje(m.u, m.m) end
-        
+        for _, m in pairs(msgs) do CrearFilaMensaje(m.u, m.m) end
         ChatScroll.CanvasSize = UDim2.new(0, 0, 0, ChatLayout.AbsoluteContentSize.Y)
-        
-        local hayNuevos = #data > lastMsgCount
-        if hayNuevos then
-            if wasAtBottom then
-                ChatScroll.CanvasPosition = Vector2.new(0, 99999)
-                NewMsgBtn.Visible = false
-            else
-                NewMsgBtn.Visible = true
-            end
-        end
-        lastMsgCount = #data
+        ChatScroll.CanvasPosition = Vector2.new(0, ChatLayout.AbsoluteContentSize.Y) -- Auto Scroll Down
     end
-    isUpdatingChat = false
 end
 
-local sending = false
-local function SendMessage()
-    if sending or ChatBox.Text == "" or not request then return end
-    sending = true
-    local txt = ChatBox.Text; ChatBox.Text = "" 
+ChatSendBtn.MouseButton1Click:Connect(function()
+    if ChatBox.Text == "" or not request then return end
+    local txt = ChatBox.Text; ChatBox.Text = "Enviando..."
     local payload = HttpService:JSONEncode({usuario = LocalPlayer.Name, texto = txt})
+    pcall(function() request({Url = URL_NGROK .. "/enviar", Method = "POST", Headers = {["Content-Type"] = "application/json", ["ngrok-skip-browser-warning"] = "true"}, Body = payload}) end)
+    ChatBox.Text = ""; task.wait(0.2); ActualizarChat()
+end)
 
-    task.spawn(function()
-        local s, r = pcall(function() request({Url = URL_NGROK .. "/enviar", Method = "POST", Headers = {["Content-Type"]="application/json", ["ngrok-skip-browser-warning"]="true"}, Body = payload}) end)
-        sending = false
-        if s then 
-            ChatScroll.CanvasPosition = Vector2.new(0, 99999)
-            ActualizarChat() 
-        else
-            ChatBox.Text = txt
-        end
-    end)
-end
-
-ChatSendBtn.MouseButton1Click:Connect(SendMessage)
-ChatBox.FocusLost:Connect(function(enter) if enter then SendMessage() end end)
+ChatBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        if ChatBox.Text == "" or not request then return end
+        local txt = ChatBox.Text; ChatBox.Text = "Enviando..."
+        local payload = HttpService:JSONEncode({usuario = LocalPlayer.Name, texto = txt})
+        pcall(function() request({Url = URL_NGROK .. "/enviar", Method = "POST", Headers = {["Content-Type"] = "application/json", ["ngrok-skip-browser-warning"] = "true"}, Body = payload}) end)
+        ChatBox.Text = ""; task.wait(0.2); ActualizarChat()
+    end
+end)
 
 task.spawn(function()
-    while task.wait(2) do if ChatMain.Visible and not chatMinimized then ActualizarChat() end end
+    while task.wait(3) do if ChatMain.Visible then ActualizarChat() end end
 end)
+
 
 -- ==================================================================
 -- 6. SISTEMA GLOBAL DE TECLAS Y COMANDOS (CON AUTOCOMPLETADO)
