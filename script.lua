@@ -1,6 +1,6 @@
 --[[
-    C.D.T OPTIFINE - V7.2 BALANCED RESPONSIVE EDITION
-    - Tamaño equilibrado (Escalado al 98% en PC, ni muy grande ni muy pequeño).
+    C.D.T OPTIFINE - V7.3 PERFECT SCALE EDITION
+    - Tamaño ajustado (Un poco más grande, 1.05x en PC).
     - TP Menu (Buscador dinámico).
     - Menú Invisible (GHOST MODE PERFECTO: Tools visuales, ataques reales).
     - Menú de Vuelo (Superman Fly Motor6D).
@@ -37,16 +37,16 @@ local tRed = Color3.fromRGB(255, 60, 60)
 local borderDark = Color3.fromRGB(45, 45, 45) -- Borde oscuro elegante
 
 -- ==================================================================
--- FUNCIÓN DE ESCALADO RESPONSIVE (TAMAÑO EQUILIBRADO)
+-- FUNCIÓN DE ESCALADO RESPONSIVE (TAMAÑO PERFECTO LEGIBLE)
 -- ==================================================================
 local function ApplyResponsiveScale(frame)
     local scaleObj = Instance.new("UIScale", frame)
     local function UpdateScale()
         local vs = Workspace.CurrentCamera.ViewportSize
         if vs.X < 850 then
-            scaleObj.Scale = 1.10 -- Celulares (Un poco más grande para tocar bien)
+            scaleObj.Scale = 1.15 -- Celulares (Tamaño cómodo para tocar)
         else
-            scaleObj.Scale = 0.98 -- PC (Tamaño perfecto, ni gigante ni pequeño)
+            scaleObj.Scale = 1.05 -- PC (Un poquitito más grande y legible)
         end
     end
     Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
@@ -93,7 +93,7 @@ pcall(function() ScreenGui.Parent = gethui() end)
 if not ScreenGui.Parent then ScreenGui.Parent = CoreGui end
 
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 310, 0, 340); Main.Position = UDim2.new(1, -330, 1, -360) 
+Main.Size = UDim2.new(0, 320, 0, 350); Main.Position = UDim2.new(1, -340, 1, -370) 
 Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.BorderSizePixel = 0; Main.ClipsDescendants = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
 Instance.new("UIStroke", Main).Color = borderDark
@@ -118,7 +118,7 @@ local UIPad = Instance.new("UIPadding", CmdBox); UIPad.PaddingLeft = UDim.new(0,
 local MiniUI = Instance.new("CanvasGroup", Main)
 MiniUI.Size = UDim2.new(1, 0, 1, 0); MiniUI.BackgroundTransparency = 1; MiniUI.BorderSizePixel = 0; MiniUI.GroupTransparency = 1; MiniUI.Visible = false
 local MiniLabel = Instance.new("TextLabel", MiniUI); MiniLabel.Size = UDim2.new(1, -40, 1, 0); MiniLabel.Position = UDim2.new(0, 15, 0, 0); MiniLabel.BackgroundTransparency = 1; MiniLabel.Text = "C.D.T TERMINAL"; MiniLabel.TextColor3 = tWhite; MiniLabel.Font = Enum.Font.GothamBold; MiniLabel.TextSize = 12; MiniLabel.TextXAlignment = Enum.TextXAlignment.Left
-local Dot = Instance.new("Frame", MiniUI); Dot.Size = UDim2.new(0, 6, 0, 6); Dot.Position = UDim2.new(0, 115, 0.5, -3); Dot.BackgroundColor3 = tGreen; Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
+local Dot = Instance.new("Frame", MiniUI); Dot.Size = UDim2.new(0, 6, 0, 6); Dot.Position = UDim2.new(0, 100, 0.5, -3); Dot.BackgroundColor3 = tGreen; Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
 local MaxBtn = Instance.new("TextButton", MiniUI); MaxBtn.Size = UDim2.new(0, 35, 1, 0); MaxBtn.Position = UDim2.new(1, -35, 0, 0); MaxBtn.BackgroundTransparency = 1; MaxBtn.Text = "⤢"; MaxBtn.TextColor3 = tGreen; MaxBtn.Font = Enum.Font.GothamBlack; MaxBtn.TextSize = 18
 
 local function MakeDraggable(dragArea, targetFrame)
@@ -142,7 +142,7 @@ local isMinimized = false
 local function ToggleMenu()
     if isMinimized then
         isMinimized = false; FullUI.Visible = true
-        TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 310, 0, 340)}):Play()
+        TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 320, 0, 350)}):Play()
         TweenService:Create(MiniUI, TweenInfo.new(0.2), {GroupTransparency = 1}):Play()
         TweenService:Create(FullUI, TweenInfo.new(0.3, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0.1), {GroupTransparency = 0}):Play()
         task.wait(0.2); MiniUI.Visible = false
@@ -498,7 +498,7 @@ InvCloseBtn.MouseButton1Click:Connect(function()
 end)
 
 LocalPlayer.CharacterAdded:Connect(function()
-    if isGhostActive then toggleGhost() end -- Evita bugearse al morir
+    if isGhostActive then toggleGhost() end 
 end)
 
 -- ==================================================================
@@ -671,7 +671,7 @@ local function GetUserColor(username)
     math.randomseed(hash)
     local r = math.random(100, 255); local g = math.random(100, 255); local b = math.random(100, 255)
     math.randomseed(tick())
-    return Color3.fromRGB(r, g, b)
+    return string.format("#%02X%02X%02X", r, g, b)
 end
 
 local function OpenProfile(username)
@@ -696,7 +696,7 @@ local function CrearFilaMensaje(usuario, mensaje)
 
     local NameBtn = Instance.new("TextButton", Row)
     NameBtn.Text = usuario .. ":"
-    NameBtn.TextColor3 = GetUserColor(usuario)
+    NameBtn.TextColor3 = Color3.fromHex(GetUserColor(usuario))
     NameBtn.BackgroundTransparency = 1; NameBtn.Font = Enum.Font.GothamBold; NameBtn.TextSize = 13; NameBtn.AutomaticSize = Enum.AutomaticSize.XY
     NameBtn.MouseButton1Click:Connect(function() OpenProfile(usuario) end)
 
