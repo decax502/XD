@@ -1,9 +1,9 @@
 --[[
-    C.D.T OPTIFINE - V6 SMART CHAT HACKER EDITION (SUPERMAN MOTOR6D FLY)
+    C.D.T OPTIFINE - V6 SMART CHAT HACKER EDITION (UNDERGROUND INVIS FIX)
     - Anti-Duplicación Segura.
     - TP Menu (Buscador dinámico). Corregido visual al minimizar.
-    - Menú Invisible (GHOST MODE PERFECTO: Tools visuales, ataques reales).
-    - Menú de Vuelo (NUEVO: Motor6D Superman Fly + Velocidad Editable por texto).
+    - Menú Invisible (Cuerpo Real a -45 studs, Fix Combate, Fix Keybind).
+    - Menú de Vuelo (Superman Fly Motor6D).
     - GLOBAL CHAT SMART (Auto-Scroll Inteligente, Botón de Perfil, Enter para enviar).
     - Consola Inteligente (Autocompletado de comandos y jugadores con TAB).
     - Textos Hacker (Morado, Blanco, Verde, Naranja, Celeste, Amarillo).
@@ -207,12 +207,10 @@ InvMinBtn.MouseButton1Click:Connect(function()
     InvFix.Visible = not invMinimized
 end)
 
-local DEPTH = 70 
 local CLONE_TRANSPARENCY = 0.5 
-local PLATFORM_SIZE = 500 
 local isGhostActive = false
 local ghostModel = nil
-local safetyPlatform = nil
+local InvisPart = nil
 local controlsConnection = nil
 local activationConn = nil
 local toolSyncConnAdded = nil
@@ -222,9 +220,9 @@ local animTracks = {Idle = nil, Walk = nil, Sit = nil}
 local currentAnim = nil
 local invKeybind = nil
 local isInvBinding = false
+local isAttacking = false -- Variable nueva para forzar pos real arriba al clickear
 
 if getgenv().PhysicalGhostCon then getgenv().PhysicalGhostCon:Disconnect() end
-if getgenv().GhostPlatform then getgenv().GhostPlatform:Destroy() end
 if getgenv().GhostModel then getgenv().GhostModel:Destroy() end
 getgenv().GhostActive = false
 
@@ -250,16 +248,6 @@ local function setRealCharTransparency(visible)
         if (v:IsA("BasePart") and v.Name ~= "HumanoidRootPart") or v:IsA("Decal") then v.Transparency = trans
         elseif v:IsA("BasePart") then v.Transparency = 1 end
     end
-end
-
-local function createSafetyPlatform(pos)
-    local p = Instance.new("Part")
-    p.Name = "SafeZone_Floor"
-    p.Size = Vector3.new(PLATFORM_SIZE, 4, PLATFORM_SIZE)
-    p.Anchored = true; p.Transparency = 1; p.CanCollide = true
-    p.CFrame = CFrame.new(pos - Vector3.new(0, DEPTH, 0))
-    p.Parent = Workspace
-    return p
 end
 
 local function createVisualTool(realTool, ghostModel)
@@ -373,9 +361,17 @@ local function startControls()
         if isSitting then
             ghostRoot.CFrame = realRoot.CFrame
         else
-            realRoot.CFrame = ghostRoot.CFrame
             if moveVec.Magnitude > 0 then ghostHum:Move(moveVec, false) else ghostHum:Move(Vector3.new(0,0,0), false) end
             if UserInputService:IsKeyDown(Enum.KeyCode.Space) then ghostHum.Jump = true end
+            
+            -- SINCRONIZACIÓN PERFECTA: El real está 45 studs abajo (salvo al atacar)
+            if not isAttacking then
+                if InvisPart then InvisPart.CFrame = ghostRoot.CFrame * CFrame.new(0, -48, 0) end
+                realRoot.CFrame = ghostRoot.CFrame * CFrame.new(0, -45, 0)
+                realRoot.AssemblyLinearVelocity = Vector3.zero
+            else
+                realRoot.CFrame = ghostRoot.CFrame
+            end
         end
         
         local targetCollidable = not isSitting
@@ -387,9 +383,20 @@ local function startControls()
         local isMoving = isMovingInput and not isSitting
         updateGhostAnim(isMoving, isSitting)
         
-        local platRoot = safetyPlatform
-        if platRoot and (char.PrimaryPart.Position - platRoot.Position).Magnitude > PLATFORM_SIZE / 2 then
-             char:SetPrimaryPartCFrame(platRoot.CFrame + Vector3.new(0, 5, 0))
+        -- Sincronizar tool en el ghost
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then
+            local handle = tool:FindFirstChild("Handle")
+            local fakeHand = ghostModel:FindFirstChild("RightHand") or ghostModel:FindFirstChild("Right Arm")
+            if handle and fakeHand then
+                local realArm = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
+                if realArm then
+                    local grip = realArm:FindFirstChild("RightGrip")
+                    if grip then grip:Destroy() end 
+                end
+                local offset = (fakeHand.Name == "RightHand") and CFrame.new(0, -0.5, 0) or CFrame.new(0, -1, 0)
+                handle.CFrame = fakeHand.CFrame * offset * (tool.Grip and tool.Grip:Inverse() or CFrame.new())
+            end
         end
     end)
     
@@ -399,36 +406,51 @@ local function startControls()
         if not char or not isGhostActive then return end
         local tool = char:FindFirstChildOfClass("Tool")
         if tool then
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then tool:Activate() 
-            elseif input.UserInputType == Enum.UserInputType.MouseButton2 then pcall(function() tool:Activate() end) end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then 
+                isAttacking = true; tool:Activate() 
+            elseif input.UserInputType == Enum.UserInputType.MouseButton2 then 
+                isAttacking = true; pcall(function() tool:Activate() end) 
+            end
         end
     end)
+
+    UserInputService.InputEnded:Connect(function(input, gpe)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
+            isAttacking = false
+        end
+    end)
+
     getgenv().PhysicalGhostCon = controlsConnection
 end
 
-local function toggleGhost()
-    isGhostActive = not isGhostActive
-    getgenv().GhostActive = isGhostActive
+local function ToggleGhost()
     local char = LocalPlayer.Character; if not char then return end
     local root = char:FindFirstChild("HumanoidRootPart")
     local realHum = char:FindFirstChild("Humanoid")
     if not root or not realHum then return end
+    
+    isGhostActive = not isGhostActive
+    getgenv().GhostActive = isGhostActive
     local camera = Workspace.CurrentCamera
     
     if isGhostActive then
         local startCF = root.CFrame
-        safetyPlatform = createSafetyPlatform(startCF.Position)
-        getgenv().GhostPlatform = safetyPlatform
+        
+        char.Archivable = true
         ghostModel = createPhysicalGhost(char)
         ghostModel.HumanoidRootPart.CFrame = startCF
         getgenv().GhostModel = ghostModel
+        
+        InvisPart = Instance.new("Part", workspace)
+        InvisPart.Anchored = true; InvisPart.Size = Vector3.new(20, 2, 20)
+        InvisPart.CFrame = startCF * CFrame.new(0, -48, 0)
+        InvisPart.Transparency = 1; InvisPart.CanCollide = true
         
         local currentTool = char:FindFirstChildOfClass("Tool")
         if currentTool then createVisualTool(currentTool, ghostModel) end
         
         setRealCharTransparency(false)
-        Workspace.CurrentCamera.CameraSubject = ghostModel:FindFirstChild("Humanoid")
-        char:SetPrimaryPartCFrame(safetyPlatform.CFrame + Vector3.new(0, 5, 0))
+        camera.CameraSubject = ghostModel:FindFirstChild("Humanoid")
         
         toolSyncConnAdded = char.ChildAdded:Connect(function(child) if child:IsA("Tool") then createVisualTool(child, ghostModel) end end)
         toolSyncConnRemoved = char.ChildRemoved:Connect(function(child) if child:IsA("Tool") and currentVisualTool then currentVisualTool:Destroy(); currentVisualTool = nil end end)
@@ -445,7 +467,7 @@ local function toggleGhost()
         if animTracks.Sit then animTracks.Sit:Stop() end
         if currentVisualTool then currentVisualTool:Destroy(); currentVisualTool = nil end
         
-        Workspace.CurrentCamera.CameraSubject = realHum
+        camera.CameraSubject = realHum
         if ghostModel and ghostModel.PrimaryPart then char:SetPrimaryPartCFrame(ghostModel.PrimaryPart.CFrame) end
         setRealCharTransparency(true)
         
@@ -456,13 +478,13 @@ local function toggleGhost()
         end
         
         if ghostModel then ghostModel:Destroy() end
-        if safetyPlatform then safetyPlatform:Destroy() end
-        ghostModel = nil; safetyPlatform = nil; animTracks = {Idle = nil, Walk = nil, Sit = nil}; currentAnim = nil
+        if InvisPart then InvisPart:Destroy() end
+        ghostModel = nil; InvisPart = nil; animTracks = {Idle = nil, Walk = nil, Sit = nil}; currentAnim = nil
         
         InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
     end
 end
-InvToggleBtn.MouseButton1Click:Connect(toggleGhost)
+InvToggleBtn.MouseButton1Click:Connect(ToggleGhost)
 
 InvKeyBtn.MouseButton1Click:Connect(function()
     if invKeybind ~= nil then invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
@@ -470,17 +492,17 @@ InvKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 InvCloseBtn.MouseButton1Click:Connect(function() 
-    if isGhostActive then toggleGhost() end
+    if isGhostActive then ToggleGhost() end
     invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
     InvMain.Visible = false 
 end)
 
 LocalPlayer.CharacterAdded:Connect(function()
-    if isGhostActive then toggleGhost() end -- Evita bugearse al morir
+    if isGhostActive then ToggleGhost() end 
 end)
 
 -- ==================================================================
--- 4. INTERFAZ Y LÓGICA DEL MENÚ FLY (NUEVO SUPERMAN MOTOR6D)
+-- 4. INTERFAZ Y LÓGICA DEL MENÚ FLY (SUPERMAN FLY)
 -- ==================================================================
 local FlyMain = Instance.new("Frame", ScreenGui); FlyMain.Size = UDim2.new(0, 250, 0, 135); FlyMain.Position = UDim2.new(0.5, 50, 0.5, -120); FlyMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FlyMain.BorderSizePixel = 0; FlyMain.ClipsDescendants = true; FlyMain.Visible = false; Instance.new("UICorner", FlyMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", FlyMain).Color = Color3.fromRGB(45, 45, 45)
 local FlyTopBar = Instance.new("Frame", FlyMain); FlyTopBar.Size = UDim2.new(1, 0, 0, 35); FlyTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FlyTopBar.BorderSizePixel = 0; Instance.new("UICorner", FlyTopBar).CornerRadius = UDim.new(0, 6)
@@ -506,31 +528,19 @@ FlyMinBtn.MouseButton1Click:Connect(function()
     FlyFix.Visible = not flyMinimized
 end)
 
--- Variables de Vuelo Motor6D
-local isFlying = false
-local flySpeed = 90
-local flySmoothness = 0.15
-local flyKeybind = nil
-local isFlyBinding = false
-local flyLoop = nil
-local BodyVel, BodyGyro
-local OriginalRightC0, OriginalLeftC0
+local isFlying = false; local flySpeed = 90; local flySmoothness = 0.15; local flyKeybind = nil; local isFlyBinding = false; local flyLoop = nil
+local BodyVel, BodyGyro; local OriginalRightC0, OriginalLeftC0
 
 FlySpeedMinus.MouseButton1Click:Connect(function() flySpeed = math.max(10, flySpeed - 10); FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
 FlySpeedPlus.MouseButton1Click:Connect(function() flySpeed = flySpeed + 10; FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
-
--- Editor de Velocidad Directo
 FlySpeedDisplay.FocusLost:Connect(function()
     local num = tonumber(FlySpeedDisplay.Text:match("%d+"))
-    if num then flySpeed = num end
-    FlySpeedDisplay.Text = "SPEED: " .. flySpeed
+    if num then flySpeed = num end; FlySpeedDisplay.Text = "SPEED: " .. flySpeed
 end)
 
 local function GetMotor6D()
-    local char = LocalPlayer.Character
-    if not char then return nil, nil end
-    local Torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-    if not Torso then return nil, nil end
+    local char = LocalPlayer.Character; if not char then return nil, nil end
+    local Torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso"); if not Torso then return nil, nil end
     local RS = Torso:FindFirstChild("Right Shoulder") or char:FindFirstChild("RightShoulder", true)
     local LS = Torso:FindFirstChild("Left Shoulder") or char:FindFirstChild("LeftShoulder", true)
     return RS, LS
@@ -540,102 +550,60 @@ local function ToggleFly()
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     local hum = char and char:FindFirstChild("Humanoid")
-    
     if not hrp or not hum then return end
 
     isFlying = not isFlying
     if isFlying then
-        FlyToggleBtn.BackgroundColor3 = tCyan
-        FlyToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
-        FlyToggleBtn.Text = "VUELO: ON"
+        FlyToggleBtn.BackgroundColor3 = tCyan; FlyToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); FlyToggleBtn.Text = "VUELO: ON"
 
-        BodyVel = Instance.new("BodyVelocity", hrp)
-        BodyVel.Name = "AK_FlyVel"
-        BodyVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-        BodyVel.Velocity = Vector3.new(0, 0, 0)
-
-        BodyGyro = Instance.new("BodyGyro", hrp)
-        BodyGyro.Name = "AK_FlyGyro"
-        BodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-        BodyGyro.P = 20000
-        BodyGyro.CFrame = hrp.CFrame
+        BodyVel = Instance.new("BodyVelocity", hrp); BodyVel.Name = "AK_FlyVel"; BodyVel.MaxForce = Vector3.new(1e9, 1e9, 1e9); BodyVel.Velocity = Vector3.new(0, 0, 0)
+        BodyGyro = Instance.new("BodyGyro", hrp); BodyGyro.Name = "AK_FlyGyro"; BodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9); BodyGyro.P = 20000; BodyGyro.CFrame = hrp.CFrame
 
         hum.PlatformStand = true
         
         local RS, LS = GetMotor6D()
-        if RS then OriginalRightC0 = RS.C0 end
-        if LS then OriginalLeftC0 = LS.C0 end
+        if RS then OriginalRightC0 = RS.C0 end; if LS then OriginalLeftC0 = LS.C0 end
 
         flyLoop = RunService.RenderStepped:Connect(function()
             if not isFlying or not hrp then return end
-
             local rs, ls = GetMotor6D()
             local CamCF = Workspace.CurrentCamera.CFrame
             local MoveVector = Vector3.new(0, 0, 0)
 
-            local W = UserInputService:IsKeyDown(Enum.KeyCode.W)
-            local S = UserInputService:IsKeyDown(Enum.KeyCode.S)
-            local A = UserInputService:IsKeyDown(Enum.KeyCode.A)
-            local D = UserInputService:IsKeyDown(Enum.KeyCode.D)
-            local Space = UserInputService:IsKeyDown(Enum.KeyCode.Space)
-            local LCtrl = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
+            local W = UserInputService:IsKeyDown(Enum.KeyCode.W); local S = UserInputService:IsKeyDown(Enum.KeyCode.S)
+            local A = UserInputService:IsKeyDown(Enum.KeyCode.A); local D = UserInputService:IsKeyDown(Enum.KeyCode.D)
+            local Space = UserInputService:IsKeyDown(Enum.KeyCode.Space); local LCtrl = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
 
-            if W then MoveVector = MoveVector + CamCF.LookVector end
-            if S then MoveVector = MoveVector - CamCF.LookVector end
-            if A then MoveVector = MoveVector - CamCF.RightVector end
-            if D then MoveVector = MoveVector + CamCF.RightVector end
-            if Space then MoveVector = MoveVector + Vector3.new(0, 1, 0) end
-            if LCtrl then MoveVector = MoveVector - Vector3.new(0, 1, 0) end
+            if W then MoveVector = MoveVector + CamCF.LookVector end; if S then MoveVector = MoveVector - CamCF.LookVector end
+            if A then MoveVector = MoveVector - CamCF.RightVector end; if D then MoveVector = MoveVector + CamCF.RightVector end
+            if Space then MoveVector = MoveVector + Vector3.new(0, 1, 0) end; if LCtrl then MoveVector = MoveVector - Vector3.new(0, 1, 0) end
 
-            if MoveVector.Magnitude > 0 then
-                BodyVel.Velocity = MoveVector.Unit * flySpeed
-            else
-                BodyVel.Velocity = Vector3.new(0, 0, 0)
-            end
+            if MoveVector.Magnitude > 0 then BodyVel.Velocity = MoveVector.Unit * flySpeed else BodyVel.Velocity = Vector3.new(0, 0, 0) end
 
             if W then
-                -- POSE SUPERMAN
                 local TargetRotation = CFrame.lookAt(hrp.Position, hrp.Position + MoveVector) * CFrame.Angles(math.rad(-90), 0, 0)
                 BodyGyro.CFrame = BodyGyro.CFrame:Lerp(TargetRotation, flySmoothness)
-
                 if rs and ls then
-                    local RightGoal = CFrame.new(1, 0.5, 0) * CFrame.Angles(math.rad(175), 0, 0)
-                    local LeftGoal = CFrame.new(-1, 0.5, 0) * CFrame.Angles(0, 0, math.rad(10))
-                    rs.C0 = rs.C0:Lerp(RightGoal, flySmoothness)
-                    ls.C0 = ls.C0:Lerp(LeftGoal, flySmoothness)
+                    rs.C0 = rs.C0:Lerp(CFrame.new(1, 0.5, 0) * CFrame.Angles(math.rad(175), 0, 0), flySmoothness)
+                    ls.C0 = ls.C0:Lerp(CFrame.new(-1, 0.5, 0) * CFrame.Angles(0, 0, math.rad(10)), flySmoothness)
                 end
             else
-                -- POSE LEVITANDO
                 local CamLook = Vector3.new(CamCF.LookVector.X, 0, CamCF.LookVector.Z)
-                if CamLook.Magnitude > 0 then
-                    local TargetRotation = CFrame.lookAt(hrp.Position, hrp.Position + CamLook)
-                    BodyGyro.CFrame = BodyGyro.CFrame:Lerp(TargetRotation, flySmoothness)
-                end
-
+                if CamLook.Magnitude > 0 then BodyGyro.CFrame = BodyGyro.CFrame:Lerp(CFrame.lookAt(hrp.Position, hrp.Position + CamLook), flySmoothness) end
                 if rs and ls then
-                    local RightGoal = CFrame.new(1, 0.5, 0) * CFrame.Angles(math.rad(-10), 0, math.rad(15))
-                    local LeftGoal = CFrame.new(-1, 0.5, 0) * CFrame.Angles(math.rad(-10), 0, math.rad(-15))
-                    rs.C0 = rs.C0:Lerp(RightGoal, flySmoothness)
-                    ls.C0 = ls.C0:Lerp(LeftGoal, flySmoothness)
+                    rs.C0 = rs.C0:Lerp(CFrame.new(1, 0.5, 0) * CFrame.Angles(math.rad(-10), 0, math.rad(15)), flySmoothness)
+                    ls.C0 = ls.C0:Lerp(CFrame.new(-1, 0.5, 0) * CFrame.Angles(math.rad(-10), 0, math.rad(-15)), flySmoothness)
                 end
             end
         end)
     else
-        FlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        FlyToggleBtn.TextColor3 = tWhite
-        FlyToggleBtn.Text = "VUELO: OFF"
-        
+        FlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); FlyToggleBtn.TextColor3 = tWhite; FlyToggleBtn.Text = "VUELO: OFF"
         if flyLoop then flyLoop:Disconnect() flyLoop = nil end
-        if BodyVel then BodyVel:Destroy() BodyVel = nil end
-        if BodyGyro then BodyGyro:Destroy() BodyGyro = nil end
-        if hrp:FindFirstChild("AK_FlyGyro") then hrp.AK_FlyGyro:Destroy() end
-        if hrp:FindFirstChild("AK_FlyVel") then hrp.AK_FlyVel:Destroy() end
-        
+        if BodyVel then BodyVel:Destroy() BodyVel = nil end; if BodyGyro then BodyGyro:Destroy() BodyGyro = nil end
+        if hrp:FindFirstChild("AK_FlyGyro") then hrp.AK_FlyGyro:Destroy() end; if hrp:FindFirstChild("AK_FlyVel") then hrp.AK_FlyVel:Destroy() end
         hum.PlatformStand = false
-        
         local RS, LS = GetMotor6D()
-        if RS and OriginalRightC0 then RS.C0 = OriginalRightC0 end
-        if LS and OriginalLeftC0 then LS.C0 = OriginalLeftC0 end
+        if RS and OriginalRightC0 then RS.C0 = OriginalRightC0 end; if LS and OriginalLeftC0 then LS.C0 = OriginalLeftC0 end
     end
 end
 FlyToggleBtn.MouseButton1Click:Connect(ToggleFly)
@@ -647,16 +615,13 @@ end)
 
 FlyCloseBtn.MouseButton1Click:Connect(function() 
     if isFlying then ToggleFly() end
-    flyKeybind = nil; FlyKeyBtn.Text = "KEY"; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFlyBinding = false
-    FlyMain.Visible = false 
+    flyKeybind = nil; FlyKeyBtn.Text = "KEY"; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFlyBinding = false; FlyMain.Visible = false 
 end)
 
-LocalPlayer.CharacterAdded:Connect(function()
-    if isFlying then ToggleFly() end
-end)
+LocalPlayer.CharacterAdded:Connect(function() if isFlying then ToggleFly() end end)
 
 -- ==================================================================
--- 5. CHAT GLOBAL V6 (SMART SCROLL + HACKER THEME)
+-- 5. CHAT GLOBAL SMART SCROLL (ESTÉTICA C.D.T OPTIFINE)
 -- ==================================================================
 local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 local setclipboard = setclipboard or toclipboard or set_clipboard
@@ -684,7 +649,7 @@ Instance.new("UICorner", NewMsgBtn).CornerRadius = UDim.new(1, 0)
 Instance.new("UIStroke", NewMsgBtn).Color = tPurple
 
 local ChatBox = Instance.new("TextBox", ChatMain); ChatBox.Position = UDim2.new(0, 5, 0, 220); ChatBox.Size = UDim2.new(0.65, 0, 0, 30); ChatBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10); ChatBox.TextColor3 = tWhite; ChatBox.PlaceholderText = "Escribe un mensaje..."; ChatBox.Font = Enum.Font.Gotham; ChatBox.TextSize = 12; ChatBox.TextXAlignment = Enum.TextXAlignment.Left; Instance.new("UICorner", ChatBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", ChatBox).Color = Color3.fromRGB(40, 40, 40); Instance.new("UIPadding", ChatBox).PaddingLeft = UDim.new(0, 10)
-local ChatSendBtn = Instance.new("TextButton", ChatMain); ChatSendBtn.Position = UDim2.new(0.68, 0, 0, 220); ChatSendBtn.Size = UDim2.new(0.30, 0, 0, 30); ChatSendBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ChatSendBtn.TextColor3 = tGreen; ChatSendBtn.Text = "ENVIAR"; ChatSendBtn.Font = Enum.Font.GothamBold; ChatSendBtn.TextSize = 11; Instance.new("UICorner", ChatSendBtn).CornerRadius = UDim.new(0, 4)
+local ChatSendBtn = Instance.new("TextButton", ChatMain); ChatSendBtn.Position = UDim2.new(0.68, 0, 0, 220); ChatSendBtn.Size = UDim2.new(0.30, 0, 0, 30); ChatSendBtn.BackgroundColor3 = tGreen; ChatSendBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ChatSendBtn.Text = "ENVIAR"; ChatSendBtn.Font = Enum.Font.GothamBold; ChatSendBtn.TextSize = 11; Instance.new("UICorner", ChatSendBtn).CornerRadius = UDim.new(0, 4)
 
 MakeDraggable(ChatTopBar, ChatMain)
 
@@ -704,7 +669,7 @@ local function GetUserColor(username)
     math.randomseed(hash)
     local r = math.random(100, 255); local g = math.random(100, 255); local b = math.random(100, 255)
     math.randomseed(tick())
-    return Color3.fromRGB(r, g, b)
+    return string.format("#%02X%02X%02X", r, g, b)
 end
 
 local function OpenProfile(username)
@@ -729,7 +694,7 @@ local function CrearFilaMensaje(usuario, mensaje)
 
     local NameBtn = Instance.new("TextButton", Row)
     NameBtn.Text = usuario .. ":"
-    NameBtn.TextColor3 = GetUserColor(usuario)
+    NameBtn.TextColor3 = Color3.fromHex(GetUserColor(usuario))
     NameBtn.BackgroundTransparency = 1; NameBtn.Font = Enum.Font.GothamBold; NameBtn.TextSize = 13; NameBtn.AutomaticSize = Enum.AutomaticSize.XY
     NameBtn.MouseButton1Click:Connect(function() OpenProfile(usuario) end)
 
