@@ -1,8 +1,9 @@
 --[[
-    C.D.T OPTIFINE - V7.4 PERFECT SCALE & KEYBIND FIX
-    - Tamaño ajustado (Un poco más grande, 1.05x en PC).
+    C.D.T OPTIFINE - V7.4.1 PERFECT EDITION (UI FIX)
+    - Tamaño ajustado (Escala 1.05x en PC).
+    - Fix visual: El punto verde de la terminal minimizada ya no se sobrepone al texto.
     - TP Menu (Buscador dinámico).
-    - Menú Invisible (GHOST MODE PERFECTO + KEYBIND 100% FUNCIONAL).
+    - Menú Invisible (GHOST MODE 100% ARREGLADO: Cuerpo bajo tierra, Tools funcionales, Keybind activo).
     - Menú de Vuelo (Superman Fly Motor6D).
     - GLOBAL CHAT SMART (Auto-Scroll Inteligente, Botón de Perfil, Enter para enviar).
     - Consola Inteligente.
@@ -25,7 +26,7 @@ local LocalPlayer = Players.LocalPlayer
 local URL_NGROK = "https://garnett-waterborne-overoffensively.ngrok-free.dev" 
 
 -- ==================================================================
--- COLORES PARA TEXTOS DE LA CONSOLA
+-- COLORES PARA TEXTOS DE LA CONSOLA Y BORDES
 -- ==================================================================
 local tPurple = Color3.fromRGB(170, 85, 255)
 local tWhite = Color3.fromRGB(255, 255, 255)
@@ -34,10 +35,10 @@ local tOrange = Color3.fromRGB(255, 150, 0)
 local tCyan = Color3.fromRGB(0, 200, 255)
 local tYellow = Color3.fromRGB(255, 220, 0)
 local tRed = Color3.fromRGB(255, 60, 60)
-local borderDark = Color3.fromRGB(45, 45, 45) -- Borde oscuro elegante
+local borderDark = Color3.fromRGB(45, 45, 45)
 
 -- ==================================================================
--- FUNCIÓN DE ESCALADO RESPONSIVE (TAMAÑO PERFECTO LEGIBLE)
+-- FUNCIÓN DE ESCALADO RESPONSIVE
 -- ==================================================================
 local function ApplyResponsiveScale(frame)
     local scaleObj = Instance.new("UIScale", frame)
@@ -46,7 +47,7 @@ local function ApplyResponsiveScale(frame)
         if vs.X < 850 then
             scaleObj.Scale = 1.15 -- Celulares
         else
-            scaleObj.Scale = 1.05 -- PC
+            scaleObj.Scale = 1.05 -- PC (Un poquito más grande)
         end
     end
     Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
@@ -118,7 +119,7 @@ local UIPad = Instance.new("UIPadding", CmdBox); UIPad.PaddingLeft = UDim.new(0,
 local MiniUI = Instance.new("CanvasGroup", Main)
 MiniUI.Size = UDim2.new(1, 0, 1, 0); MiniUI.BackgroundTransparency = 1; MiniUI.BorderSizePixel = 0; MiniUI.GroupTransparency = 1; MiniUI.Visible = false
 local MiniLabel = Instance.new("TextLabel", MiniUI); MiniLabel.Size = UDim2.new(1, -40, 1, 0); MiniLabel.Position = UDim2.new(0, 15, 0, 0); MiniLabel.BackgroundTransparency = 1; MiniLabel.Text = "C.D.T TERMINAL"; MiniLabel.TextColor3 = tWhite; MiniLabel.Font = Enum.Font.GothamBold; MiniLabel.TextSize = 12; MiniLabel.TextXAlignment = Enum.TextXAlignment.Left
-local Dot = Instance.new("Frame", MiniUI); Dot.Size = UDim2.new(0, 6, 0, 6); Dot.Position = UDim2.new(0, 100, 0.5, -3); Dot.BackgroundColor3 = tGreen; Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
+local Dot = Instance.new("Frame", MiniUI); Dot.Size = UDim2.new(0, 6, 0, 6); Dot.Position = UDim2.new(0, 140, 0.5, -3); Dot.BackgroundColor3 = tGreen; Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0) -- EL ESPACIO FUE ARREGLADO AQUI (140 DE DISTANCIA)
 local MaxBtn = Instance.new("TextButton", MiniUI); MaxBtn.Size = UDim2.new(0, 35, 1, 0); MaxBtn.Position = UDim2.new(1, -35, 0, 0); MaxBtn.BackgroundTransparency = 1; MaxBtn.Text = "⤢"; MaxBtn.TextColor3 = tGreen; MaxBtn.Font = Enum.Font.GothamBlack; MaxBtn.TextSize = 18
 
 local function MakeDraggable(dragArea, targetFrame)
@@ -148,7 +149,7 @@ local function ToggleMenu()
         task.wait(0.2); MiniUI.Visible = false
     else
         isMinimized = true; MiniUI.Visible = true
-        TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 160, 0, 35)}):Play()
+        TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 190, 0, 35)}):Play()
         TweenService:Create(FullUI, TweenInfo.new(0.2), {GroupTransparency = 1}):Play()
         TweenService:Create(MiniUI, TweenInfo.new(0.3, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0.1), {GroupTransparency = 0}):Play()
         task.wait(0.2); FullUI.Visible = false
@@ -237,6 +238,7 @@ local ghostModel = nil
 local safetyPlatform = nil
 local controlsConnection = nil
 local activationConn = nil
+local activationEndConn = nil
 local toolSyncConnAdded = nil
 local toolSyncConnRemoved = nil
 local currentVisualTool = nil
@@ -244,6 +246,7 @@ local animTracks = {Idle = nil, Walk = nil, Sit = nil}
 local currentAnim = nil
 local invKeybind = nil
 local isInvBinding = false
+local isAttacking = false 
 
 if getgenv().PhysicalGhostCon then getgenv().PhysicalGhostCon:Disconnect() end
 if getgenv().GhostPlatform then getgenv().GhostPlatform:Destroy() end
@@ -274,12 +277,11 @@ local function setRealCharTransparency(visible)
     end
 end
 
-local function createSafetyPlatform(pos)
+local function createSafetyPlatform()
     local p = Instance.new("Part")
     p.Name = "SafeZone_Floor"
-    p.Size = Vector3.new(PLATFORM_SIZE, 4, PLATFORM_SIZE)
+    p.Size = Vector3.new(50, 4, 50)
     p.Anchored = true; p.Transparency = 1; p.CanCollide = true
-    p.CFrame = CFrame.new(pos - Vector3.new(0, DEPTH, 0))
     p.Parent = Workspace
     return p
 end
@@ -313,7 +315,7 @@ local function createPhysicalGhost(original)
     
     for _, v in pairs(clone:GetDescendants()) do
         if v:IsA("BasePart") then
-            v.Transparency = CLONE_TRANSPARENCY; v.Anchored = false; v.CanCollide = true
+            v.Transparency = 0.5; v.Anchored = false; v.CanCollide = true
             if v.Name == "HumanoidRootPart" then v.Transparency = 1; v.CanCollide = false end
         elseif v:IsA("Script") or v:IsA("LocalScript") or v:IsA("Sound") then v:Destroy() end
     end
@@ -335,9 +337,6 @@ local function createPhysicalGhost(original)
         animTracks.Idle:Play(); currentAnim = "Idle"
     end
     
-    for _, v in pairs(clone:GetDescendants()) do
-        if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then v.CanCollide = true end
-    end
     return clone
 end
 
@@ -369,6 +368,7 @@ end
 local function startControls()
     if controlsConnection then controlsConnection:Disconnect() end
     if activationConn then activationConn:Disconnect() end
+    if activationEndConn then activationEndConn:Disconnect() end
     local ghostCollidable = true
     
     controlsConnection = RunService.RenderStepped:Connect(function()
@@ -395,9 +395,16 @@ local function startControls()
         if isSitting then
             ghostRoot.CFrame = realRoot.CFrame
         else
-            realRoot.CFrame = ghostRoot.CFrame
             if moveVec.Magnitude > 0 then ghostHum:Move(moveVec, false) else ghostHum:Move(Vector3.new(0,0,0), false) end
             if UserInputService:IsKeyDown(Enum.KeyCode.Space) then ghostHum.Jump = true end
+            
+            if not isAttacking then
+                if safetyPlatform then safetyPlatform.CFrame = ghostRoot.CFrame * CFrame.new(0, -48, 0) end
+                realRoot.CFrame = ghostRoot.CFrame * CFrame.new(0, -45, 0)
+                realRoot.AssemblyLinearVelocity = Vector3.zero
+            else
+                realRoot.CFrame = ghostRoot.CFrame
+            end
         end
         
         local targetCollidable = not isSitting
@@ -408,15 +415,11 @@ local function startControls()
         
         local isMoving = isMovingInput and not isSitting
         updateGhostAnim(isMoving, isSitting)
-        
-        local platRoot = safetyPlatform
-        if platRoot and (char.PrimaryPart.Position - platRoot.Position).Magnitude > PLATFORM_SIZE / 2 then
-             char:SetPrimaryPartCFrame(platRoot.CFrame + Vector3.new(0, 5, 0))
-        end
     end)
     
     activationConn = UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then isAttacking = true end
         local char = LocalPlayer.Character
         if not char or not isGhostActive then return end
         local tool = char:FindFirstChildOfClass("Tool")
@@ -425,11 +428,15 @@ local function startControls()
             elseif input.UserInputType == Enum.UserInputType.MouseButton2 then pcall(function() tool:Activate() end) end
         end
     end)
+
+    activationEndConn = UserInputService.InputEnded:Connect(function(input, gpe)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then isAttacking = false end
+    end)
+    
     getgenv().PhysicalGhostCon = controlsConnection
 end
 
--- ================= AQUI SE DEFINE LA FUNCIÓN =================
-local function ToggleGhost()
+local function toggleGhost()
     isGhostActive = not isGhostActive
     getgenv().GhostActive = isGhostActive
     local char = LocalPlayer.Character; if not char then return end
@@ -440,7 +447,7 @@ local function ToggleGhost()
     
     if isGhostActive then
         local startCF = root.CFrame
-        safetyPlatform = createSafetyPlatform(startCF.Position)
+        safetyPlatform = createSafetyPlatform()
         getgenv().GhostPlatform = safetyPlatform
         ghostModel = createPhysicalGhost(char)
         ghostModel.HumanoidRootPart.CFrame = startCF
@@ -451,7 +458,6 @@ local function ToggleGhost()
         
         setRealCharTransparency(false)
         Workspace.CurrentCamera.CameraSubject = ghostModel:FindFirstChild("Humanoid")
-        char:SetPrimaryPartCFrame(safetyPlatform.CFrame + Vector3.new(0, 5, 0))
         
         toolSyncConnAdded = char.ChildAdded:Connect(function(child) if child:IsA("Tool") then createVisualTool(child, ghostModel) end end)
         toolSyncConnRemoved = char.ChildRemoved:Connect(function(child) if child:IsA("Tool") and currentVisualTool then currentVisualTool:Destroy(); currentVisualTool = nil end end)
@@ -461,6 +467,7 @@ local function ToggleGhost()
     else
         if controlsConnection then controlsConnection:Disconnect() end
         if activationConn then activationConn:Disconnect() end
+        if activationEndConn then activationEndConn:Disconnect() end
         if toolSyncConnAdded then toolSyncConnAdded:Disconnect(); toolSyncConnAdded = nil end
         if toolSyncConnRemoved then toolSyncConnRemoved:Disconnect(); toolSyncConnRemoved = nil end
         if animTracks.Walk then animTracks.Walk:Stop() end
@@ -481,11 +488,12 @@ local function ToggleGhost()
         if ghostModel then ghostModel:Destroy() end
         if safetyPlatform then safetyPlatform:Destroy() end
         ghostModel = nil; safetyPlatform = nil; animTracks = {Idle = nil, Walk = nil, Sit = nil}; currentAnim = nil
+        isAttacking = false
         
         InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
     end
 end
-InvToggleBtn.MouseButton1Click:Connect(ToggleGhost)
+InvToggleBtn.MouseButton1Click:Connect(toggleGhost)
 
 InvKeyBtn.MouseButton1Click:Connect(function()
     if invKeybind ~= nil then invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
@@ -493,13 +501,13 @@ InvKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 InvCloseBtn.MouseButton1Click:Connect(function() 
-    if isGhostActive then ToggleGhost() end
+    if isGhostActive then toggleGhost() end
     invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
     InvMain.Visible = false 
 end)
 
 LocalPlayer.CharacterAdded:Connect(function()
-    if isGhostActive then ToggleGhost() end 
+    if isGhostActive then toggleGhost() end 
 end)
 
 -- ==================================================================
