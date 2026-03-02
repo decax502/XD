@@ -1,8 +1,8 @@
 --[[
-    C.D.T OPTIFINE - V7.4 PERFECT EDITION
-    - Tamaño ajustado (Escala 1.05x en PC).
+    C.D.T OPTIFINE - V7.4 PERFECT SCALE & KEYBIND FIX
+    - Tamaño ajustado (Un poco más grande, 1.05x en PC).
     - TP Menu (Buscador dinámico).
-    - Menú Invisible (GHOST MODE 100% ARREGLADO: Cuerpo bajo tierra, Tools funcionales, Keybind activo).
+    - Menú Invisible (GHOST MODE PERFECTO + KEYBIND 100% FUNCIONAL).
     - Menú de Vuelo (Superman Fly Motor6D).
     - GLOBAL CHAT SMART (Auto-Scroll Inteligente, Botón de Perfil, Enter para enviar).
     - Consola Inteligente.
@@ -25,7 +25,7 @@ local LocalPlayer = Players.LocalPlayer
 local URL_NGROK = "https://garnett-waterborne-overoffensively.ngrok-free.dev" 
 
 -- ==================================================================
--- COLORES PARA TEXTOS DE LA CONSOLA Y BORDES
+-- COLORES PARA TEXTOS DE LA CONSOLA
 -- ==================================================================
 local tPurple = Color3.fromRGB(170, 85, 255)
 local tWhite = Color3.fromRGB(255, 255, 255)
@@ -34,10 +34,10 @@ local tOrange = Color3.fromRGB(255, 150, 0)
 local tCyan = Color3.fromRGB(0, 200, 255)
 local tYellow = Color3.fromRGB(255, 220, 0)
 local tRed = Color3.fromRGB(255, 60, 60)
-local borderDark = Color3.fromRGB(45, 45, 45)
+local borderDark = Color3.fromRGB(45, 45, 45) -- Borde oscuro elegante
 
 -- ==================================================================
--- FUNCIÓN DE ESCALADO RESPONSIVE
+-- FUNCIÓN DE ESCALADO RESPONSIVE (TAMAÑO PERFECTO LEGIBLE)
 -- ==================================================================
 local function ApplyResponsiveScale(frame)
     local scaleObj = Instance.new("UIScale", frame)
@@ -46,7 +46,7 @@ local function ApplyResponsiveScale(frame)
         if vs.X < 850 then
             scaleObj.Scale = 1.15 -- Celulares
         else
-            scaleObj.Scale = 1.05 -- PC (Un poquito más grande)
+            scaleObj.Scale = 1.05 -- PC
         end
     end
     Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
@@ -207,16 +207,16 @@ end
 TPSearchBox:GetPropertyChangedSignal("Text"):Connect(function() RefreshTPMenu(TPSearchBox.Text) end)
 
 -- ==================================================================
--- 3. INTERFAZ INVISIBLE MENU (GHOST MODE 100% ARREGLADO)
+-- 3. INTERFAZ INVISIBLE MENU (GHOST MODE PERFECTO + TOOLS)
 -- ==================================================================
 local InvMain = Instance.new("Frame", ScreenGui); InvMain.Size = UDim2.new(0, 250, 0, 95); InvMain.Position = UDim2.new(0.5, -300, 0.5, -120); InvMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); InvMain.BorderSizePixel = 0; InvMain.ClipsDescendants = true; InvMain.Visible = false; Instance.new("UICorner", InvMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", InvMain).Color = borderDark
 local InvTopBar = Instance.new("Frame", InvMain); InvTopBar.Size = UDim2.new(1, 0, 0, 35); InvTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); InvTopBar.BorderSizePixel = 0; Instance.new("UICorner", InvTopBar).CornerRadius = UDim.new(0, 6)
 local InvFix = Instance.new("Frame", InvTopBar); InvFix.Size = UDim2.new(1, 0, 0, 5); InvFix.Position = UDim2.new(0, 0, 1, -5); InvFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); InvFix.BorderSizePixel = 0
-local InvTitle = Instance.new("TextLabel", InvTopBar); InvTitle.Size = UDim2.new(1, -70, 1, 0); InvTitle.Position = UDim2.new(0, 15, 0, 0); InvTitle.BackgroundTransparency = 1; InvTitle.Text = "INVISIBILITY"; InvTitle.TextColor3 = tWhite; InvTitle.Font = Enum.Font.GothamBold; InvTitle.TextSize = 12; InvTitle.TextXAlignment = Enum.TextXAlignment.Left
-local InvMinBtn = Instance.new("TextButton", InvTopBar); InvMinBtn.Size = UDim2.new(0, 35, 1, 0); InvMinBtn.Position = UDim2.new(1, -70, 0, 0); InvMinBtn.BackgroundTransparency = 1; InvMinBtn.Text = "—"; InvMinBtn.TextColor3 = tGreen; InvMinBtn.Font = Enum.Font.GothamBlack; InvMinBtn.TextSize = 14
-local InvCloseBtn = Instance.new("TextButton", InvTopBar); InvCloseBtn.Size = UDim2.new(0, 35, 1, 0); InvCloseBtn.Position = UDim2.new(1, -35, 0, 0); InvCloseBtn.BackgroundTransparency = 1; InvCloseBtn.Text = "X"; InvCloseBtn.TextColor3 = tRed; InvCloseBtn.Font = Enum.Font.GothamBlack; InvCloseBtn.TextSize = 12
-local InvToggleBtn = Instance.new("TextButton", InvMain); InvToggleBtn.Size = UDim2.new(1, -70, 0, 40); InvToggleBtn.Position = UDim2.new(0, 10, 0, 45); InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.Text = "INVISIBILIDAD: OFF"; InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Font = Enum.Font.GothamBold; InvToggleBtn.TextSize = 12; Instance.new("UICorner", InvToggleBtn).CornerRadius = UDim.new(0, 6)
-local InvKeyBtn = Instance.new("TextButton", InvMain); InvKeyBtn.Size = UDim2.new(0, 45, 0, 40); InvKeyBtn.Position = UDim2.new(1, -55, 0, 45); InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); InvKeyBtn.Text = "KEY"; InvKeyBtn.TextColor3 = tWhite; InvKeyBtn.Font = Enum.Font.GothamBold; InvKeyBtn.TextSize = 10; Instance.new("UICorner", InvKeyBtn).CornerRadius = UDim.new(0, 6)
+local InvTitle = Instance.new("TextLabel", InvTopBar); InvTitle.Size = UDim2.new(1, -70, 1, 0); InvTitle.Position = UDim2.new(0, 15, 0, 0); InvTitle.BackgroundTransparency = 1; InvTitle.Text = "INVISIBILITY"; InvTitle.TextColor3 = Color3.fromRGB(255, 255, 255); InvTitle.Font = Enum.Font.GothamBold; InvTitle.TextSize = 12; InvTitle.TextXAlignment = Enum.TextXAlignment.Left
+local InvMinBtn = Instance.new("TextButton", InvTopBar); InvMinBtn.Size = UDim2.new(0, 35, 1, 0); InvMinBtn.Position = UDim2.new(1, -70, 0, 0); InvMinBtn.BackgroundTransparency = 1; InvMinBtn.Text = "—"; InvMinBtn.TextColor3 = Color3.fromRGB(0, 255, 136); InvMinBtn.Font = Enum.Font.GothamBlack; InvMinBtn.TextSize = 14
+local InvCloseBtn = Instance.new("TextButton", InvTopBar); InvCloseBtn.Size = UDim2.new(0, 35, 1, 0); InvCloseBtn.Position = UDim2.new(1, -35, 0, 0); InvCloseBtn.BackgroundTransparency = 1; InvCloseBtn.Text = "X"; InvCloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50); InvCloseBtn.Font = Enum.Font.GothamBlack; InvCloseBtn.TextSize = 12
+local InvToggleBtn = Instance.new("TextButton", InvMain); InvToggleBtn.Size = UDim2.new(1, -70, 0, 40); InvToggleBtn.Position = UDim2.new(0, 10, 0, 45); InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.Text = "INVISIBILIDAD: OFF"; InvToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255); InvToggleBtn.Font = Enum.Font.GothamBold; InvToggleBtn.TextSize = 12; Instance.new("UICorner", InvToggleBtn).CornerRadius = UDim.new(0, 6)
+local InvKeyBtn = Instance.new("TextButton", InvMain); InvKeyBtn.Size = UDim2.new(0, 45, 0, 40); InvKeyBtn.Position = UDim2.new(1, -55, 0, 45); InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); InvKeyBtn.Text = "KEY"; InvKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255); InvKeyBtn.Font = Enum.Font.GothamBold; InvKeyBtn.TextSize = 10; Instance.new("UICorner", InvKeyBtn).CornerRadius = UDim.new(0, 6)
 
 ApplyResponsiveScale(InvMain)
 MakeDraggable(InvTopBar, InvMain)
@@ -229,12 +229,14 @@ InvMinBtn.MouseButton1Click:Connect(function()
     InvFix.Visible = not invMinimized
 end)
 
+local DEPTH = 70 
+local CLONE_TRANSPARENCY = 0.5 
+local PLATFORM_SIZE = 500 
 local isGhostActive = false
 local ghostModel = nil
 local safetyPlatform = nil
 local controlsConnection = nil
 local activationConn = nil
-local activationEndConn = nil
 local toolSyncConnAdded = nil
 local toolSyncConnRemoved = nil
 local currentVisualTool = nil
@@ -242,7 +244,6 @@ local animTracks = {Idle = nil, Walk = nil, Sit = nil}
 local currentAnim = nil
 local invKeybind = nil
 local isInvBinding = false
-local isAttacking = false
 
 if getgenv().PhysicalGhostCon then getgenv().PhysicalGhostCon:Disconnect() end
 if getgenv().GhostPlatform then getgenv().GhostPlatform:Destroy() end
@@ -273,11 +274,12 @@ local function setRealCharTransparency(visible)
     end
 end
 
-local function createSafetyPlatform()
+local function createSafetyPlatform(pos)
     local p = Instance.new("Part")
     p.Name = "SafeZone_Floor"
-    p.Size = Vector3.new(50, 4, 50)
+    p.Size = Vector3.new(PLATFORM_SIZE, 4, PLATFORM_SIZE)
     p.Anchored = true; p.Transparency = 1; p.CanCollide = true
+    p.CFrame = CFrame.new(pos - Vector3.new(0, DEPTH, 0))
     p.Parent = Workspace
     return p
 end
@@ -311,7 +313,7 @@ local function createPhysicalGhost(original)
     
     for _, v in pairs(clone:GetDescendants()) do
         if v:IsA("BasePart") then
-            v.Transparency = 0.5; v.Anchored = false; v.CanCollide = true
+            v.Transparency = CLONE_TRANSPARENCY; v.Anchored = false; v.CanCollide = true
             if v.Name == "HumanoidRootPart" then v.Transparency = 1; v.CanCollide = false end
         elseif v:IsA("Script") or v:IsA("LocalScript") or v:IsA("Sound") then v:Destroy() end
     end
@@ -333,6 +335,9 @@ local function createPhysicalGhost(original)
         animTracks.Idle:Play(); currentAnim = "Idle"
     end
     
+    for _, v in pairs(clone:GetDescendants()) do
+        if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then v.CanCollide = true end
+    end
     return clone
 end
 
@@ -364,7 +369,6 @@ end
 local function startControls()
     if controlsConnection then controlsConnection:Disconnect() end
     if activationConn then activationConn:Disconnect() end
-    if activationEndConn then activationEndConn:Disconnect() end
     local ghostCollidable = true
     
     controlsConnection = RunService.RenderStepped:Connect(function()
@@ -391,18 +395,9 @@ local function startControls()
         if isSitting then
             ghostRoot.CFrame = realRoot.CFrame
         else
+            realRoot.CFrame = ghostRoot.CFrame
             if moveVec.Magnitude > 0 then ghostHum:Move(moveVec, false) else ghostHum:Move(Vector3.new(0,0,0), false) end
             if UserInputService:IsKeyDown(Enum.KeyCode.Space) then ghostHum.Jump = true end
-            
-            -- Sincronización Subterránea (-45 Studs para que nadie te vea)
-            if not isAttacking then
-                if safetyPlatform then safetyPlatform.CFrame = ghostRoot.CFrame * CFrame.new(0, -48, 0) end
-                realRoot.CFrame = ghostRoot.CFrame * CFrame.new(0, -45, 0)
-                realRoot.AssemblyLinearVelocity = Vector3.zero
-            else
-                -- Si atacas, el real sube por un ms para aplicar el daño
-                realRoot.CFrame = ghostRoot.CFrame
-            end
         end
         
         local targetCollidable = not isSitting
@@ -413,11 +408,15 @@ local function startControls()
         
         local isMoving = isMovingInput and not isSitting
         updateGhostAnim(isMoving, isSitting)
+        
+        local platRoot = safetyPlatform
+        if platRoot and (char.PrimaryPart.Position - platRoot.Position).Magnitude > PLATFORM_SIZE / 2 then
+             char:SetPrimaryPartCFrame(platRoot.CFrame + Vector3.new(0, 5, 0))
+        end
     end)
     
     activationConn = UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then isAttacking = true end
         local char = LocalPlayer.Character
         if not char or not isGhostActive then return end
         local tool = char:FindFirstChildOfClass("Tool")
@@ -426,25 +425,22 @@ local function startControls()
             elseif input.UserInputType == Enum.UserInputType.MouseButton2 then pcall(function() tool:Activate() end) end
         end
     end)
-
-    activationEndConn = UserInputService.InputEnded:Connect(function(input, gpe)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then isAttacking = false end
-    end)
-    
     getgenv().PhysicalGhostCon = controlsConnection
 end
 
-local function toggleGhost()
+-- ================= AQUI SE DEFINE LA FUNCIÓN =================
+local function ToggleGhost()
     isGhostActive = not isGhostActive
     getgenv().GhostActive = isGhostActive
     local char = LocalPlayer.Character; if not char then return end
     local root = char:FindFirstChild("HumanoidRootPart")
     local realHum = char:FindFirstChild("Humanoid")
     if not root or not realHum then return end
+    local camera = Workspace.CurrentCamera
     
     if isGhostActive then
         local startCF = root.CFrame
-        safetyPlatform = createSafetyPlatform()
+        safetyPlatform = createSafetyPlatform(startCF.Position)
         getgenv().GhostPlatform = safetyPlatform
         ghostModel = createPhysicalGhost(char)
         ghostModel.HumanoidRootPart.CFrame = startCF
@@ -455,6 +451,7 @@ local function toggleGhost()
         
         setRealCharTransparency(false)
         Workspace.CurrentCamera.CameraSubject = ghostModel:FindFirstChild("Humanoid")
+        char:SetPrimaryPartCFrame(safetyPlatform.CFrame + Vector3.new(0, 5, 0))
         
         toolSyncConnAdded = char.ChildAdded:Connect(function(child) if child:IsA("Tool") then createVisualTool(child, ghostModel) end end)
         toolSyncConnRemoved = char.ChildRemoved:Connect(function(child) if child:IsA("Tool") and currentVisualTool then currentVisualTool:Destroy(); currentVisualTool = nil end end)
@@ -464,7 +461,6 @@ local function toggleGhost()
     else
         if controlsConnection then controlsConnection:Disconnect() end
         if activationConn then activationConn:Disconnect() end
-        if activationEndConn then activationEndConn:Disconnect() end
         if toolSyncConnAdded then toolSyncConnAdded:Disconnect(); toolSyncConnAdded = nil end
         if toolSyncConnRemoved then toolSyncConnRemoved:Disconnect(); toolSyncConnRemoved = nil end
         if animTracks.Walk then animTracks.Walk:Stop() end
@@ -485,12 +481,11 @@ local function toggleGhost()
         if ghostModel then ghostModel:Destroy() end
         if safetyPlatform then safetyPlatform:Destroy() end
         ghostModel = nil; safetyPlatform = nil; animTracks = {Idle = nil, Walk = nil, Sit = nil}; currentAnim = nil
-        isAttacking = false
         
         InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
     end
 end
-InvToggleBtn.MouseButton1Click:Connect(toggleGhost)
+InvToggleBtn.MouseButton1Click:Connect(ToggleGhost)
 
 InvKeyBtn.MouseButton1Click:Connect(function()
     if invKeybind ~= nil then invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
@@ -498,13 +493,13 @@ InvKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 InvCloseBtn.MouseButton1Click:Connect(function() 
-    if isGhostActive then toggleGhost() end
+    if isGhostActive then ToggleGhost() end
     invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
     InvMain.Visible = false 
 end)
 
 LocalPlayer.CharacterAdded:Connect(function()
-    if isGhostActive then toggleGhost() end
+    if isGhostActive then ToggleGhost() end 
 end)
 
 -- ==================================================================
@@ -628,7 +623,7 @@ end)
 LocalPlayer.CharacterAdded:Connect(function() if isFlying then ToggleFly() end end)
 
 -- ==================================================================
--- 5. CHAT GLOBAL SMART SCROLL (ESTÉTICA C.D.T OPTIFINE)
+-- 5. CHAT GLOBAL V6 SMART (ESTÉTICA C.D.T OPTIFINE CON AUTO-SCROLL DISCORD)
 -- ==================================================================
 local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 local setclipboard = setclipboard or toclipboard or set_clipboard
@@ -842,7 +837,6 @@ end
 local Comandos = {}
 local function AddCmd(cmd, desc, action) Comandos[cmd] = {Desc = desc, Accion = action} end
 
--- APLICANDO LA PALETA DE COLORES A LOS COMANDOS
 AddCmd("cmds", "Lista de comandos", function()
     LogMessage("--- COMANDOS DISPONIBLES ---", tYellow)
     for c, info in pairs(Comandos) do LogMessage(c .. " : " .. info.Desc, tCyan) end
