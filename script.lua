@@ -1,12 +1,10 @@
 --[[
-    C.D.T OPTIFINE - V6 SMART CHAT HACKER EDITION (UNDERGROUND INVIS FIX)
-    - Anti-Duplicación Segura.
-    - TP Menu (Buscador dinámico). Corregido visual al minimizar.
-    - Menú Invisible (Cuerpo Real a -45 studs, Fix Combate, Fix Keybind).
-    - Menú de Vuelo (Superman Fly Motor6D).
-    - GLOBAL CHAT SMART (Auto-Scroll Inteligente, Botón de Perfil, Enter para enviar).
-    - Consola Inteligente (Autocompletado de comandos y jugadores con TAB).
-    - Textos Hacker (Morado, Blanco, Verde, Naranja, Celeste, Amarillo).
+    C.D.T OPTIFINE - V7 SMART RESPONSIVE EDITION
+    - Auto-Escalado (Responsive): Se adapta si es PC o Celular.
+    - Textos más grandes y legibles.
+    - TP Menu, Ghost Mode (Perfecto), Superman Fly Motor6D.
+    - GLOBAL CHAT SMART: Estética corregida (Sin borde morado), Auto-Scroll.
+    - Consola Inteligente.
 ]]
 
 local Players = game:GetService("Players")
@@ -26,7 +24,7 @@ local LocalPlayer = Players.LocalPlayer
 local URL_NGROK = "https://garnett-waterborne-overoffensively.ngrok-free.dev" 
 
 -- ==================================================================
--- COLORES PARA TEXTOS DE LA CONSOLA Y BORDES NEÓN
+-- COLORES PARA TEXTOS DE LA CONSOLA
 -- ==================================================================
 local tPurple = Color3.fromRGB(170, 85, 255)
 local tWhite = Color3.fromRGB(255, 255, 255)
@@ -35,9 +33,29 @@ local tOrange = Color3.fromRGB(255, 150, 0)
 local tCyan = Color3.fromRGB(0, 200, 255)
 local tYellow = Color3.fromRGB(255, 220, 0)
 local tRed = Color3.fromRGB(255, 60, 60)
+local borderDark = Color3.fromRGB(45, 45, 45) -- Borde general
 
 -- ==================================================================
--- 0. SISTEMA ANTI-DUPLICACIÓN (NOTIFICACIÓN)
+-- FUNCIÓN DE ESCALADO RESPONSIVE (ADAPTABLE PC/MÓVIL)
+-- ==================================================================
+local function ApplyResponsiveScale(frame)
+    local scaleObj = Instance.new("UIScale", frame)
+    local function UpdateScale()
+        local vs = Workspace.CurrentCamera.ViewportSize
+        if vs.X < 850 then
+            scaleObj.Scale = 1.25 -- Pantallas pequeñas / Celulares (Más grande)
+        elseif vs.X > 1600 then
+            scaleObj.Scale = 1.15 -- Monitores grandes
+        else
+            scaleObj.Scale = 1.05 -- Tamaño estándar ligeramente aumentado
+        end
+    end
+    Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
+    UpdateScale()
+end
+
+-- ==================================================================
+-- 0. SISTEMA ANTI-DUPLICACIÓN
 -- ==================================================================
 local existingGui = nil
 pcall(function() existingGui = CoreGui:FindFirstChild("CDT_Optifine_Fluid") or gethui():FindFirstChild("CDT_Optifine_Fluid") end)
@@ -48,7 +66,7 @@ if existingGui then
     if not NotifGui.Parent then NotifGui.Parent = CoreGui end
 
     local NotifFrame = Instance.new("Frame", NotifGui)
-    NotifFrame.Size = UDim2.new(0, 250, 0, 40); NotifFrame.Position = UDim2.new(0.5, -125, 0, -50)
+    NotifFrame.Size = UDim2.new(0, 250, 0, 45); NotifFrame.Position = UDim2.new(0.5, -125, 0, -50)
     NotifFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15); NotifFrame.BorderSizePixel = 0
     Instance.new("UICorner", NotifFrame).CornerRadius = UDim.new(0, 6)
     Instance.new("UIStroke", NotifFrame).Color = tGreen
@@ -56,7 +74,9 @@ if existingGui then
     local NotifText = Instance.new("TextLabel", NotifFrame)
     NotifText.Size = UDim2.new(1, 0, 1, 0); NotifText.BackgroundTransparency = 1
     NotifText.Text = "⚠️ EL MENÚ YA ESTÁ ABIERTO"
-    NotifText.TextColor3 = tWhite; NotifText.Font = Enum.Font.GothamBold; NotifText.TextSize = 13
+    NotifText.TextColor3 = tWhite; NotifText.Font = Enum.Font.GothamBold; NotifText.TextSize = 14
+
+    ApplyResponsiveScale(NotifFrame)
 
     TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -125, 0, 20)}):Play()
     task.wait(3)
@@ -74,40 +94,41 @@ pcall(function() ScreenGui.Parent = gethui() end)
 if not ScreenGui.Parent then ScreenGui.Parent = CoreGui end
 
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 320, 0, 350); Main.Position = UDim2.new(1, -340, 1, -370) 
+Main.Size = UDim2.new(0, 330, 0, 360); Main.Position = UDim2.new(1, -380, 1, -400) 
 Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.BorderSizePixel = 0; Main.ClipsDescendants = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
-Instance.new("UIStroke", Main).Color = Color3.fromRGB(45, 45, 45)
+Instance.new("UIStroke", Main).Color = borderDark
+ApplyResponsiveScale(Main) -- Auto escalado
 
 local FullUI = Instance.new("CanvasGroup", Main)
 FullUI.Size = UDim2.new(1, 0, 1, 0); FullUI.BackgroundTransparency = 1; FullUI.BorderSizePixel = 0
 
 local TopBar = Instance.new("Frame", FullUI); TopBar.Size = UDim2.new(1, 0, 0, 35); TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TopBar.BorderSizePixel = 0; Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 6)
 local Fix = Instance.new("Frame", TopBar); Fix.Size = UDim2.new(1, 0, 0, 5); Fix.Position = UDim2.new(0, 0, 1, -5); Fix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Fix.BorderSizePixel = 0
-local Title = Instance.new("TextLabel", TopBar); Title.Size = UDim2.new(1, -60, 1, 0); Title.Position = UDim2.new(0, 15, 0, 0); Title.BackgroundTransparency = 1; Title.Text = "C.D.T OPTIFINE // SYSTEM"; Title.TextColor3 = tWhite; Title.Font = Enum.Font.GothamBold; Title.TextSize = 12; Title.TextXAlignment = Enum.TextXAlignment.Left
-local MinBtn = Instance.new("TextButton", TopBar); MinBtn.Size = UDim2.new(0, 35, 1, 0); MinBtn.Position = UDim2.new(1, -35, 0, 0); MinBtn.BackgroundTransparency = 1; MinBtn.Text = "—"; MinBtn.TextColor3 = tGreen; MinBtn.Font = Enum.Font.GothamBlack; MinBtn.TextSize = 14
+local Title = Instance.new("TextLabel", TopBar); Title.Size = UDim2.new(1, -60, 1, 0); Title.Position = UDim2.new(0, 15, 0, 0); Title.BackgroundTransparency = 1; Title.Text = "C.D.T OPTIFINE // SYSTEM"; Title.TextColor3 = tWhite; Title.Font = Enum.Font.GothamBold; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
+local MinBtn = Instance.new("TextButton", TopBar); MinBtn.Size = UDim2.new(0, 35, 1, 0); MinBtn.Position = UDim2.new(1, -35, 0, 0); MinBtn.BackgroundTransparency = 1; MinBtn.Text = "—"; MinBtn.TextColor3 = tGreen; MinBtn.Font = Enum.Font.GothamBlack; MinBtn.TextSize = 16
 
 local Console = Instance.new("ScrollingFrame", FullUI)
 Console.Size = UDim2.new(1, -20, 1, -95); Console.Position = UDim2.new(0, 10, 0, 40); Console.BackgroundTransparency = 1; Console.BorderSizePixel = 0; Console.ScrollBarThickness = 2; Console.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
 local UIList = Instance.new("UIListLayout", Console); UIList.Padding = UDim.new(0, 4); UIList.SortOrder = Enum.SortOrder.LayoutOrder
 
 local CmdBox = Instance.new("TextBox", FullUI)
-CmdBox.Size = UDim2.new(1, -20, 0, 35); CmdBox.Position = UDim2.new(0, 10, 1, -45); CmdBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10); CmdBox.TextColor3 = tWhite; CmdBox.PlaceholderText = "> Escribe un comando aquí..."; CmdBox.Font = Enum.Font.Gotham; CmdBox.TextSize = 13; CmdBox.TextXAlignment = Enum.TextXAlignment.Left; CmdBox.ClearTextOnFocus = false; Instance.new("UICorner", CmdBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", CmdBox).Color = Color3.fromRGB(40, 40, 40)
+CmdBox.Size = UDim2.new(1, -20, 0, 35); CmdBox.Position = UDim2.new(0, 10, 1, -45); CmdBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10); CmdBox.TextColor3 = tWhite; CmdBox.PlaceholderText = "> Escribe un comando aquí..."; CmdBox.Font = Enum.Font.Gotham; CmdBox.TextSize = 14; CmdBox.TextXAlignment = Enum.TextXAlignment.Left; CmdBox.ClearTextOnFocus = false; Instance.new("UICorner", CmdBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", CmdBox).Color = Color3.fromRGB(40, 40, 40)
 local UIPad = Instance.new("UIPadding", CmdBox); UIPad.PaddingLeft = UDim.new(0, 10)
 
 local MiniUI = Instance.new("CanvasGroup", Main)
 MiniUI.Size = UDim2.new(1, 0, 1, 0); MiniUI.BackgroundTransparency = 1; MiniUI.BorderSizePixel = 0; MiniUI.GroupTransparency = 1; MiniUI.Visible = false
-local MiniLabel = Instance.new("TextLabel", MiniUI); MiniLabel.Size = UDim2.new(1, -40, 1, 0); MiniLabel.Position = UDim2.new(0, 15, 0, 0); MiniLabel.BackgroundTransparency = 1; MiniLabel.Text = "C.D.T TERMINAL"; MiniLabel.TextColor3 = tWhite; MiniLabel.Font = Enum.Font.GothamBold; MiniLabel.TextSize = 12; MiniLabel.TextXAlignment = Enum.TextXAlignment.Left
-local Dot = Instance.new("Frame", MiniUI); Dot.Size = UDim2.new(0, 6, 0, 6); Dot.Position = UDim2.new(0, 100, 0.5, -3); Dot.BackgroundColor3 = tGreen; Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
+local MiniLabel = Instance.new("TextLabel", MiniUI); MiniLabel.Size = UDim2.new(1, -40, 1, 0); MiniLabel.Position = UDim2.new(0, 15, 0, 0); MiniLabel.BackgroundTransparency = 1; MiniLabel.Text = "C.D.T TERMINAL"; MiniLabel.TextColor3 = tWhite; MiniLabel.Font = Enum.Font.GothamBold; MiniLabel.TextSize = 14; MiniLabel.TextXAlignment = Enum.TextXAlignment.Left
+local Dot = Instance.new("Frame", MiniUI); Dot.Size = UDim2.new(0, 6, 0, 6); Dot.Position = UDim2.new(0, 115, 0.5, -3); Dot.BackgroundColor3 = tGreen; Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
 local MaxBtn = Instance.new("TextButton", MiniUI); MaxBtn.Size = UDim2.new(0, 35, 1, 0); MaxBtn.Position = UDim2.new(1, -35, 0, 0); MaxBtn.BackgroundTransparency = 1; MaxBtn.Text = "⤢"; MaxBtn.TextColor3 = tGreen; MaxBtn.Font = Enum.Font.GothamBlack; MaxBtn.TextSize = 18
 
 local function MakeDraggable(dragArea, targetFrame)
     local dragging, dragInput, dragStart, startPos
     dragArea.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true; dragStart = input.Position; startPos = targetFrame.Position end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true; dragStart = input.Position; startPos = targetFrame.Position end
     end)
-    dragArea.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
-    UserInputService.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end end)
+    dragArea.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
+    UserInputService.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
@@ -122,13 +143,13 @@ local isMinimized = false
 local function ToggleMenu()
     if isMinimized then
         isMinimized = false; FullUI.Visible = true
-        TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 320, 0, 350)}):Play()
+        TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 330, 0, 360)}):Play()
         TweenService:Create(MiniUI, TweenInfo.new(0.2), {GroupTransparency = 1}):Play()
         TweenService:Create(FullUI, TweenInfo.new(0.3, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0.1), {GroupTransparency = 0}):Play()
         task.wait(0.2); MiniUI.Visible = false
     else
         isMinimized = true; MiniUI.Visible = true
-        TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 160, 0, 35)}):Play()
+        TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, 180, 0, 35)}):Play()
         TweenService:Create(FullUI, TweenInfo.new(0.2), {GroupTransparency = 1}):Play()
         TweenService:Create(MiniUI, TweenInfo.new(0.3, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0.1), {GroupTransparency = 0}):Play()
         task.wait(0.2); FullUI.Visible = false
@@ -139,22 +160,23 @@ MinBtn.MouseButton1Click:Connect(ToggleMenu); MaxBtn.MouseButton1Click:Connect(T
 -- ==================================================================
 -- 2. INTERFAZ TP MENU 
 -- ==================================================================
-local TPMain = Instance.new("Frame", ScreenGui); TPMain.Size = UDim2.new(0, 250, 0, 380); TPMain.Position = UDim2.new(0.5, -125, 0.5, -190); TPMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); TPMain.BorderSizePixel = 0; TPMain.ClipsDescendants = true; TPMain.Visible = false; Instance.new("UICorner", TPMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", TPMain).Color = Color3.fromRGB(45, 45, 45)
+local TPMain = Instance.new("Frame", ScreenGui); TPMain.Size = UDim2.new(0, 260, 0, 380); TPMain.Position = UDim2.new(0.5, -130, 0.5, -190); TPMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); TPMain.BorderSizePixel = 0; TPMain.ClipsDescendants = true; TPMain.Visible = false; Instance.new("UICorner", TPMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", TPMain).Color = borderDark
 local TPTopBar = Instance.new("Frame", TPMain); TPTopBar.Size = UDim2.new(1, 0, 0, 35); TPTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TPTopBar.BorderSizePixel = 0; Instance.new("UICorner", TPTopBar).CornerRadius = UDim.new(0, 6)
 local TPFix = Instance.new("Frame", TPTopBar); TPFix.Size = UDim2.new(1, 0, 0, 5); TPFix.Position = UDim2.new(0, 0, 1, -5); TPFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TPFix.BorderSizePixel = 0
-local TPTitle = Instance.new("TextLabel", TPTopBar); TPTitle.Size = UDim2.new(1, -70, 1, 0); TPTitle.Position = UDim2.new(0, 15, 0, 0); TPTitle.BackgroundTransparency = 1; TPTitle.Text = "TP MENU"; TPTitle.TextColor3 = tWhite; TPTitle.Font = Enum.Font.GothamBold; TPTitle.TextSize = 12; TPTitle.TextXAlignment = Enum.TextXAlignment.Left
-local TPMinBtn = Instance.new("TextButton", TPTopBar); TPMinBtn.Size = UDim2.new(0, 35, 1, 0); TPMinBtn.Position = UDim2.new(1, -70, 0, 0); TPMinBtn.BackgroundTransparency = 1; TPMinBtn.Text = "—"; TPMinBtn.TextColor3 = tYellow; TPMinBtn.Font = Enum.Font.GothamBlack; TPMinBtn.TextSize = 14
-local TPCloseBtn = Instance.new("TextButton", TPTopBar); TPCloseBtn.Size = UDim2.new(0, 35, 1, 0); TPCloseBtn.Position = UDim2.new(1, -35, 0, 0); TPCloseBtn.BackgroundTransparency = 1; TPCloseBtn.Text = "X"; TPCloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50); TPCloseBtn.Font = Enum.Font.GothamBlack; TPCloseBtn.TextSize = 12
-local TPSearchBox = Instance.new("TextBox", TPMain); TPSearchBox.Size = UDim2.new(1, -10, 0, 30); TPSearchBox.Position = UDim2.new(0, 5, 0, 40); TPSearchBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TPSearchBox.TextColor3 = Color3.fromRGB(255, 255, 255); TPSearchBox.PlaceholderText = "🔍 Buscar jugador..."; TPSearchBox.Font = Enum.Font.Gotham; TPSearchBox.TextSize = 12; TPSearchBox.ClearTextOnFocus = false; Instance.new("UICorner", TPSearchBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", TPSearchBox).Color = Color3.fromRGB(50, 50, 50)
-local TPScroll = Instance.new("ScrollingFrame", TPMain); TPScroll.Size = UDim2.new(1, -10, 1, -80); TPScroll.Position = UDim2.new(0, 5, 0, 75); TPScroll.BackgroundTransparency = 1; TPScroll.BorderSizePixel = 0; TPScroll.ScrollBarThickness = 2; TPScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
+local TPTitle = Instance.new("TextLabel", TPTopBar); TPTitle.Size = UDim2.new(1, -70, 1, 0); TPTitle.Position = UDim2.new(0, 15, 0, 0); TPTitle.BackgroundTransparency = 1; TPTitle.Text = "TP MENU"; TPTitle.TextColor3 = tWhite; TPTitle.Font = Enum.Font.GothamBold; TPTitle.TextSize = 14; TPTitle.TextXAlignment = Enum.TextXAlignment.Left
+local TPMinBtn = Instance.new("TextButton", TPTopBar); TPMinBtn.Size = UDim2.new(0, 35, 1, 0); TPMinBtn.Position = UDim2.new(1, -70, 0, 0); TPMinBtn.BackgroundTransparency = 1; TPMinBtn.Text = "—"; TPMinBtn.TextColor3 = tYellow; TPMinBtn.Font = Enum.Font.GothamBlack; TPMinBtn.TextSize = 16
+local TPCloseBtn = Instance.new("TextButton", TPTopBar); TPCloseBtn.Size = UDim2.new(0, 35, 1, 0); TPCloseBtn.Position = UDim2.new(1, -35, 0, 0); TPCloseBtn.BackgroundTransparency = 1; TPCloseBtn.Text = "X"; TPCloseBtn.TextColor3 = tRed; TPCloseBtn.Font = Enum.Font.GothamBlack; TPCloseBtn.TextSize = 14
+local TPSearchBox = Instance.new("TextBox", TPMain); TPSearchBox.Size = UDim2.new(1, -10, 0, 35); TPSearchBox.Position = UDim2.new(0, 5, 0, 40); TPSearchBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TPSearchBox.TextColor3 = Color3.fromRGB(255, 255, 255); TPSearchBox.PlaceholderText = "🔍 Buscar jugador..."; TPSearchBox.Font = Enum.Font.Gotham; TPSearchBox.TextSize = 14; TPSearchBox.ClearTextOnFocus = false; Instance.new("UICorner", TPSearchBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", TPSearchBox).Color = Color3.fromRGB(50, 50, 50)
+local TPScroll = Instance.new("ScrollingFrame", TPMain); TPScroll.Size = UDim2.new(1, -10, 1, -85); TPScroll.Position = UDim2.new(0, 5, 0, 80); TPScroll.BackgroundTransparency = 1; TPScroll.BorderSizePixel = 0; TPScroll.ScrollBarThickness = 2; TPScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
 local TPListLayout = Instance.new("UIListLayout", TPScroll); TPListLayout.Padding = UDim.new(0, 5)
 
+ApplyResponsiveScale(TPMain)
 MakeDraggable(TPTopBar, TPMain)
 
 local tpMinimized = false
 TPMinBtn.MouseButton1Click:Connect(function()
     tpMinimized = not tpMinimized
-    TweenService:Create(TPMain, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = tpMinimized and UDim2.new(0, 250, 0, 35) or UDim2.new(0, 250, 0, 380)}):Play()
+    TweenService:Create(TPMain, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = tpMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 380)}):Play()
     TPMinBtn.Text = tpMinimized and "+" or "—"
     TPFix.Visible = not tpMinimized
 end)
@@ -170,8 +192,8 @@ local function RefreshTPMenu(filterText)
                 local Card = Instance.new("Frame", TPScroll); Card.Size = UDim2.new(1, -5, 0, 40); Card.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
                 local Avatar = Instance.new("ImageLabel", Card); Avatar.Size = UDim2.new(0, 30, 0, 30); Avatar.Position = UDim2.new(0, 5, 0, 5); Avatar.BackgroundTransparency = 1; Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
                 task.spawn(function() Avatar.Image = Players:GetUserThumbnailAsync(plr.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
-                local NameLbl = Instance.new("TextLabel", Card); NameLbl.Size = UDim2.new(1, -100, 1, 0); NameLbl.Position = UDim2.new(0, 45, 0, 0); NameLbl.BackgroundTransparency = 1; NameLbl.Text = plr.DisplayName; NameLbl.TextColor3 = tWhite; NameLbl.Font = Enum.Font.GothamMedium; NameLbl.TextSize = 12; NameLbl.TextXAlignment = Enum.TextXAlignment.Left
-                local TpBtn = Instance.new("TextButton", Card); TpBtn.Size = UDim2.new(0, 40, 0, 24); TpBtn.Position = UDim2.new(1, -45, 0.5, -12); TpBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 136); TpBtn.Text = "TP"; TpBtn.TextColor3 = Color3.fromRGB(10, 10, 10); TpBtn.Font = Enum.Font.GothamBold; TpBtn.TextSize = 11; Instance.new("UICorner", TpBtn).CornerRadius = UDim.new(0, 4)
+                local NameLbl = Instance.new("TextLabel", Card); NameLbl.Size = UDim2.new(1, -100, 1, 0); NameLbl.Position = UDim2.new(0, 45, 0, 0); NameLbl.BackgroundTransparency = 1; NameLbl.Text = plr.DisplayName; NameLbl.TextColor3 = tWhite; NameLbl.Font = Enum.Font.GothamMedium; NameLbl.TextSize = 13; NameLbl.TextXAlignment = Enum.TextXAlignment.Left
+                local TpBtn = Instance.new("TextButton", Card); TpBtn.Size = UDim2.new(0, 40, 0, 26); TpBtn.Position = UDim2.new(1, -45, 0.5, -13); TpBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 136); TpBtn.Text = "TP"; TpBtn.TextColor3 = Color3.fromRGB(10, 10, 10); TpBtn.Font = Enum.Font.GothamBold; TpBtn.TextSize = 12; Instance.new("UICorner", TpBtn).CornerRadius = UDim.new(0, 4)
                 
                 TpBtn.MouseButton1Click:Connect(function()
                     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
@@ -188,29 +210,32 @@ TPSearchBox:GetPropertyChangedSignal("Text"):Connect(function() RefreshTPMenu(TP
 -- ==================================================================
 -- 3. INTERFAZ INVISIBLE MENU (GHOST MODE PERFECTO + TOOLS)
 -- ==================================================================
-local InvMain = Instance.new("Frame", ScreenGui); InvMain.Size = UDim2.new(0, 250, 0, 95); InvMain.Position = UDim2.new(0.5, -300, 0.5, -120); InvMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); InvMain.BorderSizePixel = 0; InvMain.ClipsDescendants = true; InvMain.Visible = false; Instance.new("UICorner", InvMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", InvMain).Color = Color3.fromRGB(45, 45, 45)
+local InvMain = Instance.new("Frame", ScreenGui); InvMain.Size = UDim2.new(0, 260, 0, 100); InvMain.Position = UDim2.new(0.5, -310, 0.5, -120); InvMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); InvMain.BorderSizePixel = 0; InvMain.ClipsDescendants = true; InvMain.Visible = false; Instance.new("UICorner", InvMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", InvMain).Color = borderDark
 local InvTopBar = Instance.new("Frame", InvMain); InvTopBar.Size = UDim2.new(1, 0, 0, 35); InvTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); InvTopBar.BorderSizePixel = 0; Instance.new("UICorner", InvTopBar).CornerRadius = UDim.new(0, 6)
 local InvFix = Instance.new("Frame", InvTopBar); InvFix.Size = UDim2.new(1, 0, 0, 5); InvFix.Position = UDim2.new(0, 0, 1, -5); InvFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); InvFix.BorderSizePixel = 0
-local InvTitle = Instance.new("TextLabel", InvTopBar); InvTitle.Size = UDim2.new(1, -70, 1, 0); InvTitle.Position = UDim2.new(0, 15, 0, 0); InvTitle.BackgroundTransparency = 1; InvTitle.Text = "INVISIBILITY"; InvTitle.TextColor3 = Color3.fromRGB(255, 255, 255); InvTitle.Font = Enum.Font.GothamBold; InvTitle.TextSize = 12; InvTitle.TextXAlignment = Enum.TextXAlignment.Left
-local InvMinBtn = Instance.new("TextButton", InvTopBar); InvMinBtn.Size = UDim2.new(0, 35, 1, 0); InvMinBtn.Position = UDim2.new(1, -70, 0, 0); InvMinBtn.BackgroundTransparency = 1; InvMinBtn.Text = "—"; InvMinBtn.TextColor3 = Color3.fromRGB(0, 255, 136); InvMinBtn.Font = Enum.Font.GothamBlack; InvMinBtn.TextSize = 14
-local InvCloseBtn = Instance.new("TextButton", InvTopBar); InvCloseBtn.Size = UDim2.new(0, 35, 1, 0); InvCloseBtn.Position = UDim2.new(1, -35, 0, 0); InvCloseBtn.BackgroundTransparency = 1; InvCloseBtn.Text = "X"; InvCloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50); InvCloseBtn.Font = Enum.Font.GothamBlack; InvCloseBtn.TextSize = 12
-local InvToggleBtn = Instance.new("TextButton", InvMain); InvToggleBtn.Size = UDim2.new(1, -70, 0, 40); InvToggleBtn.Position = UDim2.new(0, 10, 0, 45); InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.Text = "INVISIBILIDAD: OFF"; InvToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255); InvToggleBtn.Font = Enum.Font.GothamBold; InvToggleBtn.TextSize = 12; Instance.new("UICorner", InvToggleBtn).CornerRadius = UDim.new(0, 6)
-local InvKeyBtn = Instance.new("TextButton", InvMain); InvKeyBtn.Size = UDim2.new(0, 45, 0, 40); InvKeyBtn.Position = UDim2.new(1, -55, 0, 45); InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); InvKeyBtn.Text = "KEY"; InvKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255); InvKeyBtn.Font = Enum.Font.GothamBold; InvKeyBtn.TextSize = 10; Instance.new("UICorner", InvKeyBtn).CornerRadius = UDim.new(0, 6)
+local InvTitle = Instance.new("TextLabel", InvTopBar); InvTitle.Size = UDim2.new(1, -70, 1, 0); InvTitle.Position = UDim2.new(0, 15, 0, 0); InvTitle.BackgroundTransparency = 1; InvTitle.Text = "INVISIBILITY"; InvTitle.TextColor3 = tWhite; InvTitle.Font = Enum.Font.GothamBold; InvTitle.TextSize = 14; InvTitle.TextXAlignment = Enum.TextXAlignment.Left
+local InvMinBtn = Instance.new("TextButton", InvTopBar); InvMinBtn.Size = UDim2.new(0, 35, 1, 0); InvMinBtn.Position = UDim2.new(1, -70, 0, 0); InvMinBtn.BackgroundTransparency = 1; InvMinBtn.Text = "—"; InvMinBtn.TextColor3 = tGreen; InvMinBtn.Font = Enum.Font.GothamBlack; InvMinBtn.TextSize = 16
+local InvCloseBtn = Instance.new("TextButton", InvTopBar); InvCloseBtn.Size = UDim2.new(0, 35, 1, 0); InvCloseBtn.Position = UDim2.new(1, -35, 0, 0); InvCloseBtn.BackgroundTransparency = 1; InvCloseBtn.Text = "X"; InvCloseBtn.TextColor3 = tRed; InvCloseBtn.Font = Enum.Font.GothamBlack; InvCloseBtn.TextSize = 14
+local InvToggleBtn = Instance.new("TextButton", InvMain); InvToggleBtn.Size = UDim2.new(1, -75, 0, 45); InvToggleBtn.Position = UDim2.new(0, 10, 0, 45); InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.Text = "INVISIBILIDAD: OFF"; InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Font = Enum.Font.GothamBold; InvToggleBtn.TextSize = 13; Instance.new("UICorner", InvToggleBtn).CornerRadius = UDim.new(0, 6)
+local InvKeyBtn = Instance.new("TextButton", InvMain); InvKeyBtn.Size = UDim2.new(0, 50, 0, 45); InvKeyBtn.Position = UDim2.new(1, -60, 0, 45); InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); InvKeyBtn.Text = "KEY"; InvKeyBtn.TextColor3 = tWhite; InvKeyBtn.Font = Enum.Font.GothamBold; InvKeyBtn.TextSize = 12; Instance.new("UICorner", InvKeyBtn).CornerRadius = UDim.new(0, 6)
 
+ApplyResponsiveScale(InvMain)
 MakeDraggable(InvTopBar, InvMain)
 
 local invMinimized = false
 InvMinBtn.MouseButton1Click:Connect(function()
     invMinimized = not invMinimized
-    TweenService:Create(InvMain, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = invMinimized and UDim2.new(0, 250, 0, 35) or UDim2.new(0, 250, 0, 95)}):Play()
+    TweenService:Create(InvMain, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = invMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100)}):Play()
     InvMinBtn.Text = invMinimized and "+" or "—"
     InvFix.Visible = not invMinimized
 end)
 
+local DEPTH = 70 
 local CLONE_TRANSPARENCY = 0.5 
+local PLATFORM_SIZE = 500 
 local isGhostActive = false
 local ghostModel = nil
-local InvisPart = nil
+local safetyPlatform = nil
 local controlsConnection = nil
 local activationConn = nil
 local toolSyncConnAdded = nil
@@ -220,9 +245,9 @@ local animTracks = {Idle = nil, Walk = nil, Sit = nil}
 local currentAnim = nil
 local invKeybind = nil
 local isInvBinding = false
-local isAttacking = false -- Variable nueva para forzar pos real arriba al clickear
 
 if getgenv().PhysicalGhostCon then getgenv().PhysicalGhostCon:Disconnect() end
+if getgenv().GhostPlatform then getgenv().GhostPlatform:Destroy() end
 if getgenv().GhostModel then getgenv().GhostModel:Destroy() end
 getgenv().GhostActive = false
 
@@ -248,6 +273,16 @@ local function setRealCharTransparency(visible)
         if (v:IsA("BasePart") and v.Name ~= "HumanoidRootPart") or v:IsA("Decal") then v.Transparency = trans
         elseif v:IsA("BasePart") then v.Transparency = 1 end
     end
+end
+
+local function createSafetyPlatform(pos)
+    local p = Instance.new("Part")
+    p.Name = "SafeZone_Floor"
+    p.Size = Vector3.new(PLATFORM_SIZE, 4, PLATFORM_SIZE)
+    p.Anchored = true; p.Transparency = 1; p.CanCollide = true
+    p.CFrame = CFrame.new(pos - Vector3.new(0, DEPTH, 0))
+    p.Parent = Workspace
+    return p
 end
 
 local function createVisualTool(realTool, ghostModel)
@@ -361,17 +396,9 @@ local function startControls()
         if isSitting then
             ghostRoot.CFrame = realRoot.CFrame
         else
+            realRoot.CFrame = ghostRoot.CFrame
             if moveVec.Magnitude > 0 then ghostHum:Move(moveVec, false) else ghostHum:Move(Vector3.new(0,0,0), false) end
             if UserInputService:IsKeyDown(Enum.KeyCode.Space) then ghostHum.Jump = true end
-            
-            -- SINCRONIZACIÓN PERFECTA: El real está 45 studs abajo (salvo al atacar)
-            if not isAttacking then
-                if InvisPart then InvisPart.CFrame = ghostRoot.CFrame * CFrame.new(0, -48, 0) end
-                realRoot.CFrame = ghostRoot.CFrame * CFrame.new(0, -45, 0)
-                realRoot.AssemblyLinearVelocity = Vector3.zero
-            else
-                realRoot.CFrame = ghostRoot.CFrame
-            end
         end
         
         local targetCollidable = not isSitting
@@ -383,20 +410,9 @@ local function startControls()
         local isMoving = isMovingInput and not isSitting
         updateGhostAnim(isMoving, isSitting)
         
-        -- Sincronizar tool en el ghost
-        local tool = char:FindFirstChildOfClass("Tool")
-        if tool then
-            local handle = tool:FindFirstChild("Handle")
-            local fakeHand = ghostModel:FindFirstChild("RightHand") or ghostModel:FindFirstChild("Right Arm")
-            if handle and fakeHand then
-                local realArm = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
-                if realArm then
-                    local grip = realArm:FindFirstChild("RightGrip")
-                    if grip then grip:Destroy() end 
-                end
-                local offset = (fakeHand.Name == "RightHand") and CFrame.new(0, -0.5, 0) or CFrame.new(0, -1, 0)
-                handle.CFrame = fakeHand.CFrame * offset * (tool.Grip and tool.Grip:Inverse() or CFrame.new())
-            end
+        local platRoot = safetyPlatform
+        if platRoot and (char.PrimaryPart.Position - platRoot.Position).Magnitude > PLATFORM_SIZE / 2 then
+             char:SetPrimaryPartCFrame(platRoot.CFrame + Vector3.new(0, 5, 0))
         end
     end)
     
@@ -406,51 +422,36 @@ local function startControls()
         if not char or not isGhostActive then return end
         local tool = char:FindFirstChildOfClass("Tool")
         if tool then
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then 
-                isAttacking = true; tool:Activate() 
-            elseif input.UserInputType == Enum.UserInputType.MouseButton2 then 
-                isAttacking = true; pcall(function() tool:Activate() end) 
-            end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then tool:Activate() 
+            elseif input.UserInputType == Enum.UserInputType.MouseButton2 then pcall(function() tool:Activate() end) end
         end
     end)
-
-    UserInputService.InputEnded:Connect(function(input, gpe)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
-            isAttacking = false
-        end
-    end)
-
     getgenv().PhysicalGhostCon = controlsConnection
 end
 
-local function ToggleGhost()
+local function toggleGhost()
+    isGhostActive = not isGhostActive
+    getgenv().GhostActive = isGhostActive
     local char = LocalPlayer.Character; if not char then return end
     local root = char:FindFirstChild("HumanoidRootPart")
     local realHum = char:FindFirstChild("Humanoid")
     if not root or not realHum then return end
-    
-    isGhostActive = not isGhostActive
-    getgenv().GhostActive = isGhostActive
     local camera = Workspace.CurrentCamera
     
     if isGhostActive then
         local startCF = root.CFrame
-        
-        char.Archivable = true
+        safetyPlatform = createSafetyPlatform(startCF.Position)
+        getgenv().GhostPlatform = safetyPlatform
         ghostModel = createPhysicalGhost(char)
         ghostModel.HumanoidRootPart.CFrame = startCF
         getgenv().GhostModel = ghostModel
-        
-        InvisPart = Instance.new("Part", workspace)
-        InvisPart.Anchored = true; InvisPart.Size = Vector3.new(20, 2, 20)
-        InvisPart.CFrame = startCF * CFrame.new(0, -48, 0)
-        InvisPart.Transparency = 1; InvisPart.CanCollide = true
         
         local currentTool = char:FindFirstChildOfClass("Tool")
         if currentTool then createVisualTool(currentTool, ghostModel) end
         
         setRealCharTransparency(false)
-        camera.CameraSubject = ghostModel:FindFirstChild("Humanoid")
+        Workspace.CurrentCamera.CameraSubject = ghostModel:FindFirstChild("Humanoid")
+        char:SetPrimaryPartCFrame(safetyPlatform.CFrame + Vector3.new(0, 5, 0))
         
         toolSyncConnAdded = char.ChildAdded:Connect(function(child) if child:IsA("Tool") then createVisualTool(child, ghostModel) end end)
         toolSyncConnRemoved = char.ChildRemoved:Connect(function(child) if child:IsA("Tool") and currentVisualTool then currentVisualTool:Destroy(); currentVisualTool = nil end end)
@@ -467,7 +468,7 @@ local function ToggleGhost()
         if animTracks.Sit then animTracks.Sit:Stop() end
         if currentVisualTool then currentVisualTool:Destroy(); currentVisualTool = nil end
         
-        camera.CameraSubject = realHum
+        Workspace.CurrentCamera.CameraSubject = realHum
         if ghostModel and ghostModel.PrimaryPart then char:SetPrimaryPartCFrame(ghostModel.PrimaryPart.CFrame) end
         setRealCharTransparency(true)
         
@@ -478,13 +479,13 @@ local function ToggleGhost()
         end
         
         if ghostModel then ghostModel:Destroy() end
-        if InvisPart then InvisPart:Destroy() end
-        ghostModel = nil; InvisPart = nil; animTracks = {Idle = nil, Walk = nil, Sit = nil}; currentAnim = nil
+        if safetyPlatform then safetyPlatform:Destroy() end
+        ghostModel = nil; safetyPlatform = nil; animTracks = {Idle = nil, Walk = nil, Sit = nil}; currentAnim = nil
         
         InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
     end
 end
-InvToggleBtn.MouseButton1Click:Connect(ToggleGhost)
+InvToggleBtn.MouseButton1Click:Connect(toggleGhost)
 
 InvKeyBtn.MouseButton1Click:Connect(function()
     if invKeybind ~= nil then invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
@@ -492,38 +493,39 @@ InvKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 InvCloseBtn.MouseButton1Click:Connect(function() 
-    if isGhostActive then ToggleGhost() end
+    if isGhostActive then toggleGhost() end
     invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
     InvMain.Visible = false 
 end)
 
 LocalPlayer.CharacterAdded:Connect(function()
-    if isGhostActive then ToggleGhost() end 
+    if isGhostActive then toggleGhost() end -- Evita bugearse al morir
 end)
 
 -- ==================================================================
 -- 4. INTERFAZ Y LÓGICA DEL MENÚ FLY (SUPERMAN FLY)
 -- ==================================================================
-local FlyMain = Instance.new("Frame", ScreenGui); FlyMain.Size = UDim2.new(0, 250, 0, 135); FlyMain.Position = UDim2.new(0.5, 50, 0.5, -120); FlyMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FlyMain.BorderSizePixel = 0; FlyMain.ClipsDescendants = true; FlyMain.Visible = false; Instance.new("UICorner", FlyMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", FlyMain).Color = Color3.fromRGB(45, 45, 45)
+local FlyMain = Instance.new("Frame", ScreenGui); FlyMain.Size = UDim2.new(0, 260, 0, 145); FlyMain.Position = UDim2.new(0.5, 50, 0.5, -120); FlyMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FlyMain.BorderSizePixel = 0; FlyMain.ClipsDescendants = true; FlyMain.Visible = false; Instance.new("UICorner", FlyMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", FlyMain).Color = borderDark
 local FlyTopBar = Instance.new("Frame", FlyMain); FlyTopBar.Size = UDim2.new(1, 0, 0, 35); FlyTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FlyTopBar.BorderSizePixel = 0; Instance.new("UICorner", FlyTopBar).CornerRadius = UDim.new(0, 6)
 local FlyFix = Instance.new("Frame", FlyTopBar); FlyFix.Size = UDim2.new(1, 0, 0, 5); FlyFix.Position = UDim2.new(0, 0, 1, -5); FlyFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FlyFix.BorderSizePixel = 0
-local FlyTitle = Instance.new("TextLabel", FlyTopBar); FlyTitle.Size = UDim2.new(1, -70, 1, 0); FlyTitle.Position = UDim2.new(0, 15, 0, 0); FlyTitle.BackgroundTransparency = 1; FlyTitle.Text = "FLIGHT MODE"; FlyTitle.TextColor3 = tWhite; FlyTitle.Font = Enum.Font.GothamBold; FlyTitle.TextSize = 12; FlyTitle.TextXAlignment = Enum.TextXAlignment.Left
-local FlyMinBtn = Instance.new("TextButton", FlyTopBar); FlyMinBtn.Size = UDim2.new(0, 35, 1, 0); FlyMinBtn.Position = UDim2.new(1, -70, 0, 0); FlyMinBtn.BackgroundTransparency = 1; FlyMinBtn.Text = "—"; FlyMinBtn.TextColor3 = tGreen; FlyMinBtn.Font = Enum.Font.GothamBlack; FlyMinBtn.TextSize = 14
-local FlyCloseBtn = Instance.new("TextButton", FlyTopBar); FlyCloseBtn.Size = UDim2.new(0, 35, 1, 0); FlyCloseBtn.Position = UDim2.new(1, -35, 0, 0); FlyCloseBtn.BackgroundTransparency = 1; FlyCloseBtn.Text = "X"; FlyCloseBtn.TextColor3 = tRed; FlyCloseBtn.Font = Enum.Font.GothamBlack; FlyCloseBtn.TextSize = 12
+local FlyTitle = Instance.new("TextLabel", FlyTopBar); FlyTitle.Size = UDim2.new(1, -70, 1, 0); FlyTitle.Position = UDim2.new(0, 15, 0, 0); FlyTitle.BackgroundTransparency = 1; FlyTitle.Text = "FLIGHT MODE"; FlyTitle.TextColor3 = tWhite; FlyTitle.Font = Enum.Font.GothamBold; FlyTitle.TextSize = 14; FlyTitle.TextXAlignment = Enum.TextXAlignment.Left
+local FlyMinBtn = Instance.new("TextButton", FlyTopBar); FlyMinBtn.Size = UDim2.new(0, 35, 1, 0); FlyMinBtn.Position = UDim2.new(1, -70, 0, 0); FlyMinBtn.BackgroundTransparency = 1; FlyMinBtn.Text = "—"; FlyMinBtn.TextColor3 = tGreen; FlyMinBtn.Font = Enum.Font.GothamBlack; FlyMinBtn.TextSize = 16
+local FlyCloseBtn = Instance.new("TextButton", FlyTopBar); FlyCloseBtn.Size = UDim2.new(0, 35, 1, 0); FlyCloseBtn.Position = UDim2.new(1, -35, 0, 0); FlyCloseBtn.BackgroundTransparency = 1; FlyCloseBtn.Text = "X"; FlyCloseBtn.TextColor3 = tRed; FlyCloseBtn.Font = Enum.Font.GothamBlack; FlyCloseBtn.TextSize = 14
 
-local FlyToggleBtn = Instance.new("TextButton", FlyMain); FlyToggleBtn.Size = UDim2.new(1, -70, 0, 40); FlyToggleBtn.Position = UDim2.new(0, 10, 0, 45); FlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); FlyToggleBtn.Text = "VUELO: OFF"; FlyToggleBtn.TextColor3 = tWhite; FlyToggleBtn.Font = Enum.Font.GothamBold; FlyToggleBtn.TextSize = 12; Instance.new("UICorner", FlyToggleBtn).CornerRadius = UDim.new(0, 6)
-local FlyKeyBtn = Instance.new("TextButton", FlyMain); FlyKeyBtn.Size = UDim2.new(0, 45, 0, 40); FlyKeyBtn.Position = UDim2.new(1, -55, 0, 45); FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FlyKeyBtn.Text = "KEY"; FlyKeyBtn.TextColor3 = tWhite; FlyKeyBtn.Font = Enum.Font.GothamBold; FlyKeyBtn.TextSize = 10; Instance.new("UICorner", FlyKeyBtn).CornerRadius = UDim.new(0, 6)
+local FlyToggleBtn = Instance.new("TextButton", FlyMain); FlyToggleBtn.Size = UDim2.new(1, -75, 0, 45); FlyToggleBtn.Position = UDim2.new(0, 10, 0, 45); FlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); FlyToggleBtn.Text = "VUELO: OFF"; FlyToggleBtn.TextColor3 = tWhite; FlyToggleBtn.Font = Enum.Font.GothamBold; FlyToggleBtn.TextSize = 13; Instance.new("UICorner", FlyToggleBtn).CornerRadius = UDim.new(0, 6)
+local FlyKeyBtn = Instance.new("TextButton", FlyMain); FlyKeyBtn.Size = UDim2.new(0, 50, 0, 45); FlyKeyBtn.Position = UDim2.new(1, -60, 0, 45); FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FlyKeyBtn.Text = "KEY"; FlyKeyBtn.TextColor3 = tWhite; FlyKeyBtn.Font = Enum.Font.GothamBold; FlyKeyBtn.TextSize = 12; Instance.new("UICorner", FlyKeyBtn).CornerRadius = UDim.new(0, 6)
 
-local FlySpeedMinus = Instance.new("TextButton", FlyMain); FlySpeedMinus.Size = UDim2.new(0, 40, 0, 30); FlySpeedMinus.Position = UDim2.new(0, 10, 0, 95); FlySpeedMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FlySpeedMinus.Text = "-"; FlySpeedMinus.TextColor3 = tWhite; FlySpeedMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", FlySpeedMinus)
-local FlySpeedDisplay = Instance.new("TextBox", FlyMain); FlySpeedDisplay.Size = UDim2.new(1, -110, 0, 30); FlySpeedDisplay.Position = UDim2.new(0, 55, 0, 95); FlySpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); FlySpeedDisplay.Text = "SPEED: 90"; FlySpeedDisplay.TextColor3 = tWhite; FlySpeedDisplay.Font = Enum.Font.GothamSemibold; FlySpeedDisplay.TextSize = 12; FlySpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", FlySpeedDisplay); Instance.new("UIStroke", FlySpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
-local FlySpeedPlus = Instance.new("TextButton", FlyMain); FlySpeedPlus.Size = UDim2.new(0, 40, 0, 30); FlySpeedPlus.Position = UDim2.new(1, -50, 0, 95); FlySpeedPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FlySpeedPlus.Text = "+"; FlySpeedPlus.TextColor3 = tWhite; FlySpeedPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", FlySpeedPlus)
+local FlySpeedMinus = Instance.new("TextButton", FlyMain); FlySpeedMinus.Size = UDim2.new(0, 40, 0, 35); FlySpeedMinus.Position = UDim2.new(0, 10, 0, 100); FlySpeedMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FlySpeedMinus.Text = "-"; FlySpeedMinus.TextColor3 = tWhite; FlySpeedMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", FlySpeedMinus)
+local FlySpeedDisplay = Instance.new("TextBox", FlyMain); FlySpeedDisplay.Size = UDim2.new(1, -110, 0, 35); FlySpeedDisplay.Position = UDim2.new(0, 55, 0, 100); FlySpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); FlySpeedDisplay.Text = "SPEED: 90"; FlySpeedDisplay.TextColor3 = tWhite; FlySpeedDisplay.Font = Enum.Font.GothamSemibold; FlySpeedDisplay.TextSize = 14; FlySpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", FlySpeedDisplay); Instance.new("UIStroke", FlySpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
+local FlySpeedPlus = Instance.new("TextButton", FlyMain); FlySpeedPlus.Size = UDim2.new(0, 40, 0, 35); FlySpeedPlus.Position = UDim2.new(1, -50, 0, 100); FlySpeedPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FlySpeedPlus.Text = "+"; FlySpeedPlus.TextColor3 = tWhite; FlySpeedPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", FlySpeedPlus)
 
+ApplyResponsiveScale(FlyMain)
 MakeDraggable(FlyTopBar, FlyMain)
 
 local flyMinimized = false
 FlyMinBtn.MouseButton1Click:Connect(function()
     flyMinimized = not flyMinimized
-    TweenService:Create(FlyMain, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = flyMinimized and UDim2.new(0, 250, 0, 35) or UDim2.new(0, 250, 0, 135)}):Play()
+    TweenService:Create(FlyMain, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = flyMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145)}):Play()
     FlyMinBtn.Text = flyMinimized and "+" or "—"
     FlyFix.Visible = not flyMinimized
 end)
@@ -621,42 +623,43 @@ end)
 LocalPlayer.CharacterAdded:Connect(function() if isFlying then ToggleFly() end end)
 
 -- ==================================================================
--- 5. CHAT GLOBAL SMART SCROLL (ESTÉTICA C.D.T OPTIFINE)
+-- 5. CHAT GLOBAL V6 SMART (ESTÉTICA C.D.T OPTIFINE CON AUTO-SCROLL DISCORD)
 -- ==================================================================
 local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 local setclipboard = setclipboard or toclipboard or set_clipboard
 
 local ChatMain = Instance.new("Frame", ScreenGui)
-ChatMain.Size = UDim2.new(0, 380, 0, 260); ChatMain.Position = UDim2.new(0.05, 0, 0.6, 0); ChatMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ChatMain.BorderSizePixel = 0; ChatMain.ClipsDescendants = true; ChatMain.Visible = false
+ChatMain.Size = UDim2.new(0, 420, 0, 300); ChatMain.Position = UDim2.new(0.05, 0, 0.6, 0); ChatMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ChatMain.BorderSizePixel = 0; ChatMain.ClipsDescendants = true; ChatMain.Visible = false
 Instance.new("UICorner", ChatMain).CornerRadius = UDim.new(0, 6)
-Instance.new("UIStroke", ChatMain).Color = tPurple
+Instance.new("UIStroke", ChatMain).Color = borderDark
+ApplyResponsiveScale(ChatMain)
 
 local ChatTopBar = Instance.new("Frame", ChatMain); ChatTopBar.Size = UDim2.new(1, 0, 0, 35); ChatTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ChatTopBar.BorderSizePixel = 0; Instance.new("UICorner", ChatTopBar).CornerRadius = UDim.new(0, 6)
 local ChatFix = Instance.new("Frame", ChatTopBar); ChatFix.Size = UDim2.new(1, 0, 0, 5); ChatFix.Position = UDim2.new(0, 0, 1, -5); ChatFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ChatFix.BorderSizePixel = 0
-local ChatTitle = Instance.new("TextLabel", ChatTopBar); ChatTitle.Size = UDim2.new(1, -70, 1, 0); ChatTitle.Position = UDim2.new(0, 15, 0, 0); ChatTitle.BackgroundTransparency = 1; ChatTitle.Text = "GLOBAL CHAT"; ChatTitle.TextColor3 = tWhite; ChatTitle.Font = Enum.Font.GothamBold; ChatTitle.TextSize = 12; ChatTitle.TextXAlignment = Enum.TextXAlignment.Left
-local ChatMinBtn = Instance.new("TextButton", ChatTopBar); ChatMinBtn.Size = UDim2.new(0, 35, 1, 0); ChatMinBtn.Position = UDim2.new(1, -70, 0, 0); ChatMinBtn.BackgroundTransparency = 1; ChatMinBtn.Text = "—"; ChatMinBtn.TextColor3 = tGreen; ChatMinBtn.Font = Enum.Font.GothamBlack; ChatMinBtn.TextSize = 14
-local ChatCloseBtn = Instance.new("TextButton", ChatTopBar); ChatCloseBtn.Size = UDim2.new(0, 35, 1, 0); ChatCloseBtn.Position = UDim2.new(1, -35, 0, 0); ChatCloseBtn.BackgroundTransparency = 1; ChatCloseBtn.Text = "X"; ChatCloseBtn.TextColor3 = tRed; ChatCloseBtn.Font = Enum.Font.GothamBlack; ChatCloseBtn.TextSize = 12
+local ChatTitle = Instance.new("TextLabel", ChatTopBar); ChatTitle.Size = UDim2.new(1, -70, 1, 0); ChatTitle.Position = UDim2.new(0, 15, 0, 0); ChatTitle.BackgroundTransparency = 1; ChatTitle.Text = "GLOBAL CHAT"; ChatTitle.TextColor3 = tWhite; ChatTitle.Font = Enum.Font.GothamBold; ChatTitle.TextSize = 14; ChatTitle.TextXAlignment = Enum.TextXAlignment.Left
+local ChatMinBtn = Instance.new("TextButton", ChatTopBar); ChatMinBtn.Size = UDim2.new(0, 35, 1, 0); ChatMinBtn.Position = UDim2.new(1, -70, 0, 0); ChatMinBtn.BackgroundTransparency = 1; ChatMinBtn.Text = "—"; ChatMinBtn.TextColor3 = tGreen; ChatMinBtn.Font = Enum.Font.GothamBlack; ChatMinBtn.TextSize = 16
+local ChatCloseBtn = Instance.new("TextButton", ChatTopBar); ChatCloseBtn.Size = UDim2.new(0, 35, 1, 0); ChatCloseBtn.Position = UDim2.new(1, -35, 0, 0); ChatCloseBtn.BackgroundTransparency = 1; ChatCloseBtn.Text = "X"; ChatCloseBtn.TextColor3 = tRed; ChatCloseBtn.Font = Enum.Font.GothamBlack; ChatCloseBtn.TextSize = 14
 
-local ChatScroll = Instance.new("ScrollingFrame", ChatMain); ChatScroll.Position = UDim2.new(0, 5, 0, 40); ChatScroll.Size = UDim2.new(1, -10, 0, 175); ChatScroll.BackgroundTransparency = 1; ChatScroll.ScrollBarThickness = 4; ChatScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
+local ChatScroll = Instance.new("ScrollingFrame", ChatMain); ChatScroll.Position = UDim2.new(0, 5, 0, 45); ChatScroll.Size = UDim2.new(1, -10, 0, 205); ChatScroll.BackgroundTransparency = 1; ChatScroll.ScrollBarThickness = 4; ChatScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
 local ChatLayout = Instance.new("UIListLayout", ChatScroll); ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder; ChatLayout.Padding = UDim.new(0, 4)
 
 -- Botón Smart Scroll
 local NewMsgBtn = Instance.new("TextButton", ChatMain)
 NewMsgBtn.Name = "NewMsgBtn"; NewMsgBtn.Text = "⬇ Nuevos Mensajes"
-NewMsgBtn.Size = UDim2.new(0, 140, 0, 25); NewMsgBtn.Position = UDim2.new(0.5, -70, 0.75, 0)
-NewMsgBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); NewMsgBtn.TextColor3 = tYellow; NewMsgBtn.Font = Enum.Font.GothamBold; NewMsgBtn.Visible = false; NewMsgBtn.ZIndex = 5
+NewMsgBtn.Size = UDim2.new(0, 150, 0, 25); NewMsgBtn.Position = UDim2.new(0.5, -75, 1, -80)
+NewMsgBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); NewMsgBtn.TextColor3 = tYellow; NewMsgBtn.Font = Enum.Font.GothamBold; NewMsgBtn.Visible = false; NewMsgBtn.ZIndex = 5; NewMsgBtn.TextSize = 13
 Instance.new("UICorner", NewMsgBtn).CornerRadius = UDim.new(1, 0)
-Instance.new("UIStroke", NewMsgBtn).Color = tPurple
+Instance.new("UIStroke", NewMsgBtn).Color = borderDark
 
-local ChatBox = Instance.new("TextBox", ChatMain); ChatBox.Position = UDim2.new(0, 5, 0, 220); ChatBox.Size = UDim2.new(0.65, 0, 0, 30); ChatBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10); ChatBox.TextColor3 = tWhite; ChatBox.PlaceholderText = "Escribe un mensaje..."; ChatBox.Font = Enum.Font.Gotham; ChatBox.TextSize = 12; ChatBox.TextXAlignment = Enum.TextXAlignment.Left; Instance.new("UICorner", ChatBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", ChatBox).Color = Color3.fromRGB(40, 40, 40); Instance.new("UIPadding", ChatBox).PaddingLeft = UDim.new(0, 10)
-local ChatSendBtn = Instance.new("TextButton", ChatMain); ChatSendBtn.Position = UDim2.new(0.68, 0, 0, 220); ChatSendBtn.Size = UDim2.new(0.30, 0, 0, 30); ChatSendBtn.BackgroundColor3 = tGreen; ChatSendBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ChatSendBtn.Text = "ENVIAR"; ChatSendBtn.Font = Enum.Font.GothamBold; ChatSendBtn.TextSize = 11; Instance.new("UICorner", ChatSendBtn).CornerRadius = UDim.new(0, 4)
+local ChatBox = Instance.new("TextBox", ChatMain); ChatBox.Position = UDim2.new(0, 5, 1, -40); ChatBox.Size = UDim2.new(0.68, 0, 0, 35); ChatBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10); ChatBox.TextColor3 = tWhite; ChatBox.PlaceholderText = "Escribe un mensaje..."; ChatBox.Font = Enum.Font.Gotham; ChatBox.TextSize = 14; ChatBox.TextXAlignment = Enum.TextXAlignment.Left; Instance.new("UICorner", ChatBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", ChatBox).Color = Color3.fromRGB(40, 40, 40); Instance.new("UIPadding", ChatBox).PaddingLeft = UDim.new(0, 10)
+local ChatSendBtn = Instance.new("TextButton", ChatMain); ChatSendBtn.Position = UDim2.new(0.71, 0, 1, -40); ChatSendBtn.Size = UDim2.new(0.27, 0, 0, 35); ChatSendBtn.BackgroundColor3 = tGreen; ChatSendBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ChatSendBtn.Text = "ENVIAR"; ChatSendBtn.Font = Enum.Font.GothamBold; ChatSendBtn.TextSize = 13; Instance.new("UICorner", ChatSendBtn).CornerRadius = UDim.new(0, 4)
 
 MakeDraggable(ChatTopBar, ChatMain)
 
 local chatMinimized = false
 ChatMinBtn.MouseButton1Click:Connect(function()
     chatMinimized = not chatMinimized
-    TweenService:Create(ChatMain, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = chatMinimized and UDim2.new(0, 380, 0, 35) or UDim2.new(0, 380, 0, 260)}):Play()
+    TweenService:Create(ChatMain, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = chatMinimized and UDim2.new(0, 420, 0, 35) or UDim2.new(0, 420, 0, 300)}):Play()
     ChatMinBtn.Text = chatMinimized and "+" or "—"
     ChatFix.Visible = not chatMinimized
     if chatMinimized then NewMsgBtn.Visible = false end
@@ -695,16 +698,16 @@ local function CrearFilaMensaje(usuario, mensaje)
     local NameBtn = Instance.new("TextButton", Row)
     NameBtn.Text = usuario .. ":"
     NameBtn.TextColor3 = Color3.fromHex(GetUserColor(usuario))
-    NameBtn.BackgroundTransparency = 1; NameBtn.Font = Enum.Font.GothamBold; NameBtn.TextSize = 13; NameBtn.AutomaticSize = Enum.AutomaticSize.XY
+    NameBtn.BackgroundTransparency = 1; NameBtn.Font = Enum.Font.GothamBold; NameBtn.TextSize = 14; NameBtn.AutomaticSize = Enum.AutomaticSize.XY
     NameBtn.MouseButton1Click:Connect(function() OpenProfile(usuario) end)
 
     local MsgLbl = Instance.new("TextLabel", Row)
     MsgLbl.Text = mensaje
-    MsgLbl.TextColor3 = tWhite; MsgLbl.BackgroundTransparency = 1; MsgLbl.Font = Enum.Font.Gotham; MsgLbl.TextSize = 12; MsgLbl.TextXAlignment = Enum.TextXAlignment.Left; MsgLbl.TextWrapped = true; MsgLbl.AutomaticSize = Enum.AutomaticSize.XY; MsgLbl.Size = UDim2.new(0, 0, 0, 0)
+    MsgLbl.TextColor3 = tWhite; MsgLbl.BackgroundTransparency = 1; MsgLbl.Font = Enum.Font.Gotham; MsgLbl.TextSize = 14; MsgLbl.TextXAlignment = Enum.TextXAlignment.Left; MsgLbl.TextWrapped = true; MsgLbl.AutomaticSize = Enum.AutomaticSize.XY; MsgLbl.Size = UDim2.new(0, 0, 0, 0)
     if mensaje:lower():find("http") or mensaje:lower():find("www") then MsgLbl.TextColor3 = tCyan end
 
     local CopyBtn = Instance.new("TextButton", Row)
-    CopyBtn.Text = "📋"; CopyBtn.BackgroundTransparency = 1; CopyBtn.Size = UDim2.new(0, 20, 0, 20); CopyBtn.TextSize = 12; CopyBtn.TextColor3 = tYellow
+    CopyBtn.Text = "📋"; CopyBtn.BackgroundTransparency = 1; CopyBtn.Size = UDim2.new(0, 20, 0, 20); CopyBtn.TextSize = 14; CopyBtn.TextColor3 = tYellow
     CopyBtn.MouseButton1Click:Connect(function()
         if setclipboard then 
             setclipboard(mensaje)
@@ -814,7 +817,7 @@ local function LogMessage(text, color)
     local lbl = Instance.new("TextLabel", Console)
     lbl.Size = UDim2.new(1, 0, 0, 20); lbl.BackgroundTransparency = 1
     lbl.Text = "  " .. text; lbl.TextColor3 = color or tWhite
-    lbl.Font = Enum.Font.Gotham; lbl.TextSize = 12; lbl.TextXAlignment = Enum.TextXAlignment.Left; lbl.TextWrapped = true
+    lbl.Font = Enum.Font.Gotham; lbl.TextSize = 14; lbl.TextXAlignment = Enum.TextXAlignment.Left; lbl.TextWrapped = true
     Console.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y)
     Console.CanvasPosition = Vector2.new(0, Console.CanvasSize.Y.Offset)
 end
@@ -834,6 +837,7 @@ end
 local Comandos = {}
 local function AddCmd(cmd, desc, action) Comandos[cmd] = {Desc = desc, Accion = action} end
 
+-- APLICANDO LA PALETA DE COLORES A LOS COMANDOS
 AddCmd("cmds", "Lista de comandos", function()
     LogMessage("--- COMANDOS DISPONIBLES ---", tYellow)
     for c, info in pairs(Comandos) do LogMessage(c .. " : " .. info.Desc, tCyan) end
@@ -888,7 +892,7 @@ end)
 
 -- LOGICA AUTOCOMPLETADO ESTILO MINECRAFT
 local SuggestFrame = Instance.new("ScrollingFrame", FullUI)
-SuggestFrame.Size = UDim2.new(1, -20, 0, 0); SuggestFrame.Position = UDim2.new(0, 10, 1, -45); SuggestFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); SuggestFrame.BorderSizePixel = 0; SuggestFrame.Visible = false; SuggestFrame.ScrollBarThickness = 2; SuggestFrame.ZIndex = 10
+SuggestFrame.Size = UDim2.new(1, -20, 0, 0); SuggestFrame.Position = UDim2.new(0, 10, 1, -50); SuggestFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); SuggestFrame.BorderSizePixel = 0; SuggestFrame.Visible = false; SuggestFrame.ScrollBarThickness = 2; SuggestFrame.ZIndex = 10
 Instance.new("UICorner", SuggestFrame).CornerRadius = UDim.new(0, 4)
 Instance.new("UIStroke", SuggestFrame).Color = Color3.fromRGB(50, 50, 50)
 local SuggestList = Instance.new("UIListLayout", SuggestFrame); SuggestList.Padding = UDim.new(0, 2)
@@ -921,7 +925,7 @@ local function UpdateSuggestions()
         SuggestFrame.Visible = true; local ySize = 0
         for _, sug in ipairs(suggestions) do
             local btn = Instance.new("TextButton", SuggestFrame)
-            btn.Size = UDim2.new(1, -5, 0, 22); btn.BackgroundTransparency = 1; btn.Text = "  " .. sug.Display; btn.TextColor3 = tWhite; btn.Font = Enum.Font.Gotham; btn.TextSize = 11; btn.TextXAlignment = Enum.TextXAlignment.Left; btn.ZIndex = 11
+            btn.Size = UDim2.new(1, -5, 0, 22); btn.BackgroundTransparency = 1; btn.Text = "  " .. sug.Display; btn.TextColor3 = tWhite; btn.Font = Enum.Font.Gotham; btn.TextSize = 13; btn.TextXAlignment = Enum.TextXAlignment.Left; btn.ZIndex = 11
             btn:SetAttribute("Fill", sug.Fill)
             
             btn.MouseEnter:Connect(function() btn.TextColor3 = tPurple end) 
@@ -934,7 +938,7 @@ local function UpdateSuggestions()
         local frameHeight = math.min(ySize, 100)
         SuggestFrame.CanvasSize = UDim2.new(0, 0, 0, ySize)
         SuggestFrame.Size = UDim2.new(1, -20, 0, frameHeight)
-        SuggestFrame.Position = UDim2.new(0, 10, 1, -45 - frameHeight - 5)
+        SuggestFrame.Position = UDim2.new(0, 10, 1, -50 - frameHeight - 5)
     else
         SuggestFrame.Visible = false
     end
