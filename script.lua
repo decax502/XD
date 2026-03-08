@@ -1,3 +1,12 @@
+--[[
+    C.D.T OPTIFINE - V8 VEHICLE FLY EDITION
+    - Tamaño ajustado (Escala 1.05x en PC, 1.15x Celular).
+    - TP Menu, Menú Invisible (Ghost Perfecto), Menú de Vuelo (Superman).
+    - GLOBAL CHAT SMART (Discord Scroll).
+    - NUEVO: VEHICLE FLY (Vuelo en vehículos con controles táctiles, Pitch, Anti-Lock y FwF).
+    - Consola Inteligente y comandos.
+]]
+
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local StarterGui = game:GetService("StarterGui")
