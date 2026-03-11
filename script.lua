@@ -4,7 +4,7 @@
     - Inyección Segura (Bulletproof) y Responsive UI.
     - TP Menu (Buscador dinámico).
     - Map Points (Comando 'mp', Guarda lugares por juego).
-    - Menú Invisible (GHOST MODE PERFECTO + KEYBIND).
+    - Menú Invisible (SEAT MODE PERFECTO + KEYBIND).
     - Menú de Vuelo (Noclip Fly).
     - VEHICLE FLY (Lerp Suave).
     - GLOBAL CHAT SMART (Auto-Scroll).
@@ -276,7 +276,7 @@ end
 TPSearchBox:GetPropertyChangedSignal("Text"):Connect(function() RefreshTPMenu(TPSearchBox.Text) end)
 
 -- ==================================================================
--- 4. INTERFAZ INVISIBLE MENU (GHOST MODE PERFECTO)
+-- 4. INTERFAZ INVISIBLE MENU (SEAT MODE)
 -- ==================================================================
 local InvMain = Instance.new("Frame", ScreenGui); InvMain.Size = UDim2.new(0, 260, 0, 100); InvMain.Position = UDim2.new(0, 20, 0, 20); InvMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); InvMain.BorderSizePixel = 0; InvMain.ClipsDescendants = true; InvMain.Visible = false; Instance.new("UICorner", InvMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", InvMain).Color = borderDark
 local InvTopBar = Instance.new("Frame", InvMain); InvTopBar.Size = UDim2.new(1, 0, 0, 35); InvTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); InvTopBar.BorderSizePixel = 0; Instance.new("UICorner", InvTopBar).CornerRadius = UDim.new(0, 6)
@@ -296,129 +296,100 @@ InvMinBtn.MouseButton1Click:Connect(function()
 end)
 InvCloseBtn.MouseButton1Click:Connect(function() InvMain.Visible = false end)
 
-local isGhostActive = false; local ghostModel = nil; local ghostPlatform = nil; local controlsConnection = nil; local activationConn = nil; local activationEndConn = nil; local toolSyncConnAdded = nil; local toolSyncConnRemoved = nil; local currentVisualTool = nil; local animTracks = {Idle=nil, Walk=nil, Sit=nil}; local currentAnim = nil; local invKeybind = nil; local isInvBinding = false; local isAttacking = false 
+-- Variables Lógicas
+local isGhostActive = false
+local invKeybind = nil
+local isInvBinding = false
 
-pcall(function() if getgenv().PhysicalGhostCon then getgenv().PhysicalGhostCon:Disconnect() end; if getgenv().GhostPlatform then getgenv().GhostPlatform:Destroy() end; if getgenv().GhostModel then getgenv().GhostModel:Destroy() end; getgenv().GhostActive = false end)
+local seatTeleportPosition = Vector3.new(-25.95, 400, 3537.55)
+local voidLevelYThreshold = -50
+local invis_transparency = 0.75
 
-local function getAnimID(scriptName, childName)
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Animate") then
-        local animScript = char.Animate
-        if animScript:FindFirstChild(scriptName) then local value = animScript[scriptName]:FindFirstChild(childName); if value and value:IsA("Animation") then return value.AnimationId end end
-    end
-    if scriptName == "idle" then return "http://www.roblox.com/asset/?id=507766388" elseif scriptName == "sit" then return "http://www.roblox.com/asset/?id=2506281703" else return "http://www.roblox.com/asset/?id=507777826" end
-end
-
-local function setRealCharTransparency(visible)
-    local char = LocalPlayer.Character; if not char then return end
-    local trans = visible and 0 or 1
-    for _, v in pairs(char:GetDescendants()) do if (v:IsA("BasePart") and v.Name ~= "HumanoidRootPart") or v:IsA("Decal") then v.Transparency = trans elseif v:IsA("BasePart") then v.Transparency = 1 end end
-end
-
-local function createSafetyPlatform()
-    local p = Instance.new("Part"); p.Name = "SafeZone_Floor"; p.Size = Vector3.new(50, 4, 50); p.Anchored = true; p.Transparency = 1; p.CanCollide = true; p.Parent = Workspace; return p
-end
-
-local function createVisualTool(realTool, ghostModel)
-    if currentVisualTool then currentVisualTool:Destroy() end
-    local visual = realTool:Clone(); visual.Name = "Visual_" .. realTool.Name; visual.Parent = ghostModel
-    for _, v in pairs(visual:GetDescendants()) do if v:IsA("BasePart") then v.Transparency = 0; v.CanCollide = false; v.Massless = true elseif v:IsA("Script") or v:IsA("LocalScript") or v:IsA("Sound") then v:Destroy() end end
-    local handle = visual:FindFirstChild("Handle") or visual:FindFirstChildOfClass("BasePart")
-    local rightHand = ghostModel:FindFirstChild("RightHand", true) or ghostModel:FindFirstChild("Right Arm", true)
-    if handle and rightHand then handle.CFrame = rightHand.CFrame * realTool.Grip; local weld = Instance.new("WeldConstraint"); weld.Part0 = rightHand; weld.Part1 = handle; weld.Parent = rightHand end
-    currentVisualTool = visual
-end
-
-local function createPhysicalGhost(original)
-    original.Archivable = true; local clone = original:Clone(); clone.Name = "Clone_Active"; clone.Parent = Workspace
-    for _, v in pairs(clone:GetDescendants()) do if v:IsA("BasePart") then v.Transparency = 0.5; v.Anchored = false; v.CanCollide = true; if v.Name == "HumanoidRootPart" then v.Transparency = 1; v.CanCollide = false end elseif v:IsA("Script") or v:IsA("LocalScript") or v:IsA("Sound") then v:Destroy() end end
-    for _, child in pairs(clone:GetChildren()) do if child:IsA("Tool") then child:Destroy() end end
-    local ghostHum = clone:FindFirstChild("Humanoid")
-    if ghostHum then
-        ghostHum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None; ghostHum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
-        local animator = ghostHum:FindFirstChild("Animator") or Instance.new("Animator", ghostHum)
-        local animIdle = Instance.new("Animation"); animIdle.AnimationId = getAnimID("idle", "Animation1"); local animWalk = Instance.new("Animation"); animWalk.AnimationId = getAnimID("run", "RunAnim"); local animSit = Instance.new("Animation"); animSit.AnimationId = getAnimID("sit", "Animation1")
-        animTracks.Idle = animator:LoadAnimation(animIdle); animTracks.Walk = animator:LoadAnimation(animWalk); animTracks.Sit = animator:LoadAnimation(animSit)
-        for _, track in pairs(animTracks) do if track then track.Looped = true end end; animTracks.Idle:Play(); currentAnim = "Idle"
-    end
-    return clone
-end
-
-local function updateGhostAnim(isMoving, isSitting)
-    if isSitting then if currentAnim ~= "Sit" then if animTracks.Idle then animTracks.Idle:Stop(0.1) end; if animTracks.Walk then animTracks.Walk:Stop(0.1) end; if animTracks.Sit then animTracks.Sit:Play(0.1) end; currentAnim = "Sit" end
-    elseif isMoving then if currentAnim ~= "Walk" then if animTracks.Idle then animTracks.Idle:Stop(0.1) end; if animTracks.Sit then animTracks.Sit:Stop(0.1) end; if animTracks.Walk then animTracks.Walk:Play(0.1) end; currentAnim = "Walk" end
-    else if currentAnim ~= "Idle" then if animTracks.Walk then animTracks.Walk:Stop(0.1) end; if animTracks.Sit then animTracks.Sit:Stop(0.1) end; if animTracks.Idle then animTracks.Idle:Play(0.1) end; currentAnim = "Idle" end end
-end
-
-local function startControls()
-    if controlsConnection then controlsConnection:Disconnect() end; if activationConn then activationConn:Disconnect() end; if activationEndConn then activationEndConn:Disconnect() end
-    local ghostCollidable = true
-    controlsConnection = RunService.RenderStepped:Connect(function()
-        if not ghostModel or not isGhostActive then return end
-        local ghostHum = ghostModel:FindFirstChild("Humanoid"); local char = LocalPlayer.Character; local realHum = char and char:FindFirstChild("Humanoid"); local realRoot = char and char.PrimaryPart; local ghostRoot = ghostModel.PrimaryPart
-        if not ghostHum or not char or not realHum or not realRoot or not ghostRoot then return end
-        
-        local moveVec = Vector3.new(0,0,0); local camCF = Workspace.CurrentCamera.CFrame; local look = Vector3.new(camCF.LookVector.X, 0, camCF.LookVector.Z).Unit; local right = Vector3.new(camCF.RightVector.X, 0, camCF.RightVector.Z).Unit; local isMovingInput = false
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveVec = moveVec + look; isMovingInput = true end; if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveVec = moveVec - look; isMovingInput = true end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveVec = moveVec + right; isMovingInput = true end; if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveVec = moveVec - right; isMovingInput = true end
-        
-        local isSitting = realHum.Sit
-        if isSitting then ghostRoot.CFrame = realRoot.CFrame
-        else
-            if moveVec.Magnitude > 0 then ghostHum:Move(moveVec, false) else ghostHum:Move(Vector3.new(0,0,0), false) end
-            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then ghostHum.Jump = true end
-            if not isAttacking then
-                if ghostPlatform then ghostPlatform.CFrame = ghostRoot.CFrame * CFrame.new(0, -48, 0) end
-                realRoot.CFrame = ghostRoot.CFrame * CFrame.new(0, -45, 0); realRoot.AssemblyLinearVelocity = Vector3.zero
-            else realRoot.CFrame = ghostRoot.CFrame end
+local function setCharacterTransparency(transparency)
+    local character = LocalPlayer.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                part.Transparency = transparency
+            end
         end
-        local targetCollidable = not isSitting
-        if targetCollidable ~= ghostCollidable then ghostCollidable = targetCollidable; for _, v in pairs(ghostModel:GetDescendants()) do if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then v.CanCollide = ghostCollidable end end end
-        updateGhostAnim(isMovingInput and not isSitting, isSitting)
-    end)
-    activationConn = UserInputService.InputBegan:Connect(function(input, gpe)
-        if gpe then return end; if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then isAttacking = true end
-        local char = LocalPlayer.Character; if not char or not isGhostActive then return end; local tool = char:FindFirstChildOfClass("Tool")
-        if tool then if input.UserInputType == Enum.UserInputType.MouseButton1 then tool:Activate() elseif input.UserInputType == Enum.UserInputType.MouseButton2 then pcall(function() tool:Activate() end) end end
-    end)
-    activationEndConn = UserInputService.InputEnded:Connect(function(input, gpe) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then isAttacking = false end end)
-    pcall(function() getgenv().PhysicalGhostCon = controlsConnection end)
+    end
 end
 
 local function ToggleGhost()
-    isGhostActive = not isGhostActive; pcall(function() getgenv().GhostActive = isGhostActive end)
-    local char = LocalPlayer.Character; if not char then return end
-    local root = char:FindFirstChild("HumanoidRootPart"); local realHum = char:FindFirstChild("Humanoid"); if not root or not realHum then return end
-    local camera = Workspace.CurrentCamera
+    isGhostActive = not isGhostActive
+    local character = LocalPlayer.Character
+
     if isGhostActive then
-        local startCF = root.CFrame; ghostPlatform = createSafetyPlatform(); pcall(function() getgenv().GhostPlatform = ghostPlatform end)
-        ghostModel = createPhysicalGhost(char); ghostModel.HumanoidRootPart.CFrame = startCF; pcall(function() getgenv().GhostModel = ghostModel end)
-        local currentTool = char:FindFirstChildOfClass("Tool"); if currentTool then createVisualTool(currentTool, ghostModel) end
-        setRealCharTransparency(false); camera.CameraSubject = ghostModel:FindFirstChild("Humanoid")
-        toolSyncConnAdded = char.ChildAdded:Connect(function(child) if child:IsA("Tool") then createVisualTool(child, ghostModel) end end)
-        toolSyncConnRemoved = char.ChildRemoved:Connect(function(child) if child:IsA("Tool") and currentVisualTool then currentVisualTool:Destroy(); currentVisualTool = nil end end)
-        startControls(); InvToggleBtn.BackgroundColor3 = tGreen; InvToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); InvToggleBtn.Text = "INVISIBILIDAD: ON"
+        setCharacterTransparency(invis_transparency)
+        if character then
+            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+            if humanoidRootPart then
+                local savedpos = humanoidRootPart.CFrame
+                task.wait(0.1)
+                
+                -- Teletransportar lejos
+                pcall(function() character:MoveTo(seatTeleportPosition) end)
+                task.wait(0.1)
+                
+                -- Chequeo de seguridad por si cae al vacío
+                if not character:FindFirstChild("HumanoidRootPart") or character.HumanoidRootPart.Position.Y < voidLevelYThreshold then
+                    pcall(function() character:MoveTo(savedpos.Position) end)
+                    isGhostActive = false
+                    setCharacterTransparency(0)
+                    return
+                end
+
+                -- Crear asiento invisible
+                local Seat = Instance.new('Seat')
+                Seat.Parent = Workspace
+                Seat.Anchored = false
+                Seat.CanCollide = false
+                Seat.Name = 'invischair'
+                Seat.Transparency = 1
+                Seat.Position = seatTeleportPosition
+
+                local Weld = Instance.new("Weld")
+                Weld.Part0 = Seat
+                
+                local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+                if torso then
+                    Weld.Part1 = torso
+                    Weld.Parent = Seat
+                    task.wait()
+                    -- Traer de vuelta el asiento con el jugador
+                    pcall(function() Seat.CFrame = savedpos end)
+                    
+                    InvToggleBtn.BackgroundColor3 = tGreen
+                    InvToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
+                    InvToggleBtn.Text = "INVISIBILIDAD: ON"
+                else
+                    Seat:Destroy()
+                end
+            end
+        end
     else
-        if controlsConnection then controlsConnection:Disconnect() end; if activationConn then activationConn:Disconnect() end; if activationEndConn then activationEndConn:Disconnect() end
-        if toolSyncConnAdded then toolSyncConnAdded:Disconnect(); toolSyncConnAdded = nil end; if toolSyncConnRemoved then toolSyncConnRemoved:Disconnect(); toolSyncConnRemoved = nil end
-        if animTracks.Walk then animTracks.Walk:Stop() end; if animTracks.Idle then animTracks.Idle:Stop() end; if animTracks.Sit then animTracks.Sit:Stop() end
-        if currentVisualTool then currentVisualTool:Destroy(); currentVisualTool = nil end
-        camera.CameraSubject = realHum; if ghostModel and ghostModel.PrimaryPart then char:SetPrimaryPartCFrame(ghostModel.PrimaryPart.CFrame) end
-        setRealCharTransparency(true); local ghostHum = ghostModel and ghostModel:FindFirstChild("Humanoid")
-        if ghostHum then local seat = ghostHum.SeatPart; if seat then seat:Sit(realHum) else realHum.Sit = ghostHum.Sit end end
-        if ghostModel then ghostModel:Destroy() end; if ghostPlatform then ghostPlatform:Destroy() end
-        ghostModel = nil; ghostPlatform = nil; animTracks = {Idle = nil, Walk = nil, Sit = nil}; currentAnim = nil; isAttacking = false
-        InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
+        -- Desactivar
+        setCharacterTransparency(0)
+        local inv = Workspace:FindFirstChild('invischair')
+        if inv then
+            pcall(function() inv:Destroy() end)
+        end
+        
+        InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        InvToggleBtn.TextColor3 = tWhite
+        InvToggleBtn.Text = "INVISIBILIDAD: OFF"
     end
 end
 InvToggleBtn.MouseButton1Click:Connect(ToggleGhost)
 
 InvKeyBtn.MouseButton1Click:Connect(function()
-    if invKeybind ~= nil then invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
-    else isInvBinding = true; InvKeyBtn.Text = "..."; InvKeyBtn.BackgroundColor3 = tOrange end
+    if invKeybind ~= nil then 
+        invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
+    else 
+        isInvBinding = true; InvKeyBtn.Text = "..."; InvKeyBtn.BackgroundColor3 = tOrange 
+    end
 end)
-
-LocalPlayer.CharacterAdded:Connect(function() if isGhostActive then ToggleGhost() end end)
 
 -- ==================================================================
 -- 5. INTERFAZ Y LÓGICA DEL MENÚ FLY (NOCLIP FLY AEREO)
@@ -483,8 +454,6 @@ FlyKeyBtn.MouseButton1Click:Connect(function()
     else isFlyBinding = true; FlyKeyBtn.Text = "..."; FlyKeyBtn.BackgroundColor3 = tOrange end
 end)
 
-LocalPlayer.CharacterAdded:Connect(function() if isFlying then ToggleFly() end end)
-
 -- ==================================================================
 -- 6. NOCLIP WALK (ATRAVIESA PAREDES CAMINANDO + ANTI-VACÍO)
 -- ==================================================================
@@ -541,8 +510,6 @@ NoclipKeyBtn.MouseButton1Click:Connect(function()
     if noclipKeybind ~= nil then noclipKeybind = nil; NoclipKeyBtn.Text = "KEY"; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isNoclipBinding = false
     else isNoclipBinding = true; NoclipKeyBtn.Text = "..."; NoclipKeyBtn.BackgroundColor3 = tOrange end
 end)
-
-LocalPlayer.CharacterAdded:Connect(function() if isNoclipActive then ToggleNoclipWalk() end end)
 
 -- ==================================================================
 -- 7. VEHICLE FLY (ZACH'S SCRIPT LERP)
