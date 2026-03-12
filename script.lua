@@ -1,5 +1,5 @@
 --[[
-    C.D.T OPTIFINE - V9.1 MANUAL TRIP EDITION
+    C.D.T OPTIFINE - V9.1 MANUAL TRIP EDITION (BUG FIXES FINALES)
     - Trip Mode (NUEVO: Un solo toque para caer, te quedas tirado hasta saltar con ESPACIO).
     - Inyección Segura (Bulletproof) y Responsive UI.
     - TP Menu (Buscador dinámico).
@@ -9,6 +9,9 @@
     - VEHICLE FLY (Lerp Suave).
     - GLOBAL CHAT SMART (Auto-Scroll).
     - Consola Inteligente.
+    - Name Tags (Auto-Registro, Radar Anti-Cache).
+    - [FIX] Las ventanas ahora SÍ apagan el poder al darle a la 'X' y limpian la tecla.
+    - [FIX] El comando Destroy ahora desconecta el teclado y mata el script por completo.
 ]]
 
 local Players = game:GetService("Players")
@@ -20,10 +23,22 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local Lighting = game:GetService("Lighting")
+local TextService = game:GetService("TextService")
 
--- Esperar al jugador de forma segura
 repeat task.wait() until Players.LocalPlayer
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- ==================================================================
+-- VARIABLES NAME TAGS (RADAR)
+-- ==================================================================
+local BASE_URL = "http://185.249.196.246:3000"
+local API_URL = BASE_URL .. "/api/nametags"
+local scriptActivoTags = true
+local UIsActivos = {} 
+local tagsDescargados = {}
+local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
 -- ==================================================================
 -- COLORES GLOBALES
@@ -75,6 +90,7 @@ if not targetGuiParent then targetGuiParent = LocalPlayer:WaitForChild("PlayerGu
 if targetGuiParent:FindFirstChild("CDT_Optifine_Fluid") then
     targetGuiParent:FindFirstChild("CDT_Optifine_Fluid"):Destroy()
 end
+if _G.DestruirTags then pcall(function() _G.DestruirTags() end) end
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CDT_Optifine_Fluid"
@@ -83,7 +99,222 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = targetGuiParent
 
 -- ==================================================================
--- 1. CONSOLA PRINCIPAL
+-- SISTEMA NAME TAGS (INTEGRADO EN OPTIFINE)
+-- ==================================================================
+
+task.spawn(function()
+    while scriptActivoTags do
+        pcall(function()
+            request({
+                Url = BASE_URL .. "/api/ping/" .. tostring(LocalPlayer.UserId),
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = "{}"
+            })
+        end)
+        task.wait(4)
+    end
+end)
+
+local function parseHexTag(hexStr, defaultHex)
+    if not hexStr or hexStr == "" then return Color3.fromHex(defaultHex) end
+    if hexStr:sub(1,1) ~= "#" then hexStr = "#" .. hexStr end
+    local success, color = pcall(function() return Color3.fromHex(hexStr) end)
+    return success and color or Color3.fromHex(defaultHex)
+end
+
+local function obtenerImagenTag(url, userId)
+    if not url or url == "" or url == "default" then return Players:GetUserThumbnailAsync(tonumber(userId), Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150) end
+    if url:find("rbxassetid://") then return url end
+    if tagsDescargados[userId] and tagsDescargados[userId].url == url then return tagsDescargados[userId].asset end
+    
+    local nombreArchivo = "RF_Logo_" .. tostring(userId) .. "_" .. tostring(math.random(1000, 99999)) .. ".png"
+    local s, r = pcall(function() return request({Url = url, Method = "GET"}) end)
+    if s and r.StatusCode == 200 then
+        writefile(nombreArchivo, r.Body)
+        local assetId = getcustomasset(nombreArchivo)
+        tagsDescargados[userId] = {url = url, asset = assetId}
+        return assetId
+    end
+    return Players:GetUserThumbnailAsync(tonumber(userId), Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+end
+
+local function crearNieveTag(container, emojiText, colorNieveHex)
+    local listaCopos = {}
+    for i = 1, 6 do
+        local snow = Instance.new("TextLabel", container)
+        snow.BackgroundTransparency = 1; snow.Text = emojiText or "*"; snow.Font = Enum.Font.GothamBlack 
+        snow.TextColor3 = parseHexTag(colorNieveHex, "#ffffff"); snow.TextTransparency = 0.4; snow.TextSize = math.random(14, 22) 
+        snow.Position = UDim2.new(math.random(5, 95)/100, 0, -0.3, 0)
+        snow.ZIndex = 2
+        table.insert(listaCopos, snow)
+
+        local speed = math.random(30, 50) / 10; local delay = math.random(0, 20) / 10
+        task.spawn(function()
+            task.wait(delay)
+            while scriptActivoTags and container and container.Parent and snow and snow.Parent do
+                snow.Position = UDim2.new(math.random(5, 95)/100, 0, -0.3, 0)
+                local tween = TweenService:Create(snow, TweenInfo.new(speed, Enum.EasingStyle.Linear), {Position = UDim2.new(snow.Position.X.Scale, 0, 1.3, 0)})
+                tween:Play(); tween.Completed:Wait()
+            end
+        end)
+    end
+    return listaCopos
+end
+
+local function actualizarAnimacionNombreTag(uiData, cfg)
+    if cfg.animarNombre then
+        if not uiData.animNameTask then
+            uiData.animNameTask = true
+            task.spawn(function()
+                while uiData.animNameTask and uiData.TxtName and uiData.TxtName.Parent do
+                    local t1 = TweenService:Create(uiData.TxtName, TweenInfo.new(1), {TextColor3 = Color3.fromHex("#60a5fa")})
+                    t1:Play() t1.Completed:Wait()
+                    if not uiData.animNameTask then break end
+                    local t2 = TweenService:Create(uiData.TxtName, TweenInfo.new(1), {TextColor3 = Color3.fromHex("#c084fc")})
+                    t2:Play() t2.Completed:Wait()
+                    if not uiData.animNameTask then break end
+                    local t3 = TweenService:Create(uiData.TxtName, TweenInfo.new(1), {TextColor3 = parseHexTag(cfg.colorNombre, "#a0a0b0")})
+                    t3:Play() t3.Completed:Wait()
+                end
+            end)
+        end
+    else
+        uiData.animNameTask = false
+        if uiData.TxtName then uiData.TxtName.TextColor3 = parseHexTag(cfg.colorNombre, "#a0a0b0") end
+    end
+end
+
+local function crearUITag(player, datos, userId)
+    local head = player.Character and player.Character:FindFirstChild("Head")
+    if not head then return end
+    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
+
+    local nombreUI = "SafeHTML_" .. userId
+    if targetGuiParent:FindFirstChild(nombreUI) then targetGuiParent[nombreUI]:Destroy() end
+
+    local tTit = datos.titulo or "USER"; local tNom = player.Name:upper()
+    local sF, fU = pcall(function() return Enum.Font[datos.fuente] end)
+    if not sF or not fU then fU = Enum.Font.GothamBold end
+    local bT = TextService:GetTextSize(tTit, 14, fU, Vector2.new(1000, 50)); local bN = TextService:GetTextSize(tNom, 11, Enum.Font.GothamBold, Vector2.new(1000, 50))
+    local aI = 6 + 28 + 8 + math.max(bT.X, bN.X) + 12; if aI < 90 then aI = 90 end 
+
+    local bill = Instance.new("BillboardGui", targetGuiParent)
+    bill.Name = nombreUI; bill.Adornee = head; bill.Size = UDim2.new(0, aI, 0, 40); bill.StudsOffset = Vector3.new(0, 2.2, 0); bill.AlwaysOnTop = true; bill.MaxDistance = math.huge; bill.ResetOnSpawn = false; bill.Active = true 
+    local scale = Instance.new("UIScale", bill); scale.Scale = 1
+    local card = Instance.new("Frame", bill); card.Size = UDim2.new(0, aI, 0, 40); card.AnchorPoint = Vector2.new(0.5, 0.5); card.Position = UDim2.new(0.5, 0, 0.5, 0); card.BackgroundColor3 = Color3.new(1, 1, 1) 
+    local corner = Instance.new("UICorner", card); corner.CornerRadius = UDim.new(0, 8)
+    local grad = Instance.new("UIGradient", card); grad.Rotation = 45; grad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorFondo1, "#1c1c24")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorFondo2, "#0f0f13")) })
+    local stroke = Instance.new("UIStroke", card); stroke.Color = parseHexTag(datos.colorBorde, "#FFFFFF"); stroke.Transparency = 0.7; stroke.Thickness = 1.2
+    
+    local snowCont = Instance.new("Frame", card); snowCont.Size = UDim2.new(1,0,1,0); snowCont.BackgroundTransparency = 1; snowCont.ClipsDescendants = true; Instance.new("UICorner", snowCont).CornerRadius = UDim.new(0,8)
+    local listaCopos = crearNieveTag(snowCont, datos.emojiNieve, datos.colorNieve or "#ffffff")
+
+    local avF = Instance.new("Frame", card); avF.Size = UDim2.new(0, 28, 0, 28); avF.AnchorPoint = Vector2.new(0, 0.5); avF.Position = UDim2.new(0, 6, 0.5, 0); avF.BackgroundColor3 = Color3.fromHex("#2a2a35"); Instance.new("UICorner", avF).CornerRadius = UDim.new(1, 0)
+    local avS = Instance.new("UIStroke", avF); avS.Color = Color3.new(0, 0, 0); avS.Transparency = 0; avS.Thickness = 1 
+
+    local avatarImg = Instance.new("ImageLabel", avF); avatarImg.Size = UDim2.new(1, 0, 1, 0); avatarImg.BackgroundTransparency = 1
+    task.spawn(function() local img = obtenerImagenTag(datos.imagen, userId); if avatarImg and avatarImg.Parent then avatarImg.Image = img end end)
+    Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
+
+    local dot = Instance.new("Frame", avF); dot.Size = UDim2.new(0, 8, 0, 8); dot.Position = UDim2.new(1, 0, 1, 0); dot.AnchorPoint = Vector2.new(1, 1); dot.BackgroundColor3 = Color3.fromHex("#2ed573"); dot.ZIndex = 5
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+    local dotStroke = Instance.new("UIStroke", dot); dotStroke.Color = parseHexTag(datos.colorFondo2, "#0f0f13"); dotStroke.Thickness = 2
+
+    local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -42, 0, 30); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 40, 0.5, 0); infoGroup.BackgroundTransparency = 1
+
+    local txtTitle = Instance.new("TextLabel", infoGroup); txtTitle.BackgroundTransparency = 1; txtTitle.Size = UDim2.new(1, 0, 0, 16); txtTitle.Position = UDim2.new(0, 0, 0, 0)
+    txtTitle.Font = fU; txtTitle.Text = tTit; txtTitle.TextColor3 = parseHexTag(datos.colorTitulo, "#ffffff"); txtTitle.TextSize = 14; txtTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+    local txtName = Instance.new("TextLabel", infoGroup); txtName.BackgroundTransparency = 1; txtName.Size = UDim2.new(1, 0, 0, 12); txtName.Position = UDim2.new(0, 0, 0, 16)
+    txtName.Font = Enum.Font.GothamBold; txtName.Text = tNom; txtName.TextColor3 = parseHexTag(datos.colorNombre, "#a0a0b0"); txtName.TextSize = 11; txtName.TextXAlignment = Enum.TextXAlignment.Left
+
+    local btnTP = Instance.new("TextButton", card); btnTP.Size = UDim2.new(1, 0, 1, 0); btnTP.BackgroundTransparency = 1; btnTP.Text = ""; btnTP.ZIndex = 100
+    btnTP.MouseButton1Click:Connect(function()
+        if player.Character and LocalPlayer.Character and player ~= LocalPlayer then
+            local target = player.Character:FindFirstChild("HumanoidRootPart"); local me = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if target and me then local flash = Instance.new("ColorCorrectionEffect", Lighting); flash.Brightness = 1; TweenService:Create(flash, TweenInfo.new(0.3), {Brightness = 0}):Play(); game.Debris:AddItem(flash, 0.4); me.CFrame = target.CFrame * CFrame.new(0, 0, 3) end
+        end
+    end)
+
+    UIsActivos[userId] = { Estado = "Abierto", UI = bill, Escalador = scale, Head = head, Card = card, CardCorner = corner, Avatar = avF, AvatarImg = avatarImg, TxtTitle = txtTitle, TxtName = txtName, SnowContainer = snowCont, Copos = listaCopos, AnchoIdeal = aI }
+    actualizarAnimacionNombreTag(UIsActivos[userId], datos)
+end
+
+task.spawn(function()
+    local oldDataCache = {}
+    while scriptActivoTags do
+        local nocache = "?t=" .. tostring(tick())
+        local s1, resActive = pcall(function() return request({Url = BASE_URL .. "/api/active" .. nocache, Method = "GET"}) end)
+        local s2, resTags = pcall(function() return request({Url = API_URL .. nocache, Method = "GET"}) end)
+        
+        if s1 and s2 and resActive.StatusCode == 200 and resTags.StatusCode == 200 then
+            local sA, activeArray = pcall(function() return HttpService:JSONDecode(resActive.Body) end)
+            local sT, apiData = pcall(function() return HttpService:JSONDecode(resTags.Body) end)
+            
+            if sA and sT then
+                local isScriptUser = {}
+                for _, uid in ipairs(activeArray) do isScriptUser[tostring(uid)] = true end
+                
+                for _, player in ipairs(Players:GetPlayers()) do
+                    local id = tostring(player.UserId)
+                    if isScriptUser[id] or player == LocalPlayer then
+                        local cfg = apiData[id] or { titulo = "USER", colorFondo1 = "#1c1c24", colorFondo2 = "#0f0f13", colorBorde = "#ffffff", colorTitulo = "#ffffff", colorNombre = "#a0a0b0", animarNombre = false, emojiNieve = "*", colorNieve = "#ffffff", fuente = "GothamBold" }
+                        local hashData = HttpService:JSONEncode(cfg)
+
+                        if player.Character and player.Character:FindFirstChild("Head") then
+                            if not UIsActivos[id] then
+                                crearUITag(player, cfg, id)
+                                oldDataCache[id] = hashData
+                            elseif oldDataCache[id] ~= hashData then
+                                if UIsActivos[id] then
+                                    if UIsActivos[id].UI then UIsActivos[id].UI:Destroy() end
+                                    UIsActivos[id] = nil
+                                end
+                                crearUITag(player, cfg, id)
+                                oldDataCache[id] = hashData
+                            end
+                        end
+                    else
+                        if UIsActivos[id] then 
+                            UIsActivos[id].UI:Destroy()
+                            UIsActivos[id] = nil
+                            if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then player.Character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer end 
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(2.5) 
+    end
+end)
+
+local animSpd = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+RunService.RenderStepped:Connect(function()
+    if not scriptActivoTags then return end
+    for id, data in pairs(UIsActivos) do
+        if data.Head and data.Head.Parent and data.UI.Parent then
+            local dist = (Camera.CFrame.Position - data.Head.Position).Magnitude
+            if dist > 35 then data.Escalador.Scale = math.clamp(40 / dist, 0.5, 1) else data.Escalador.Scale = 1 end
+            if dist > 28 and data.Estado == "Abierto" then
+                data.Estado = "Cerrado"; data.SnowContainer.Visible = false
+                TweenService:Create(data.TxtTitle, animSpd, {TextTransparency = 1}):Play(); TweenService:Create(data.TxtName, animSpd, {TextTransparency = 1}):Play()
+                TweenService:Create(data.Card, animSpd, {Size = UDim2.new(0, 36, 0, 36)}):Play(); TweenService:Create(data.CardCorner, animSpd, {CornerRadius = UDim.new(1, 0)}):Play(); TweenService:Create(data.Avatar, animSpd, {Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5)}):Play()
+            elseif dist < 23 and data.Estado == "Cerrado" then
+                data.Estado = "Abierto"; data.SnowContainer.Visible = true
+                TweenService:Create(data.TxtTitle, animSpd, {TextTransparency = 0}):Play(); TweenService:Create(data.TxtName, animSpd, {TextTransparency = 0}):Play()
+                TweenService:Create(data.Card, animSpd, {Size = UDim2.new(0, data.AnchoIdeal, 0, 40)}):Play(); TweenService:Create(data.CardCorner, animSpd, {CornerRadius = UDim.new(0, 8)}):Play(); TweenService:Create(data.Avatar, animSpd, {Position = UDim2.new(0, 6, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5)}):Play()
+            end
+        else
+            if data.UI then data.UI:Destroy() end; UIsActivos[id] = nil
+        end
+    end
+end)
+
+
+-- ==================================================================
+-- 1. CONSOLA PRINCIPAL OPTIFINE
 -- ==================================================================
 local Main = Instance.new("Frame", ScreenGui)
 Main.Size = UDim2.new(0, 320, 0, 350); Main.Position = UDim2.new(1, -340, 0, 20); Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.BorderSizePixel = 0; Main.ClipsDescendants = true
@@ -135,18 +366,7 @@ local function LoadWaypoints()
 end
 LoadWaypoints()
 
-LocalPlayer.Chatted:Connect(function(msg)
-    if string.sub(msg, 1, 1) == "!" then
-        local cmd = string.sub(msg, 2)
-        for wpName, coords in pairs(waypoints) do
-            if string.lower(wpName) == string.lower(cmd) then
-                local char = LocalPlayer.Character
-                if char and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.CFrame = CFrame.new(coords.X, coords.Y, coords.Z) end
-                break
-            end
-        end
-    end
-end)
+-- LocalPlayer.Chatted movido más abajo para poder desconectarlo
 
 local MPMain = Instance.new("Frame", ScreenGui); MPMain.Size = UDim2.new(0, 260, 0, 350); MPMain.Position = UDim2.new(0.5, 150, 0.5, -175); MPMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); MPMain.BorderSizePixel = 0; MPMain.ClipsDescendants = true; MPMain.Visible = false; Instance.new("UICorner", MPMain).CornerRadius = UDim.new(0, 6); Instance.new("UIStroke", MPMain).Color = borderDark
 local MPTopBar = Instance.new("Frame", MPMain); MPTopBar.Size = UDim2.new(1, 0, 0, 35); MPTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); MPTopBar.BorderSizePixel = 0; Instance.new("UICorner", MPTopBar).CornerRadius = UDim.new(0, 6)
@@ -294,101 +514,53 @@ InvMinBtn.MouseButton1Click:Connect(function()
     invMinimized = not invMinimized; InvMain:TweenSize(invMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     InvMinBtn.Text = invMinimized and "+" or "—"; InvFix.Visible = not invMinimized
 end)
-InvCloseBtn.MouseButton1Click:Connect(function() InvMain.Visible = false end)
 
--- Variables Lógicas
-local isGhostActive = false
-local invKeybind = nil
-local isInvBinding = false
-
-local seatTeleportPosition = Vector3.new(-25.95, 400, 3537.55)
-local voidLevelYThreshold = -50
-local invis_transparency = 0.75
+local isGhostActive = false; local invKeybind = nil; local isInvBinding = false
+local seatTeleportPosition = Vector3.new(-25.95, 400, 3537.55); local voidLevelYThreshold = -50; local invis_transparency = 0.75
 
 local function setCharacterTransparency(transparency)
     local character = LocalPlayer.Character
-    if character then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                part.Transparency = transparency
-            end
-        end
-    end
+    if character then for _, part in pairs(character:GetDescendants()) do if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.Transparency = transparency end end end
 end
 
 local function ToggleGhost()
-    isGhostActive = not isGhostActive
-    local character = LocalPlayer.Character
-
+    isGhostActive = not isGhostActive; local character = LocalPlayer.Character
     if isGhostActive then
         setCharacterTransparency(invis_transparency)
         if character then
             local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
             if humanoidRootPart then
-                local savedpos = humanoidRootPart.CFrame
-                task.wait(0.1)
-                
-                -- Teletransportar lejos
-                pcall(function() character:MoveTo(seatTeleportPosition) end)
-                task.wait(0.1)
-                
-                -- Chequeo de seguridad por si cae al vacío
+                local savedpos = humanoidRootPart.CFrame; task.wait(0.1)
+                pcall(function() character:MoveTo(seatTeleportPosition) end); task.wait(0.1)
                 if not character:FindFirstChild("HumanoidRootPart") or character.HumanoidRootPart.Position.Y < voidLevelYThreshold then
-                    pcall(function() character:MoveTo(savedpos.Position) end)
-                    isGhostActive = false
-                    setCharacterTransparency(0)
-                    return
+                    pcall(function() character:MoveTo(savedpos.Position) end); isGhostActive = false; setCharacterTransparency(0); return
                 end
-
-                -- Crear asiento invisible
-                local Seat = Instance.new('Seat')
-                Seat.Parent = Workspace
-                Seat.Anchored = false
-                Seat.CanCollide = false
-                Seat.Name = 'invischair'
-                Seat.Transparency = 1
-                Seat.Position = seatTeleportPosition
-
-                local Weld = Instance.new("Weld")
-                Weld.Part0 = Seat
-                
+                local Seat = Instance.new('Seat'); Seat.Parent = Workspace; Seat.Anchored = false; Seat.CanCollide = false; Seat.Name = 'invischair'; Seat.Transparency = 1; Seat.Position = seatTeleportPosition
+                local Weld = Instance.new("Weld"); Weld.Part0 = Seat
                 local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
-                if torso then
-                    Weld.Part1 = torso
-                    Weld.Parent = Seat
-                    task.wait()
-                    -- Traer de vuelta el asiento con el jugador
-                    pcall(function() Seat.CFrame = savedpos end)
-                    
-                    InvToggleBtn.BackgroundColor3 = tGreen
-                    InvToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
-                    InvToggleBtn.Text = "INVISIBILIDAD: ON"
-                else
-                    Seat:Destroy()
-                end
+                if torso then Weld.Part1 = torso; Weld.Parent = Seat; task.wait(); pcall(function() Seat.CFrame = savedpos end); InvToggleBtn.BackgroundColor3 = tGreen; InvToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); InvToggleBtn.Text = "INVISIBILIDAD: ON" else Seat:Destroy() end
             end
         end
     else
-        -- Desactivar
-        setCharacterTransparency(0)
-        local inv = Workspace:FindFirstChild('invischair')
-        if inv then
-            pcall(function() inv:Destroy() end)
-        end
-        
-        InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        InvToggleBtn.TextColor3 = tWhite
-        InvToggleBtn.Text = "INVISIBILIDAD: OFF"
+        setCharacterTransparency(0); local inv = Workspace:FindFirstChild('invischair'); if inv then pcall(function() inv:Destroy() end) end
+        InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
     end
 end
 InvToggleBtn.MouseButton1Click:Connect(ToggleGhost)
 
+-- ✨ FIX: APAGAR Y BORRAR KEY Al CERRAR CON LA 'X' ✨
+InvCloseBtn.MouseButton1Click:Connect(function() 
+    InvMain.Visible = false
+    invKeybind = nil
+    isInvBinding = false
+    InvKeyBtn.Text = "KEY"
+    InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isGhostActive then ToggleGhost() end
+end)
+
 InvKeyBtn.MouseButton1Click:Connect(function()
-    if invKeybind ~= nil then 
-        invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
-    else 
-        isInvBinding = true; InvKeyBtn.Text = "..."; InvKeyBtn.BackgroundColor3 = tOrange 
-    end
+    if invKeybind ~= nil then invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
+    else isInvBinding = true; InvKeyBtn.Text = "..."; InvKeyBtn.BackgroundColor3 = tOrange end
 end)
 
 -- ==================================================================
@@ -415,7 +587,6 @@ FlyMinBtn.MouseButton1Click:Connect(function()
     flyMinimized = not flyMinimized; FlyMain:TweenSize(flyMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     FlyMinBtn.Text = flyMinimized and "+" or "—"; FlyFix.Visible = not flyMinimized
 end)
-FlyCloseBtn.MouseButton1Click:Connect(function() FlyMain.Visible = false end)
 
 local isFlying = false; local flySpeed = 100; local flyKeybind = nil; local isFlyBinding = false; local flyLoop = nil; local flycontrol = {F = 0, R = 0, B = 0, L = 0, U = 0, D = 0}
 
@@ -449,6 +620,16 @@ local function ToggleFly()
 end
 FlyToggleBtn.MouseButton1Click:Connect(ToggleFly)
 
+-- ✨ FIX: APAGAR Y BORRAR KEY Al CERRAR CON LA 'X' ✨
+FlyCloseBtn.MouseButton1Click:Connect(function() 
+    FlyMain.Visible = false
+    flyKeybind = nil
+    isFlyBinding = false
+    FlyKeyBtn.Text = "KEY"
+    FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isFlying then ToggleFly() end
+end)
+
 FlyKeyBtn.MouseButton1Click:Connect(function()
     if flyKeybind ~= nil then flyKeybind = nil; FlyKeyBtn.Text = "KEY"; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFlyBinding = false
     else isFlyBinding = true; FlyKeyBtn.Text = "..."; FlyKeyBtn.BackgroundColor3 = tOrange end
@@ -474,7 +655,6 @@ NoclipMinBtn.MouseButton1Click:Connect(function()
     noclipMinimized = not noclipMinimized; NoclipMain:TweenSize(noclipMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     NoclipMinBtn.Text = noclipMinimized and "+" or "—"; NoclipFix.Visible = not noclipMinimized
 end)
-NoclipCloseBtn.MouseButton1Click:Connect(function() NoclipMain.Visible = false end)
 
 local isNoclipActive = false; local noclipLoop = nil; local noclipFloor = nil; local noclipKeybind = nil; local isNoclipBinding = false
 
@@ -506,6 +686,16 @@ local function ToggleNoclipWalk()
 end
 NoclipToggleBtn.MouseButton1Click:Connect(ToggleNoclipWalk)
 
+-- ✨ FIX: APAGAR Y BORRAR KEY Al CERRAR CON LA 'X' ✨
+NoclipCloseBtn.MouseButton1Click:Connect(function() 
+    NoclipMain.Visible = false
+    noclipKeybind = nil
+    isNoclipBinding = false
+    NoclipKeyBtn.Text = "KEY"
+    NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isNoclipActive then ToggleNoclipWalk() end
+end)
+
 NoclipKeyBtn.MouseButton1Click:Connect(function()
     if noclipKeybind ~= nil then noclipKeybind = nil; NoclipKeyBtn.Text = "KEY"; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isNoclipBinding = false
     else isNoclipBinding = true; NoclipKeyBtn.Text = "..."; NoclipKeyBtn.BackgroundColor3 = tOrange end
@@ -535,7 +725,6 @@ VFlyMinBtn.MouseButton1Click:Connect(function()
     vflyMinimized = not vflyMinimized; VFlyMain:TweenSize(vflyMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     VFlyMinBtn.Text = vflyMinimized and "+" or "—"; VFlyFix.Visible = not vflyMinimized
 end)
-VFlyCloseBtn.MouseButton1Click:Connect(function() VFlyMain.Visible = false end)
 
 local isVFlying = false; local vFlySpeedNum = 256; local vFlyAccel = 4; local vFlyTurn = 16; local vFlyMultiplier = 3; local vFlyKeybind = nil; local isVFlyBinding = false; local vFlyConn = nil; local vFlyCurrentVel = Vector3.new(0,0,0)
 
@@ -571,14 +760,24 @@ local function ToggleVFly()
         VFlyToggleBtn.BackgroundColor3 = tPurple; VFlyToggleBtn.Text = "V-FLY: ON"
         if root then vFlyCurrentVel = root.Velocity end; vFlyConn = RunService.Heartbeat:Connect(VFlyLoop)
     else
-        VFlyToggleBtn.BackgroundColor3 = Color.fromRGB(30, 30, 30); VFlyToggleBtn.Text = "V-FLY: OFF"
+        VFlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); VFlyToggleBtn.Text = "V-FLY: OFF"
         if vFlyConn then vFlyConn:Disconnect(); vFlyConn = nil end
     end
 end
 VFlyToggleBtn.MouseButton1Click:Connect(ToggleVFly)
 
+-- ✨ FIX: APAGAR Y BORRAR KEY Al CERRAR CON LA 'X' ✨
+VFlyCloseBtn.MouseButton1Click:Connect(function() 
+    VFlyMain.Visible = false
+    vFlyKeybind = nil
+    isVFlyBinding = false
+    VFlyKeyBtn.Text = "KEY"
+    VFlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isVFlying then ToggleVFly() end
+end)
+
 VFlyKeyBtn.MouseButton1Click:Connect(function()
-    if vFlyKeybind ~= nil then vFlyKeybind = nil; VFlyKeyBtn.Text = "KEY"; VFlyKeyBtn.BackgroundColor3 = Color.fromRGB(40, 40, 40); isVFlyBinding = false
+    if vFlyKeybind ~= nil then vFlyKeybind = nil; VFlyKeyBtn.Text = "KEY"; VFlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isVFlyBinding = false
     else isVFlyBinding = true; VFlyKeyBtn.Text = "..."; VFlyKeyBtn.BackgroundColor3 = tOrange end
 end)
 
@@ -602,7 +801,6 @@ TripMinBtn.MouseButton1Click:Connect(function()
     tripMinimized = not tripMinimized; TripMain:TweenSize(tripMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     TripMinBtn.Text = tripMinimized and "+" or "—"; TripFix.Visible = not tripMinimized
 end)
-TripCloseBtn.MouseButton1Click:Connect(function() TripMain.Visible = false end)
 
 local isTripped = false
 local tripKeybind = nil
@@ -669,6 +867,16 @@ end
 
 TripToggleBtn.MouseButton1Click:Connect(DoTrip)
 
+-- ✨ FIX: APAGAR Y BORRAR KEY Al CERRAR CON LA 'X' ✨
+TripCloseBtn.MouseButton1Click:Connect(function() 
+    TripMain.Visible = false
+    tripKeybind = nil
+    isTripBinding = false
+    TripKeyBtn.Text = "KEY"
+    TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isTripped then GetUpFromTrip() end
+end)
+
 TripKeyBtn.MouseButton1Click:Connect(function()
     if tripKeybind ~= nil then tripKeybind = nil; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false
     else isTripBinding = true; TripKeyBtn.Text = "..."; TripKeyBtn.BackgroundColor3 = tOrange end
@@ -678,7 +886,6 @@ end)
 -- ==================================================================
 -- 9. CHAT GLOBAL SMART SCROLL
 -- ==================================================================
-local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 local setclipboard = setclipboard or toclipboard or set_clipboard
 
 local ChatMain = Instance.new("Frame", ScreenGui)
@@ -800,15 +1007,19 @@ local function LogMessage(text, color)
 end
 LogMessage("Terminal C.D.T Optifine cargada.", tGreen)
 
--- Detectar Respawn para apagar módulos y restaurar físicas
-LocalPlayer.CharacterAdded:Connect(function() 
+-- ✨ FIX DESTROY: Variables para guardar los eventos globales y poder matarlos ✨
+local charAddedConn
+local inputBeganConn
+local inputEndedConn
+
+charAddedConn = LocalPlayer.CharacterAdded:Connect(function() 
     if isGhostActive then ToggleGhost() end
     if isFlying then ToggleFly() end
     if isNoclipActive then ToggleNoclipWalk() end
     isTripped = false
 end)
 
-UserInputService.InputBegan:Connect(function(input, gp)
+inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
     if isInvBinding and input.UserInputType == Enum.UserInputType.Keyboard then invKeybind = input.KeyCode; InvKeyBtn.Text = input.KeyCode.Name; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false; return end
     if isFlyBinding and input.UserInputType == Enum.UserInputType.Keyboard then flyKeybind = input.KeyCode; FlyKeyBtn.Text = input.KeyCode.Name; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFlyBinding = false; return end
     if isVFlyBinding and input.UserInputType == Enum.UserInputType.Keyboard then vFlyKeybind = input.KeyCode; VFlyKeyBtn.Text = input.KeyCode.Name; VFlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isVFlyBinding = false; return end
@@ -816,13 +1027,17 @@ UserInputService.InputBegan:Connect(function(input, gp)
     if isTripBinding and input.UserInputType == Enum.UserInputType.Keyboard then tripKeybind = input.KeyCode; TripKeyBtn.Text = input.KeyCode.Name; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false; return end
     
     if not gp then
-        if input.KeyCode == Enum.KeyCode.Insert then ToggleMenu() end
-        
+        if input.KeyCode == Enum.KeyCode.Insert then 
+            if Main.Visible then
+                Main.Visible = false; MPMain.Visible = false; TPMain.Visible = false; InvMain.Visible = false; FlyMain.Visible = false; VFlyMain.Visible = false; NoclipMain.Visible = false; TripMain.Visible = false; ChatMain.Visible = false
+            else
+                Main.Visible = true
+            end
+        end
         if invKeybind and input.KeyCode == invKeybind then ToggleGhost() end
         if flyKeybind and input.KeyCode == flyKeybind then ToggleFly() end
         if vFlyKeybind and input.KeyCode == vFlyKeybind then ToggleVFly() end
         if noclipKeybind and input.KeyCode == noclipKeybind then ToggleNoclipWalk() end
-        
         if tripKeybind and input.KeyCode == tripKeybind then DoTrip() end
         if isTripped and input.KeyCode == Enum.KeyCode.Space then GetUpFromTrip() end
         
@@ -837,7 +1052,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
     end
 end)
 
-UserInputService.InputEnded:Connect(function(input, gp)
+inputEndedConn = UserInputService.InputEnded:Connect(function(input, gp)
     if not gp then
         if isFlying then
             if input.KeyCode == Enum.KeyCode.W then flycontrol.F = 0
@@ -881,9 +1096,47 @@ AddCmd("chat", "Abre el chat global", function() ChatMain.Visible = true; Actual
 AddCmd("speed", "Cambia la velocidad", function(args)
     if args[1] and tonumber(args[1]) then LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(args[1]); LogMessage("Velocidad -> " .. args[1], tGreen) end
 end)
+
+-- ✨ COMANDO DESTROY ACTUALIZADO: Mata conexiones y apaga TODO ✨
 AddCmd("destroy", "Cierra y elimina el panel completo", function()
     if isGhostActive then ToggleGhost() end; if isFlying then ToggleFly() end; if isVFlying then ToggleVFly() end; if isNoclipActive then ToggleNoclipWalk() end; if isTripped then GetUpFromTrip() end
-    LogMessage("Cerrando C.D.T Optifine...", tPurple); task.wait(0.5); ScreenGui:Destroy()
+    LogMessage("Cerrando C.D.T Optifine...", tPurple)
+    
+    -- Desconectar el teclado y los eventos principales de Roblox
+    if inputBeganConn then inputBeganConn:Disconnect() end
+    if inputEndedConn then inputEndedConn:Disconnect() end
+    if charAddedConn then charAddedConn:Disconnect() end
+
+    task.spawn(function()
+        pcall(function() 
+            request({
+                Url = BASE_URL .. "/api/offline/" .. tostring(LocalPlayer.UserId), 
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = "{}"
+            }) 
+        end)
+    end)
+    
+    scriptActivoTags = false 
+    for _, v in pairs(UIsActivos) do if v.UI then v.UI:Destroy() end end
+    UIsActivos = {}
+    
+    if targetGuiParent then
+        for _, obj in ipairs(targetGuiParent:GetChildren()) do
+            if string.sub(obj.Name, 1, 9) == "SafeHTML_" then 
+                obj:Destroy() 
+            end
+        end
+    end
+    
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character and p.Character:FindFirstChildOfClass("Humanoid") then
+            p.Character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
+        end
+    end
+    
+    task.wait(0.5); ScreenGui:Destroy()
 end)
 
 local SuggestFrame = Instance.new("ScrollingFrame", FullUI); SuggestFrame.Size = UDim2.new(1, -20, 0, 0); SuggestFrame.Position = UDim2.new(0, 10, 1, -45); SuggestFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); SuggestFrame.BorderSizePixel = 0; SuggestFrame.Visible = false; SuggestFrame.ScrollBarThickness = 2; SuggestFrame.ZIndex = 10; Instance.new("UICorner", SuggestFrame).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", SuggestFrame).Color = Color3.fromRGB(50, 50, 50)
