@@ -1,5 +1,5 @@
 --[[
-    C.D.T OPTIFINE - V10.5 MANUAL TRIP EDITION (FULL AVATAR HIDE)
+    C.D.T OPTIFINE - V10.5 MANUAL TRIP EDITION (FULL GRADIANT & AVATAR HIDE)
     - Trip Mode (Un solo toque para caer, te quedas tirado hasta saltar con ESPACIO).
     - Inyección Segura (Bulletproof) y Responsive UI.
     - TP Menu (Buscador dinámico).
@@ -9,10 +9,10 @@
     - VEHICLE FLY (Lerp Suave).
     - GLOBAL CHAT SMART (Auto-Scroll).
     - Consola Inteligente.
-    - Name Tags (Auto-Registro, Radar Anti-Cache, HD Textures).
     - Comando 'vtag' para ocultar/mostrar tu propio tag visualmente.
     - Panel de Ajustes (⚙) con Temas Consistentes (DEFAULT / CRISTAL ROUNDED).
-    - [NUEVO] Comando 'hide' que ahora oculta EL AVATAR COMPLETO y el Name Tag del jugador seleccionado.
+    - Comando 'hide' que oculta EL AVATAR COMPLETO y el Name Tag del jugador.
+    - [NUEVO] Soporte nativo para Gradientes en Bordes, Título y Nombre en tiempo real.
 ]]
 
 local Players = game:GetService("Players")
@@ -40,7 +40,7 @@ local scriptActivoTags = true
 local verMiTag = true
 local UIsActivos = {} 
 local tagsDescargados = {}
-local hiddenTags = {} -- Memoria de jugadores ocultos
+local hiddenTags = {}
 local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
 -- ==================================================================
@@ -104,8 +104,6 @@ ScreenGui.Parent = targetGuiParent
 -- ==================================================================
 -- SISTEMA NAME TAGS E INVISIBILIDAD LOCAL DE JUGADORES
 -- ==================================================================
-
--- ✨ FUNCIÓN PARA OCULTAR EL AVATAR COMPLETO ✨
 local function OcultarAvatar(character, ocultar)
     if not character then return end
     for _, obj in ipairs(character:GetDescendants()) do
@@ -189,14 +187,14 @@ local function actualizarAnimacionNombreTag(uiData, cfg)
                     local t2 = TweenService:Create(uiData.TxtName, TweenInfo.new(1), {TextColor3 = Color3.fromHex("#c084fc")})
                     t2:Play() t2.Completed:Wait()
                     if not uiData.animNameTask then break end
-                    local t3 = TweenService:Create(uiData.TxtName, TweenInfo.new(1), {TextColor3 = parseHexTag(cfg.colorNombre, "#a0a0b0")})
+                    local t3 = TweenService:Create(uiData.TxtName, TweenInfo.new(1), {TextColor3 = Color3.new(1,1,1)})
                     t3:Play() t3.Completed:Wait()
                 end
             end)
         end
     else
         uiData.animNameTask = false
-        if uiData.TxtName then uiData.TxtName.TextColor3 = parseHexTag(cfg.colorNombre, "#a0a0b0") end
+        if uiData.TxtName then uiData.TxtName.TextColor3 = Color3.new(1,1,1) end
     end
 end
 
@@ -223,7 +221,10 @@ local function crearUITag(player, datos, userId)
     local card = Instance.new("Frame", bill); card.Size = UDim2.new(0, aI, 0, 50); card.AnchorPoint = Vector2.new(0.5, 0.5); card.Position = UDim2.new(0.5, 0, 0.5, 0); card.BackgroundColor3 = Color3.new(1, 1, 1) 
     local corner = Instance.new("UICorner", card); corner.CornerRadius = UDim.new(0, 8)
     local grad = Instance.new("UIGradient", card); grad.Rotation = 45; grad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorFondo1, "#1c1c24")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorFondo2, "#0f0f13")) })
-    local stroke = Instance.new("UIStroke", card); stroke.Color = parseHexTag(datos.colorBorde, "#FFFFFF"); stroke.Transparency = 0.7; stroke.Thickness = 1.2
+    
+    -- ✨ NUEVO: GRADIENTE EN EL BORDE
+    local stroke = Instance.new("UIStroke", card); stroke.Color = Color3.new(1,1,1); stroke.Transparency = 0.7; stroke.Thickness = 1.2
+    local strokeGrad = Instance.new("UIGradient", stroke); strokeGrad.Rotation = 45; strokeGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorBorde1 or datos.colorBorde, "#FFFFFF")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorBorde2 or datos.colorBorde, "#FFFFFF")) })
     
     local snowCont = Instance.new("Frame", card); snowCont.Size = UDim2.new(1,0,1,0); snowCont.BackgroundTransparency = 1; snowCont.ClipsDescendants = true; Instance.new("UICorner", snowCont).CornerRadius = UDim.new(0,8)
     local listaCopos = crearNieveTag(snowCont, datos.emojiNieve, datos.colorNieve or "#ffffff")
@@ -241,11 +242,15 @@ local function crearUITag(player, datos, userId)
 
     local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -54, 0, 36); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 50, 0.5, 0); infoGroup.BackgroundTransparency = 1
 
+    -- ✨ NUEVO: GRADIENTE EN EL TÍTULO
     local txtTitle = Instance.new("TextLabel", infoGroup); txtTitle.BackgroundTransparency = 1; txtTitle.Size = UDim2.new(1, 0, 0, 18); txtTitle.Position = UDim2.new(0, 0, 0, 0)
-    txtTitle.Font = fU; txtTitle.Text = tTit; txtTitle.TextColor3 = parseHexTag(datos.colorTitulo, "#ffffff"); txtTitle.TextSize = 16; txtTitle.TextXAlignment = Enum.TextXAlignment.Left
+    txtTitle.Font = fU; txtTitle.Text = tTit; txtTitle.TextColor3 = Color3.new(1,1,1); txtTitle.TextSize = 16; txtTitle.TextXAlignment = Enum.TextXAlignment.Left
+    local titleGrad = Instance.new("UIGradient", txtTitle); titleGrad.Rotation = 45; titleGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorTitulo1 or datos.colorTitulo, "#ffffff")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorTitulo2 or datos.colorTitulo, "#ffffff")) })
 
+    -- ✨ NUEVO: GRADIENTE EN EL NOMBRE
     local txtName = Instance.new("TextLabel", infoGroup); txtName.BackgroundTransparency = 1; txtName.Size = UDim2.new(1, 0, 0, 14); txtName.Position = UDim2.new(0, 0, 0, 18)
-    txtName.Font = Enum.Font.GothamBold; txtName.Text = tNom; txtName.TextColor3 = parseHexTag(datos.colorNombre, "#a0a0b0"); txtName.TextSize = 13; txtName.TextXAlignment = Enum.TextXAlignment.Left
+    txtName.Font = Enum.Font.GothamBold; txtName.Text = tNom; txtName.TextColor3 = Color3.new(1,1,1); txtName.TextSize = 13; txtName.TextXAlignment = Enum.TextXAlignment.Left
+    local nameGrad = Instance.new("UIGradient", txtName); nameGrad.Rotation = 45; nameGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorNombre1 or datos.colorNombre, "#a0a0b0")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorNombre2 or datos.colorNombre, "#a0a0b0")) })
 
     local btnTP = Instance.new("TextButton", card); btnTP.Size = UDim2.new(1, 0, 1, 0); btnTP.BackgroundTransparency = 1; btnTP.Text = ""; btnTP.ZIndex = 100
     btnTP.MouseButton1Click:Connect(function()
@@ -255,7 +260,10 @@ local function crearUITag(player, datos, userId)
         end
     end)
 
-    UIsActivos[userId] = { Estado = "Abierto", UI = bill, Escalador = scale, Head = head, Card = card, CardCorner = corner, CardStroke = stroke, Gradiente = grad, Avatar = avF, AvatarImg = avatarImg, TxtTitle = txtTitle, TxtName = txtName, SnowContainer = snowCont, Copos = listaCopos, DotStroke = dotStroke, AnchoIdeal = aI }
+    UIsActivos[userId] = { 
+        Estado = "Abierto", UI = bill, Escalador = scale, Head = head, Card = card, CardCorner = corner, CardStroke = stroke, Gradiente = grad, Avatar = avF, AvatarImg = avatarImg, TxtTitle = txtTitle, TxtName = txtName, SnowContainer = snowCont, Copos = listaCopos, DotStroke = dotStroke, AnchoIdeal = aI,
+        StrokeGrad = strokeGrad, TitleGrad = titleGrad, NameGrad = nameGrad -- Referencias de los gradientes nuevos
+    }
     actualizarAnimacionNombreTag(UIsActivos[userId], datos)
 end
 
@@ -277,7 +285,6 @@ task.spawn(function()
                 for _, player in ipairs(Players:GetPlayers()) do
                     local id = tostring(player.UserId)
                     
-                    -- ✨ Si está oculto en memoria, forzar invisibilidad continua
                     if hiddenTags[id] then
                         OcultarAvatar(player.Character, true)
                     end
@@ -296,11 +303,36 @@ task.spawn(function()
                                 crearUITag(player, cfg, id)
                                 oldDataCache[id] = hashData
                             elseif oldDataCache[id] ~= hashData then
-                                if UIsActivos[id] then
-                                    if UIsActivos[id].UI then UIsActivos[id].UI:Destroy() end
-                                    UIsActivos[id] = nil
+                                local ui = UIsActivos[id]
+                                if ui and ui.UI and ui.UI.Parent then
+                                    ui.Gradiente.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorFondo1, "#1c1c24")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorFondo2, "#0f0f13")) })
+                                    
+                                    -- Actualiza gradientes en vivo
+                                    if ui.StrokeGrad then ui.StrokeGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorBorde1 or cfg.colorBorde, "#FFFFFF")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorBorde2 or cfg.colorBorde, "#FFFFFF")) }) end
+                                    if ui.TitleGrad then ui.TitleGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorTitulo1 or cfg.colorTitulo, "#ffffff")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorTitulo2 or cfg.colorTitulo, "#ffffff")) }) end
+                                    if ui.NameGrad then ui.NameGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorNombre1 or cfg.colorNombre, "#a0a0b0")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorNombre2 or cfg.colorNombre, "#a0a0b0")) }) end
+                                    
+                                    ui.TxtTitle.Text = cfg.titulo or "USER"
+                                    local sF, fU = pcall(function() return Enum.Font[cfg.fuente] end)
+                                    if sF and fU then ui.TxtTitle.Font = fU end
+                                    
+                                    task.spawn(function() local newImg = obtenerImagenTag(cfg.imagen, id); if ui.AvatarImg and ui.AvatarImg.Parent then ui.AvatarImg.Image = newImg end end)
+                                    ui.DotStroke.Color = parseHexTag(cfg.colorFondo2, "#0f0f13")
+                                    
+                                    for _, copo in ipairs(ui.Copos) do 
+                                        if copo.Parent then 
+                                            copo.Text = cfg.emojiNieve or "*"
+                                            copo.TextColor3 = parseHexTag(cfg.colorNieve, "#ffffff") 
+                                        end 
+                                    end
+                                    
+                                    actualizarAnimacionNombreTag(ui, cfg)
+                                    
+                                    local bT = TextService:GetTextSize(ui.TxtTitle.Text, 16, ui.TxtTitle.Font, Vector2.new(1000, 50)); local bN = TextService:GetTextSize(player.Name:upper(), 13, Enum.Font.GothamBold, Vector2.new(1000, 50))
+                                    ui.AnchoIdeal = math.max(110, 8 + 36 + 10 + math.max(bT.X, bN.X) + 16)
+                                    
+                                    if ui.Estado == "Abierto" then TweenService:Create(ui.Card, TweenInfo.new(0.2), {Size = UDim2.new(0, ui.AnchoIdeal, 0, 50)}):Play() end
                                 end
-                                crearUITag(player, cfg, id)
                                 oldDataCache[id] = hashData
                             end
                         end
@@ -327,7 +359,7 @@ RunService.RenderStepped:Connect(function()
             if id == tostring(LocalPlayer.UserId) then
                 data.UI.Enabled = verMiTag
             else
-                data.UI.Enabled = not hiddenTags[id]
+                data.UI.Enabled = not hiddenTags[id] 
             end
 
             local dist = (Camera.CFrame.Position - data.Head.Position).Magnitude
@@ -359,11 +391,10 @@ ApplyResponsiveScale(Main)
 FullUI = Instance.new("Frame", Main); FullUI.Size = UDim2.new(1, 0, 1, 0); FullUI.BackgroundTransparency = 1; FullUI.BorderSizePixel = 0
 TopBar = Instance.new("Frame", FullUI); TopBar.Size = UDim2.new(1, 0, 0, 35); TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TopBar.BorderSizePixel = 0; Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 6)
 Fix = Instance.new("Frame", TopBar); Fix.Size = UDim2.new(1, 0, 0, 5); Fix.Position = UDim2.new(0, 0, 1, -5); Fix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Fix.BorderSizePixel = 0
-
-Title = Instance.new("TextLabel", TopBar); Title.Size = UDim2.new(1, -100, 1, 0); Title.Position = UDim2.new(0, 15, 0, 0); Title.BackgroundTransparency = 1; Title.Text = "C.D.T OPTIFINE // SYSTEM"; Title.TextColor3 = tWhite; Title.Font = Enum.Font.GothamBold; Title.TextSize = 12; Title.TextXAlignment = Enum.TextXAlignment.Left
-MinBtn = Instance.new("TextButton", TopBar); MinBtn.Size = UDim2.new(0, 35, 1, 0); MinBtn.Position = UDim2.new(1, -35, 0, 0); MinBtn.BackgroundTransparency = 1; MinBtn.Text = "—"; MinBtn.TextColor3 = tGreen; MinBtn.Font = Enum.Font.GothamBlack; MinBtn.TextSize = 14
-
-SetBtn = Instance.new("TextButton", TopBar); SetBtn.Size = UDim2.new(0, 35, 1, 0); SetBtn.Position = UDim2.new(1, -70, 0, 0); SetBtn.BackgroundTransparency = 1; SetBtn.Text = "⚙"; SetBtn.TextColor3 = tWhite; SetBtn.Font = Enum.Font.GothamBlack; SetBtn.TextSize = 16
+Title = Instance.new("TextLabel", TopBar); Title.Size = UDim2.new(1, -70, 1, 0); Title.Position = UDim2.new(0, 15, 0, 0); Title.BackgroundTransparency = 1; Title.Text = "C.D.T OPTIFINE // SYSTEM"; Title.TextColor3 = tWhite; Title.Font = Enum.Font.GothamBold; Title.TextSize = 12; Title.TextXAlignment = Enum.TextXAlignment.Left
+MinBtn = Instance.new("TextButton", TopBar); MinBtn.Size = UDim2.new(0, 35, 1, 0); MinBtn.Position = UDim2.new(1, -70, 0, 0); MinBtn.BackgroundTransparency = 1; MinBtn.Text = "—"; MinBtn.TextColor3 = tGreen; MinBtn.Font = Enum.Font.GothamBlack; MinBtn.TextSize = 14
+SetBtn = Instance.new("TextButton", TopBar); SetBtn.Size = UDim2.new(0, 35, 1, 0); SetBtn.Position = UDim2.new(1, -105, 0, 0); SetBtn.BackgroundTransparency = 1; SetBtn.Text = "⚙"; SetBtn.TextColor3 = tWhite; SetBtn.Font = Enum.Font.GothamBlack; SetBtn.TextSize = 16
+HideBtn = Instance.new("TextButton", TopBar); HideBtn.Size = UDim2.new(0, 35, 1, 0); HideBtn.Position = UDim2.new(1, -35, 0, 0); HideBtn.BackgroundTransparency = 1; HideBtn.Text = "X"; HideBtn.TextColor3 = tRed; HideBtn.Font = Enum.Font.GothamBlack; HideBtn.TextSize = 12
 
 Console = Instance.new("ScrollingFrame", FullUI)
 Console.Size = UDim2.new(1, -20, 1, -95); Console.Position = UDim2.new(0, 10, 0, 40); Console.BackgroundTransparency = 1; Console.BorderSizePixel = 0; Console.ScrollBarThickness = 2; Console.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
@@ -388,6 +419,7 @@ MaxBtn.MouseButton1Click:Connect(function()
     isMinimized = false; MiniUI.Visible = false; FullUI.Visible = true
     Main:TweenSize(UDim2.new(0, 320, 0, 350), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
 end)
+HideBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
 
 -- ==================================================================
 -- 2. MAP POINTS (WAYPOINTS MANAGER)
@@ -598,8 +630,7 @@ local function RefreshHideMenu(filterText)
                     HBtn.Text = h and "OCULTO" or "VISIBLE"
                     HBtn.TextColor3 = h and Color3.fromRGB(10, 10, 10) or tWhite
                     
-                    -- ✨ Ocultar o mostrar al instante ✨
-                    OcultarAvatar(plr.Character, h)
+                    if plr.Character then OcultarAvatar(plr.Character, h) end
                 end)
             end
         end
@@ -611,7 +642,7 @@ Players.PlayerAdded:Connect(function() if HideMain.Visible then RefreshHideMenu(
 Players.PlayerRemoving:Connect(function() if HideMain.Visible then RefreshHideMenu(HideSearchBox.Text) end end)
 
 -- ==================================================================
--- 4. INTERFAZ INVISIBLE MENU (NUEVA INVISIBILIDAD LOCAL)
+-- 4. INTERFAZ INVISIBLE MENU (SEAT MODE FIX GHOST)
 -- ==================================================================
 InvMain = Instance.new("Frame", ScreenGui); InvMain.Size = UDim2.new(0, 260, 0, 100); InvMain.Position = UDim2.new(0, 20, 0, 20); InvMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); InvMain.BorderSizePixel = 0; InvMain.ClipsDescendants = true; InvMain.Visible = false; Instance.new("UICorner", InvMain).CornerRadius = UDim.new(0, 6); InvMainStroke = Instance.new("UIStroke", InvMain); InvMainStroke.Color = borderDark
 InvTopBar = Instance.new("Frame", InvMain); InvTopBar.Size = UDim2.new(1, 0, 0, 35); InvTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); InvTopBar.BorderSizePixel = 0; Instance.new("UICorner", InvTopBar).CornerRadius = UDim.new(0, 6)
@@ -630,7 +661,6 @@ InvMinBtn.MouseButton1Click:Connect(function()
     InvMinBtn.Text = invMinimized and "+" or "—"; InvFix.Visible = not invMinimized
 end)
 
--- Sistema Custom de Notificaciones (Integrado desde tu código)
 local function showNotice(txt)
     pcall(function() if CoreGui:FindFirstChild("InvisGhostNotice") then CoreGui.InvisGhostNotice:Destroy() end end)
     local g = Instance.new("ScreenGui", CoreGui); g.Name = "InvisGhostNotice"; g.ResetOnSpawn = false
