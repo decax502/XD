@@ -1,5 +1,5 @@
 --[[
-    C.D.T OPTIFINE - V10.0 manual trip edition (GLASS ROUNDED & GHOST FIX)
+    C.D.T OPTIFINE - V10.5 MANUAL TRIP EDITION (FULL AVATAR HIDE)
     - Trip Mode (Un solo toque para caer, te quedas tirado hasta saltar con ESPACIO).
     - Inyección Segura (Bulletproof) y Responsive UI.
     - TP Menu (Buscador dinámico).
@@ -9,9 +9,10 @@
     - VEHICLE FLY (Lerp Suave).
     - GLOBAL CHAT SMART (Auto-Scroll).
     - Consola Inteligente.
-    - Name Tags (Auto-Registro, Radar Anti-Cache, Inicia VISIBLE).
+    - Name Tags (Auto-Registro, Radar Anti-Cache, HD Textures).
     - Comando 'vtag' para ocultar/mostrar tu propio tag visualmente.
-    - Panel de Ajustes (⚙) con TemasConsistentes (DEFAULT / CRISTAL ROUNDED).
+    - Panel de Ajustes (⚙) con Temas Consistentes (DEFAULT / CRISTAL ROUNDED).
+    - [NUEVO] Comando 'hide' que ahora oculta EL AVATAR COMPLETO y el Name Tag del jugador seleccionado.
 ]]
 
 local Players = game:GetService("Players")
@@ -31,7 +32,7 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- ==================================================================
--- VARIABLES NAME TAGS (RADAR)
+-- VARIABLES NAME TAGS (RADAR & HIDE)
 -- ==================================================================
 local BASE_URL = "http://185.249.196.246:3000"
 local API_URL = BASE_URL .. "/api/nametags"
@@ -39,6 +40,7 @@ local scriptActivoTags = true
 local verMiTag = true
 local UIsActivos = {} 
 local tagsDescargados = {}
+local hiddenTags = {} -- Memoria de jugadores ocultos
 local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
 -- ==================================================================
@@ -100,8 +102,20 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = targetGuiParent
 
 -- ==================================================================
--- SISTEMA NAME TAGS (INTEGRADO EN OPTIFINE)
+-- SISTEMA NAME TAGS E INVISIBILIDAD LOCAL DE JUGADORES
 -- ==================================================================
+
+-- ✨ FUNCIÓN PARA OCULTAR EL AVATAR COMPLETO ✨
+local function OcultarAvatar(character, ocultar)
+    if not character then return end
+    for _, obj in ipairs(character:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" then
+            obj.Transparency = ocultar and 1 or 0
+        elseif obj:IsA("Decal") or obj:IsA("Texture") then
+            obj.Transparency = ocultar and 1 or 0
+        end
+    end
+end
 
 task.spawn(function()
     while scriptActivoTags do
@@ -125,7 +139,7 @@ local function parseHexTag(hexStr, defaultHex)
 end
 
 local function obtenerImagenTag(url, userId)
-    if not url or url == "" or url == "default" then return Players:GetUserThumbnailAsync(tonumber(userId), Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150) end
+    if not url or url == "" or url == "default" then return Players:GetUserThumbnailAsync(tonumber(userId), Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end
     if url:find("rbxassetid://") then return url end
     if tagsDescargados[userId] and tagsDescargados[userId].url == url then return tagsDescargados[userId].asset end
     
@@ -137,7 +151,7 @@ local function obtenerImagenTag(url, userId)
         tagsDescargados[userId] = {url = url, asset = assetId}
         return assetId
     end
-    return Players:GetUserThumbnailAsync(tonumber(userId), Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+    return Players:GetUserThumbnailAsync(tonumber(userId), Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
 end
 
 local function crearNieveTag(container, emojiText, colorNieveHex)
@@ -145,7 +159,7 @@ local function crearNieveTag(container, emojiText, colorNieveHex)
     for i = 1, 6 do
         local snow = Instance.new("TextLabel", container)
         snow.BackgroundTransparency = 1; snow.Text = emojiText or "*"; snow.Font = Enum.Font.GothamBlack 
-        snow.TextColor3 = parseHexTag(colorNieveHex, "#ffffff"); snow.TextTransparency = 0.4; snow.TextSize = math.random(14, 22) 
+        snow.TextColor3 = parseHexTag(colorNieveHex, "#ffffff"); snow.TextTransparency = 0.4; snow.TextSize = math.random(16, 24) 
         snow.Position = UDim2.new(math.random(5, 95)/100, 0, -0.3, 0)
         snow.ZIndex = 2
         table.insert(listaCopos, snow)
@@ -198,13 +212,15 @@ local function crearUITag(player, datos, userId)
     local tTit = datos.titulo or "USER"; local tNom = player.Name:upper()
     local sF, fU = pcall(function() return Enum.Font[datos.fuente] end)
     if not sF or not fU then fU = Enum.Font.GothamBold end
-    local bT = TextService:GetTextSize(tTit, 14, fU, Vector2.new(1000, 50)); local bN = TextService:GetTextSize(tNom, 11, Enum.Font.GothamBold, Vector2.new(1000, 50))
-    local aI = 6 + 28 + 8 + math.max(bT.X, bN.X) + 12; if aI < 90 then aI = 90 end 
+    
+    local bT = TextService:GetTextSize(tTit, 16, fU, Vector2.new(1000, 50)); 
+    local bN = TextService:GetTextSize(tNom, 13, Enum.Font.GothamBold, Vector2.new(1000, 50))
+    local aI = 8 + 36 + 10 + math.max(bT.X, bN.X) + 16; if aI < 110 then aI = 110 end 
 
     local bill = Instance.new("BillboardGui", targetGuiParent)
-    bill.Name = nombreUI; bill.Adornee = head; bill.Size = UDim2.new(0, aI, 0, 40); bill.StudsOffset = Vector3.new(0, 2.2, 0); bill.AlwaysOnTop = true; bill.MaxDistance = math.huge; bill.ResetOnSpawn = false; bill.Active = true 
+    bill.Name = nombreUI; bill.Adornee = head; bill.Size = UDim2.new(0, aI, 0, 50); bill.StudsOffset = Vector3.new(0, 2.8, 0); bill.AlwaysOnTop = true; bill.MaxDistance = math.huge; bill.ResetOnSpawn = false; bill.Active = true 
     local scale = Instance.new("UIScale", bill); scale.Scale = 1
-    local card = Instance.new("Frame", bill); card.Size = UDim2.new(0, aI, 0, 40); card.AnchorPoint = Vector2.new(0.5, 0.5); card.Position = UDim2.new(0.5, 0, 0.5, 0); card.BackgroundColor3 = Color3.new(1, 1, 1) 
+    local card = Instance.new("Frame", bill); card.Size = UDim2.new(0, aI, 0, 50); card.AnchorPoint = Vector2.new(0.5, 0.5); card.Position = UDim2.new(0.5, 0, 0.5, 0); card.BackgroundColor3 = Color3.new(1, 1, 1) 
     local corner = Instance.new("UICorner", card); corner.CornerRadius = UDim.new(0, 8)
     local grad = Instance.new("UIGradient", card); grad.Rotation = 45; grad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorFondo1, "#1c1c24")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorFondo2, "#0f0f13")) })
     local stroke = Instance.new("UIStroke", card); stroke.Color = parseHexTag(datos.colorBorde, "#FFFFFF"); stroke.Transparency = 0.7; stroke.Thickness = 1.2
@@ -212,24 +228,24 @@ local function crearUITag(player, datos, userId)
     local snowCont = Instance.new("Frame", card); snowCont.Size = UDim2.new(1,0,1,0); snowCont.BackgroundTransparency = 1; snowCont.ClipsDescendants = true; Instance.new("UICorner", snowCont).CornerRadius = UDim.new(0,8)
     local listaCopos = crearNieveTag(snowCont, datos.emojiNieve, datos.colorNieve or "#ffffff")
 
-    local avF = Instance.new("Frame", card); avF.Size = UDim2.new(0, 28, 0, 28); avF.AnchorPoint = Vector2.new(0, 0.5); avF.Position = UDim2.new(0, 6, 0.5, 0); avF.BackgroundColor3 = Color3.fromHex("#2a2a35"); Instance.new("UICorner", avF).CornerRadius = UDim.new(1, 0)
+    local avF = Instance.new("Frame", card); avF.Size = UDim2.new(0, 36, 0, 36); avF.AnchorPoint = Vector2.new(0, 0.5); avF.Position = UDim2.new(0, 8, 0.5, 0); avF.BackgroundColor3 = Color3.fromHex("#2a2a35"); Instance.new("UICorner", avF).CornerRadius = UDim.new(1, 0)
     local avS = Instance.new("UIStroke", avF); avS.Color = Color3.new(0, 0, 0); avS.Transparency = 0; avS.Thickness = 1 
 
     local avatarImg = Instance.new("ImageLabel", avF); avatarImg.Size = UDim2.new(1, 0, 1, 0); avatarImg.BackgroundTransparency = 1
     task.spawn(function() local img = obtenerImagenTag(datos.imagen, userId); if avatarImg and avatarImg.Parent then avatarImg.Image = img end end)
     Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
 
-    local dot = Instance.new("Frame", avF); dot.Size = UDim2.new(0, 8, 0, 8); dot.Position = UDim2.new(1, 0, 1, 0); dot.AnchorPoint = Vector2.new(1, 1); dot.BackgroundColor3 = Color3.fromHex("#2ed573"); dot.ZIndex = 5
+    local dot = Instance.new("Frame", avF); dot.Size = UDim2.new(0, 10, 0, 10); dot.Position = UDim2.new(1, 0, 1, 0); dot.AnchorPoint = Vector2.new(1, 1); dot.BackgroundColor3 = Color3.fromHex("#2ed573"); dot.ZIndex = 5
     Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
     local dotStroke = Instance.new("UIStroke", dot); dotStroke.Color = parseHexTag(datos.colorFondo2, "#0f0f13"); dotStroke.Thickness = 2
 
-    local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -42, 0, 30); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 40, 0.5, 0); infoGroup.BackgroundTransparency = 1
+    local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -54, 0, 36); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 50, 0.5, 0); infoGroup.BackgroundTransparency = 1
 
-    local txtTitle = Instance.new("TextLabel", infoGroup); txtTitle.BackgroundTransparency = 1; txtTitle.Size = UDim2.new(1, 0, 0, 16); txtTitle.Position = UDim2.new(0, 0, 0, 0)
-    txtTitle.Font = fU; txtTitle.Text = tTit; txtTitle.TextColor3 = parseHexTag(datos.colorTitulo, "#ffffff"); txtTitle.TextSize = 14; txtTitle.TextXAlignment = Enum.TextXAlignment.Left
+    local txtTitle = Instance.new("TextLabel", infoGroup); txtTitle.BackgroundTransparency = 1; txtTitle.Size = UDim2.new(1, 0, 0, 18); txtTitle.Position = UDim2.new(0, 0, 0, 0)
+    txtTitle.Font = fU; txtTitle.Text = tTit; txtTitle.TextColor3 = parseHexTag(datos.colorTitulo, "#ffffff"); txtTitle.TextSize = 16; txtTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-    local txtName = Instance.new("TextLabel", infoGroup); txtName.BackgroundTransparency = 1; txtName.Size = UDim2.new(1, 0, 0, 12); txtName.Position = UDim2.new(0, 0, 0, 16)
-    txtName.Font = Enum.Font.GothamBold; txtName.Text = tNom; txtName.TextColor3 = parseHexTag(datos.colorNombre, "#a0a0b0"); txtName.TextSize = 11; txtName.TextXAlignment = Enum.TextXAlignment.Left
+    local txtName = Instance.new("TextLabel", infoGroup); txtName.BackgroundTransparency = 1; txtName.Size = UDim2.new(1, 0, 0, 14); txtName.Position = UDim2.new(0, 0, 0, 18)
+    txtName.Font = Enum.Font.GothamBold; txtName.Text = tNom; txtName.TextColor3 = parseHexTag(datos.colorNombre, "#a0a0b0"); txtName.TextSize = 13; txtName.TextXAlignment = Enum.TextXAlignment.Left
 
     local btnTP = Instance.new("TextButton", card); btnTP.Size = UDim2.new(1, 0, 1, 0); btnTP.BackgroundTransparency = 1; btnTP.Text = ""; btnTP.ZIndex = 100
     btnTP.MouseButton1Click:Connect(function()
@@ -260,6 +276,12 @@ task.spawn(function()
                 
                 for _, player in ipairs(Players:GetPlayers()) do
                     local id = tostring(player.UserId)
+                    
+                    -- ✨ Si está oculto en memoria, forzar invisibilidad continua
+                    if hiddenTags[id] then
+                        OcultarAvatar(player.Character, true)
+                    end
+                    
                     if isScriptUser[id] or player == LocalPlayer then
                         local cfg = apiData[id] or { titulo = "USER", colorFondo1 = "#1c1c24", colorFondo2 = "#0f0f13", colorBorde = "#ffffff", colorTitulo = "#ffffff", colorNombre = "#a0a0b0", animarNombre = false, emojiNieve = "*", colorNieve = "#ffffff", fuente = "GothamBold" }
                         local hashData = HttpService:JSONEncode(cfg)
@@ -305,7 +327,7 @@ RunService.RenderStepped:Connect(function()
             if id == tostring(LocalPlayer.UserId) then
                 data.UI.Enabled = verMiTag
             else
-                data.UI.Enabled = true
+                data.UI.Enabled = not hiddenTags[id]
             end
 
             local dist = (Camera.CFrame.Position - data.Head.Position).Magnitude
@@ -313,11 +335,11 @@ RunService.RenderStepped:Connect(function()
             if dist > 28 and data.Estado == "Abierto" then
                 data.Estado = "Cerrado"; data.SnowContainer.Visible = false
                 TweenService:Create(data.TxtTitle, animSpd, {TextTransparency = 1}):Play(); TweenService:Create(data.TxtName, animSpd, {TextTransparency = 1}):Play()
-                TweenService:Create(data.Card, animSpd, {Size = UDim2.new(0, 36, 0, 36)}):Play(); TweenService:Create(data.CardCorner, animSpd, {CornerRadius = UDim.new(1, 0)}):Play(); TweenService:Create(data.Avatar, animSpd, {Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5)}):Play()
+                TweenService:Create(data.Card, animSpd, {Size = UDim2.new(0, 46, 0, 46)}):Play(); TweenService:Create(data.CardCorner, animSpd, {CornerRadius = UDim.new(1, 0)}):Play(); TweenService:Create(data.Avatar, animSpd, {Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5)}):Play()
             elseif dist < 23 and data.Estado == "Cerrado" then
                 data.Estado = "Abierto"; data.SnowContainer.Visible = true
                 TweenService:Create(data.TxtTitle, animSpd, {TextTransparency = 0}):Play(); TweenService:Create(data.TxtName, animSpd, {TextTransparency = 0}):Play()
-                TweenService:Create(data.Card, animSpd, {Size = UDim2.new(0, data.AnchoIdeal, 0, 40)}):Play(); TweenService:Create(data.CardCorner, animSpd, {CornerRadius = UDim.new(0, 8)}):Play(); TweenService:Create(data.Avatar, animSpd, {Position = UDim2.new(0, 6, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5)}):Play()
+                TweenService:Create(data.Card, animSpd, {Size = UDim2.new(0, data.AnchoIdeal, 0, 50)}):Play(); TweenService:Create(data.CardCorner, animSpd, {CornerRadius = UDim.new(0, 8)}):Play(); TweenService:Create(data.Avatar, animSpd, {Position = UDim2.new(0, 8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5)}):Play()
             end
         else
             if data.UI then data.UI:Destroy() end; UIsActivos[id] = nil
@@ -340,6 +362,7 @@ Fix = Instance.new("Frame", TopBar); Fix.Size = UDim2.new(1, 0, 0, 5); Fix.Posit
 
 Title = Instance.new("TextLabel", TopBar); Title.Size = UDim2.new(1, -100, 1, 0); Title.Position = UDim2.new(0, 15, 0, 0); Title.BackgroundTransparency = 1; Title.Text = "C.D.T OPTIFINE // SYSTEM"; Title.TextColor3 = tWhite; Title.Font = Enum.Font.GothamBold; Title.TextSize = 12; Title.TextXAlignment = Enum.TextXAlignment.Left
 MinBtn = Instance.new("TextButton", TopBar); MinBtn.Size = UDim2.new(0, 35, 1, 0); MinBtn.Position = UDim2.new(1, -35, 0, 0); MinBtn.BackgroundTransparency = 1; MinBtn.Text = "—"; MinBtn.TextColor3 = tGreen; MinBtn.Font = Enum.Font.GothamBlack; MinBtn.TextSize = 14
+
 SetBtn = Instance.new("TextButton", TopBar); SetBtn.Size = UDim2.new(0, 35, 1, 0); SetBtn.Position = UDim2.new(1, -70, 0, 0); SetBtn.BackgroundTransparency = 1; SetBtn.Text = "⚙"; SetBtn.TextColor3 = tWhite; SetBtn.Font = Enum.Font.GothamBlack; SetBtn.TextSize = 16
 
 Console = Instance.new("ScrollingFrame", FullUI)
@@ -527,7 +550,68 @@ Players.PlayerAdded:Connect(function() if TPMain.Visible then RefreshTPMenu(TPSe
 Players.PlayerRemoving:Connect(function() if TPMain.Visible then RefreshTPMenu(TPSearchBox.Text) end end)
 
 -- ==================================================================
--- 4. INTERFAZ INVISIBLE MENU (SEAT MODE FIX GHOST)
+-- ✨ [NUEVO] INTERFAZ HIDE MENU (OCULTAR AVATAR + TAG VISUALMENTE) ✨
+-- ==================================================================
+HideMain = Instance.new("Frame", ScreenGui); HideMain.Size = UDim2.new(0, 260, 0, 380); HideMain.Position = UDim2.new(0.5, 150, 0.5, -190); HideMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); HideMain.BorderSizePixel = 0; HideMain.ClipsDescendants = true; HideMain.Visible = false; Instance.new("UICorner", HideMain).CornerRadius = UDim.new(0, 6); HideMainStroke = Instance.new("UIStroke", HideMain); HideMainStroke.Color = borderDark
+HideTopBar = Instance.new("Frame", HideMain); HideTopBar.Size = UDim2.new(1, 0, 0, 35); HideTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); HideTopBar.BorderSizePixel = 0; Instance.new("UICorner", HideTopBar).CornerRadius = UDim.new(0, 6)
+HideFix = Instance.new("Frame", HideTopBar); HideFix.Size = UDim2.new(1, 0, 0, 5); HideFix.Position = UDim2.new(0, 0, 1, -5); HideFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); HideFix.BorderSizePixel = 0
+HideTitle = Instance.new("TextLabel", HideTopBar); HideTitle.Size = UDim2.new(1, -70, 1, 0); HideTitle.Position = UDim2.new(0, 15, 0, 0); HideTitle.BackgroundTransparency = 1; HideTitle.Text = "HIDE PLAYERS"; HideTitle.TextColor3 = tWhite; HideTitle.Font = Enum.Font.GothamBold; HideTitle.TextSize = 13; HideTitle.TextXAlignment = Enum.TextXAlignment.Left
+HideMinBtn = Instance.new("TextButton", HideTopBar); HideMinBtn.Size = UDim2.new(0, 35, 1, 0); HideMinBtn.Position = UDim2.new(1, -70, 0, 0); HideMinBtn.BackgroundTransparency = 1; HideMinBtn.Text = "—"; HideMinBtn.TextColor3 = tYellow; HideMinBtn.Font = Enum.Font.GothamBlack; HideMinBtn.TextSize = 14
+HideCloseBtn = Instance.new("TextButton", HideTopBar); HideCloseBtn.Size = UDim2.new(0, 35, 1, 0); HideCloseBtn.Position = UDim2.new(1, -35, 0, 0); HideCloseBtn.BackgroundTransparency = 1; HideCloseBtn.Text = "X"; HideCloseBtn.TextColor3 = tRed; HideCloseBtn.Font = Enum.Font.GothamBlack; HideCloseBtn.TextSize = 12
+HideSearchBox = Instance.new("TextBox", HideMain); HideSearchBox.Size = UDim2.new(1, -10, 0, 35); HideSearchBox.Position = UDim2.new(0, 5, 0, 40); HideSearchBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20); HideSearchBox.TextColor3 = Color3.fromRGB(255, 255, 255); HideSearchBox.Text = ""; HideSearchBox.PlaceholderText = "🔍 Buscar jugador..."; HideSearchBox.Font = Enum.Font.Gotham; HideSearchBox.TextSize = 13; HideSearchBox.ClearTextOnFocus = false; Instance.new("UICorner", HideSearchBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", HideSearchBox).Color = Color3.fromRGB(50, 50, 50)
+HideScroll = Instance.new("ScrollingFrame", HideMain); HideScroll.Size = UDim2.new(1, -10, 1, -85); HideScroll.Position = UDim2.new(0, 5, 0, 80); HideScroll.BackgroundTransparency = 1; HideScroll.BorderSizePixel = 0; HideScroll.ScrollBarThickness = 2; HideScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
+HideListLayout = Instance.new("UIListLayout", HideScroll); HideListLayout.Padding = UDim.new(0, 5)
+
+ApplyResponsiveScale(HideMain); MakeDraggable(HideTopBar, HideMain)
+
+local hideMinimized = false
+HideMinBtn.MouseButton1Click:Connect(function()
+    hideMinimized = not hideMinimized; HideMain:TweenSize(hideMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 380), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    HideMinBtn.Text = hideMinimized and "+" or "—"; HideFix.Visible = not hideMinimized
+end)
+HideCloseBtn.MouseButton1Click:Connect(function() HideMain.Visible = false end)
+
+local function RefreshHideMenu(filterText)
+    filterText = filterText and string.lower(filterText) or ""
+    for _, child in pairs(HideScroll:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            if filterText == "" or string.find(string.lower(plr.Name), filterText) or string.find(string.lower(plr.DisplayName), filterText) then
+                local Card = Instance.new("Frame", HideScroll); Card.Size = UDim2.new(1, -5, 0, 40); Card.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 6)
+                local Avatar = Instance.new("ImageLabel", Card); Avatar.Size = UDim2.new(0, 30, 0, 30); Avatar.Position = UDim2.new(0, 5, 0, 5); Avatar.BackgroundTransparency = 1; Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
+                task.spawn(function() pcall(function() Avatar.Image = Players:GetUserThumbnailAsync(plr.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end) end)
+                local NameLbl = Instance.new("TextLabel", Card); NameLbl.Size = UDim2.new(1, -110, 1, 0); NameLbl.Position = UDim2.new(0, 40, 0, 0); NameLbl.BackgroundTransparency = 1; NameLbl.Text = plr.DisplayName; NameLbl.TextColor3 = tWhite; NameLbl.Font = Enum.Font.GothamMedium; NameLbl.TextSize = 13; NameLbl.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local idStr = tostring(plr.UserId)
+                local isHid = hiddenTags[idStr]
+                
+                local HBtn = Instance.new("TextButton", Card); HBtn.Size = UDim2.new(0, 60, 0, 26); HBtn.Position = UDim2.new(1, -65, 0.5, -13)
+                HBtn.BackgroundColor3 = isHid and tGreen or Color3.fromRGB(40, 40, 40)
+                HBtn.Text = isHid and "OCULTO" or "VISIBLE"
+                HBtn.TextColor3 = isHid and Color3.fromRGB(10, 10, 10) or tWhite
+                HBtn.Font = Enum.Font.GothamBold; HBtn.TextSize = 11; Instance.new("UICorner", HBtn).CornerRadius = UDim.new(0, 4)
+                
+                HBtn.MouseButton1Click:Connect(function()
+                    hiddenTags[idStr] = not hiddenTags[idStr]
+                    local h = hiddenTags[idStr]
+                    HBtn.BackgroundColor3 = h and tGreen or Color3.fromRGB(40, 40, 40)
+                    HBtn.Text = h and "OCULTO" or "VISIBLE"
+                    HBtn.TextColor3 = h and Color3.fromRGB(10, 10, 10) or tWhite
+                    
+                    -- ✨ Ocultar o mostrar al instante ✨
+                    OcultarAvatar(plr.Character, h)
+                end)
+            end
+        end
+    end
+    HideScroll.CanvasSize = UDim2.new(0, 0, 0, HideListLayout.AbsoluteContentSize.Y + 10)
+end
+HideSearchBox:GetPropertyChangedSignal("Text"):Connect(function() RefreshHideMenu(HideSearchBox.Text) end)
+Players.PlayerAdded:Connect(function() if HideMain.Visible then RefreshHideMenu(HideSearchBox.Text) end end)
+Players.PlayerRemoving:Connect(function() if HideMain.Visible then RefreshHideMenu(HideSearchBox.Text) end end)
+
+-- ==================================================================
+-- 4. INTERFAZ INVISIBLE MENU (NUEVA INVISIBILIDAD LOCAL)
 -- ==================================================================
 InvMain = Instance.new("Frame", ScreenGui); InvMain.Size = UDim2.new(0, 260, 0, 100); InvMain.Position = UDim2.new(0, 20, 0, 20); InvMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); InvMain.BorderSizePixel = 0; InvMain.ClipsDescendants = true; InvMain.Visible = false; Instance.new("UICorner", InvMain).CornerRadius = UDim.new(0, 6); InvMainStroke = Instance.new("UIStroke", InvMain); InvMainStroke.Color = borderDark
 InvTopBar = Instance.new("Frame", InvMain); InvTopBar.Size = UDim2.new(1, 0, 0, 35); InvTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); InvTopBar.BorderSizePixel = 0; Instance.new("UICorner", InvTopBar).CornerRadius = UDim.new(0, 6)
@@ -556,9 +640,12 @@ end
 
 local isGhostActive = false; local invKeybind = nil; local isInvBinding = false; local ghostDebounce = false
 
-local function setCharacterTransparency(transparency)
-    local character = LocalPlayer.Character
-    if character then for _, part in ipairs(character:GetDescendants()) do if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.Transparency = transparency end end end
+local function setCharacterTransparency(char, val)
+    for _, p in ipairs(char:GetDescendants()) do
+        if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
+            p.Transparency = val
+        end
+    end
 end
 
 local function ToggleGhost()
@@ -568,14 +655,13 @@ local function ToggleGhost()
     local char = LocalPlayer.Character
 
     if isGhostActive then
-        setCharacterTransparency(0.5)
         if char and char:FindFirstChild("HumanoidRootPart") then
+            setCharacterTransparency(char, 0.5)
             local savedpos = char.HumanoidRootPart.CFrame
             task.wait()
             pcall(function() char:MoveTo(Vector3.new(-25.95, 84, 3537.55)) end)
             task.wait(0.15)
             
-            -- Limpiar restos anteriores
             if Workspace:FindFirstChild("invischair") then Workspace.invischair:Destroy() end
 
             local Seat = Instance.new("Seat", Workspace)
@@ -589,11 +675,11 @@ local function ToggleGhost()
                 InvToggleBtn.BackgroundColor3 = tGreen; InvToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); InvToggleBtn.Text = "INVISIBILIDAD: ON"
                 showNotice("Invisibility Enabled")
             else 
-                Seat:Destroy(); isGhostActive = false; setCharacterTransparency(0) 
+                Seat:Destroy(); isGhostActive = false; setCharacterTransparency(char, 0) 
             end
         end
     else
-        setCharacterTransparency(0)
+        if char then setCharacterTransparency(char, 0) end
         local inv = Workspace:FindFirstChild("invischair")
         if inv then pcall(function() inv:Destroy() end) end
         InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
@@ -800,7 +886,7 @@ function ToggleVFly()
         VFlyToggleBtn.BackgroundColor3 = tPurple; VFlyToggleBtn.Text = "V-FLY: ON"
         if root then vFlyCurrentVel = root.Velocity end; vFlyConn = RunService.Heartbeat:Connect(VFlyLoop)
     else
-        VFlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); VFlyToggleBtn.Text = "V-FLY: OFF"
+        VFlyToggleBtn.BackgroundColor3 = Color.fromRGB(30, 30, 30); VFlyToggleBtn.Text = "V-FLY: OFF"
         if vFlyConn then vFlyConn:Disconnect(); vFlyConn = nil end
     end
 end
@@ -937,7 +1023,6 @@ SetBtn.MouseButton1Click:Connect(function()
     if SetMain then SetMain.Visible = not SetMain.Visible end
 end)
 
--- ✨ TEMA CRISTAL ROUNDED (Semitransparencia + Bordes Cian) ✨
 local currentTheme = "Default"
 ThemeToggleBtn.MouseButton1Click:Connect(function()
     if currentTheme == "Default" then
@@ -961,10 +1046,10 @@ ThemeToggleBtn.MouseButton1Click:Connect(function()
     local strokeColor = isGlass and tCyan or borderDark
     local strokeTrans = isGlass and 0.3 or 0
 
-    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain}
-    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar}
-    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix}
-    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke}
+    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain, HideMain}
+    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar, HideTopBar}
+    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix, HideFix}
+    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke}
     
     for _, f in ipairs(frames) do if f then f.BackgroundTransparency = bgTrans; f.BackgroundColor3 = bgColor end end
     for _, tb in ipairs(topbars) do if tb then tb.BackgroundTransparency = tbTrans; tb.BackgroundColor3 = tbColor end end
@@ -1122,7 +1207,7 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
     if not gp then
         if input.KeyCode == Enum.KeyCode.Insert then 
             if Main.Visible then
-                Main.Visible = false; MPMain.Visible = false; TPMain.Visible = false; InvMain.Visible = false; FlyMain.Visible = false; VFlyMain.Visible = false; NoclipMain.Visible = false; TripMain.Visible = false; ChatMain.Visible = false; SetMain.Visible = false
+                Main.Visible = false; MPMain.Visible = false; TPMain.Visible = false; InvMain.Visible = false; FlyMain.Visible = false; VFlyMain.Visible = false; NoclipMain.Visible = false; TripMain.Visible = false; ChatMain.Visible = false; SetMain.Visible = false; HideMain.Visible = false
             else
                 Main.Visible = true
             end
@@ -1187,9 +1272,15 @@ AddCmd("noclip", "Abre el panel de Noclip Walk", function() NoclipMain.Visible =
 AddCmd("trip", "Abre el panel de Trip Mode", function() TripMain.Visible = true; LogMessage("Menú Trip abierto.", tGreen) end)
 AddCmd("chat", "Abre el chat global", function() ChatMain.Visible = true; ActualizarChat(); LogMessage("Chat Global conectado.", tGreen) end)
 AddCmd("settings", "Abre el panel de Ajustes/Temas", function() SetMain.Visible = true; LogMessage("Menú de Ajustes abierto.", tOrange) end)
+
+AddCmd("hide", "Abre el menú para ocultar avatares completos", function() 
+    HideSearchBox.Text = ""; RefreshHideMenu(); HideMain.Visible = true; LogMessage("Menú Ocultar Jugadores abierto.", tPurple) 
+end)
+
 AddCmd("speed", "Cambia la velocidad", function(args)
     if args[1] and tonumber(args[1]) then LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(args[1]); LogMessage("Velocidad -> " .. args[1], tGreen) end
 end)
+
 AddCmd("vtag", "Oculta/Muestra tu propio Name Tag en tu pantalla", function()
     verMiTag = not verMiTag
     if verMiTag then
@@ -1222,6 +1313,15 @@ AddCmd("destroy", "Cierra y elimina el panel completo", function()
     for _, v in pairs(UIsActivos) do if v.UI then v.UI:Destroy() end end
     UIsActivos = {}
     
+    -- Restaurar avatares ocultos
+    for idStr, isHidden in pairs(hiddenTags) do
+        if isHidden then
+            local p = Players:GetPlayerByUserId(tonumber(idStr))
+            if p and p.Character then OcultarAvatar(p.Character, false) end
+        end
+    end
+    hiddenTags = {}
+
     if targetGuiParent then
         for _, obj in ipairs(targetGuiParent:GetChildren()) do
             if string.sub(obj.Name, 1, 9) == "SafeHTML_" then 
