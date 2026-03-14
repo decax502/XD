@@ -216,7 +216,7 @@ local function crearUITag(player, datos, userId)
     local aI = 8 + 36 + 10 + math.max(bT.X, bN.X) + 16; if aI < 110 then aI = 110 end 
 
     local bill = Instance.new("BillboardGui", targetGuiParent)
-    bill.Name = nombreUI; bill.Adornee = head; bill.Size = UDim2.new(0, aI, 0, 50); bill.StudsOffset = Vector3.new(0, 2.8, 0); bill.AlwaysOnTop = true; bill.MaxDistance = math.huge; bill.ResetOnSpawn = false; bill.Active = true 
+    bill.Name = nombreUI; bill.Adornee = head; bill.Size = UDim2.new(0, aI, 0, 50); bill.StudsOffset = Vector3.new(0, 1.8, 0); bill.AlwaysOnTop = true; bill.MaxDistance = math.huge; bill.ResetOnSpawn = false; bill.Active = true 
     local scale = Instance.new("UIScale", bill); scale.Scale = 1
     local card = Instance.new("Frame", bill); card.Size = UDim2.new(0, aI, 0, 50); card.AnchorPoint = Vector2.new(0.5, 0.5); card.Position = UDim2.new(0.5, 0, 0.5, 0); card.BackgroundColor3 = Color3.new(1, 1, 1) 
     local corner = Instance.new("UICorner", card); corner.CornerRadius = UDim.new(0, 8)
