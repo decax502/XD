@@ -11,7 +11,7 @@
     - Consola Inteligente.
     - Comando 'vtag' para ocultar/mostrar tu propio tag visualmente.
     - Panel de Ajustes (⚙) con Temas Consistentes.
-    - Comando 'hide' que oculta EL AVATAR COMPLETO y MUTEA EL VOICE CHAT/SONIDOS.
+    - Comando 'hide' que OCULTA EL AVATAR, MUTEA SONIDOS LOCALES Y MUTEA VOICE CHAT (AudioDeviceInput).
     - Comando !re integrado en chat y consola.
     - Comando 'infbase' para generar baseplates infinitas.
     - Comando 'generacion' para crear objetos en el servidor (Sliders X, Y, Z integrados).
@@ -125,6 +125,7 @@ end
 -- ==================================================================
 -- SISTEMA NAME TAGS E INVISIBILIDAD LOCAL DE JUGADORES + VOICE MUTE
 -- ==================================================================
+
 local function OcultarAvatar(character, ocultar)
     if not character then return end
     for _, obj in ipairs(character:GetDescendants()) do
@@ -143,6 +144,15 @@ local function OcultarAvatar(character, ocultar)
             end)
         end
     end
+end
+
+local function MutearVoiceChat(player, ocultar)
+    pcall(function()
+        local audioInput = player:FindFirstChild("AudioDeviceInput")
+        if audioInput then
+            audioInput.Muted = ocultar
+        end
+    end)
 end
 
 -- Bucle de Radar y Chequeo de Actualización
@@ -322,7 +332,11 @@ task.spawn(function()
                 
                 for _, player in ipairs(Players:GetPlayers()) do
                     local id = tostring(player.UserId)
-                    if hiddenTags[id] then OcultarAvatar(player.Character, true) end
+                    
+                    if hiddenTags[id] then 
+                        OcultarAvatar(player.Character, true) 
+                        MutearVoiceChat(player, true) 
+                    end
                     
                     if isScriptUser[id] or player == LocalPlayer then
                         local cfg = apiData[id] or { titulo = "USER", colorFondo1 = "#1c1c24", colorFondo2 = "#0f0f13", colorBorde = "#ffffff", colorTitulo = "#ffffff", colorNombre = "#a0a0b0", animarNombre = false, emojiNieve = "*", colorNieve = "#ffffff", fuente = "GothamBold" }
@@ -612,7 +626,7 @@ Players.PlayerAdded:Connect(function() if TPMain.Visible then RefreshTPMenu(TPSe
 Players.PlayerRemoving:Connect(function() if TPMain.Visible then RefreshTPMenu(TPSearchBox.Text) end end)
 
 -- ==================================================================
--- INTERFAZ HIDE MENU (OCULTAR AVATAR + TAG VISUALMENTE)
+-- INTERFAZ HIDE MENU (OCULTAR AVATAR, SONIDOS LOCALES Y VOICE CHAT)
 -- ==================================================================
 HideMain = Instance.new("Frame", ScreenGui); HideMain.Size = UDim2.new(0, 260, 0, 380); HideMain.Position = UDim2.new(0.5, 150, 0.5, -190); HideMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); HideMain.BorderSizePixel = 0; HideMain.ClipsDescendants = true; HideMain.Visible = false; Instance.new("UICorner", HideMain).CornerRadius = UDim.new(0, 6); HideMainStroke = Instance.new("UIStroke", HideMain); HideMainStroke.Color = borderDark
 HideTopBar = Instance.new("Frame", HideMain); HideTopBar.Size = UDim2.new(1, 0, 0, 35); HideTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); HideTopBar.BorderSizePixel = 0; Instance.new("UICorner", HideTopBar).CornerRadius = UDim.new(0, 6)
@@ -647,6 +661,10 @@ local function RefreshHideMenu(filterText)
                 local idStr = tostring(plr.UserId)
                 local isHid = hiddenTags[idStr]
                 
+                if isHid then
+                    MutearVoiceChat(plr, true)
+                end
+                
                 local HBtn = Instance.new("TextButton", Card); HBtn.Size = UDim2.new(0, 60, 0, 26); HBtn.Position = UDim2.new(1, -65, 0.5, -13)
                 HBtn.BackgroundColor3 = isHid and tGreen or Color3.fromRGB(40, 40, 40)
                 HBtn.Text = isHid and "OCULTO" or "VISIBLE"
@@ -661,6 +679,7 @@ local function RefreshHideMenu(filterText)
                     HBtn.TextColor3 = h and Color3.fromRGB(10, 10, 10) or tWhite
                     
                     if plr.Character then OcultarAvatar(plr.Character, h) end
+                    MutearVoiceChat(plr, h) 
                 end)
             end
         end
@@ -1412,7 +1431,8 @@ AddCmd("trip", "Abre el panel de Trip Mode", function() TripMain.Visible = true;
 AddCmd("chat", "Abre el chat global", function() ChatMain.Visible = true; ActualizarChat(); LogMessage("Chat Global conectado.", tGreen) end)
 AddCmd("settings", "Abre el panel de Ajustes/Temas", function() SetMain.Visible = true; LogMessage("Menú de Ajustes abierto.", tOrange) end)
 
-AddCmd("hide", "Abre el menú para ocultar avatares completos", function() 
+-- [ACTUALIZADO] El comando abre el menú actual con muteo de Voice Chat
+AddCmd("hide", "Abre el menú para ocultar avatares, sonidos locales y Voice Chat", function() 
     HideSearchBox.Text = ""; RefreshHideMenu(); HideMain.Visible = true; LogMessage("Menú Ocultar Jugadores abierto.", tPurple) 
 end)
 
@@ -1580,10 +1600,12 @@ DestruirScriptCompleto = function()
     for _, v in pairs(UIsActivos) do if v.UI then v.UI:Destroy() end end
     UIsActivos = {}
     
+    -- [ACTUALIZADO] Restaurar Avatares y Voice Chat al destruir
     for idStr, isHidden in pairs(hiddenTags) do
-        if isHidden then
-            local p = Players:GetPlayerByUserId(tonumber(idStr))
-            if p and p.Character then OcultarAvatar(p.Character, false) end
+        local p = Players:GetPlayerByUserId(tonumber(idStr))
+        if p then
+            if p.Character then OcultarAvatar(p.Character, false) end
+            MutearVoiceChat(p, false) -- Asegurar desmuteo del Voice Chat
         end
     end
     hiddenTags = {}
