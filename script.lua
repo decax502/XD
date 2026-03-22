@@ -1,5 +1,5 @@
 --[[
-    C.D.T OPTIFINE - V10.6 PROJECT SAFE (KEY & AUTO-UPDATE)
+    C.D.T OPTIFINE - V10.7 PROJECT SAFE (KEY & AUTO-UPDATE)
     - Trip Mode (Un solo toque para caer, te quedas tirado hasta saltar con ESPACIO).
     - Inyección Segura (Bulletproof) y Responsive UI.
     - TP Menu (Buscador dinámico).
@@ -13,7 +13,9 @@
     - Panel de Ajustes (⚙) con Temas Consistentes.
     - Comando 'hide' que oculta EL AVATAR COMPLETO y MUTEA EL VOICE CHAT/SONIDOS.
     - Comando !re integrado en chat y consola.
-    - SISTEMA DE KEY, HWID, RECORDATORIO DE 30 DÍAS Y AUTO-ACTUALIZACIÓN GLOBAL (DESTRUCCIÓN TOTAL).
+    - Comando 'infbase' para generar baseplates infinitas.
+    - Comando 'generacion' para crear objetos en el servidor (Sliders X, Y, Z integrados).
+    - SISTEMA DE KEY, HWID, RECORDATORIO DE 30 DÍAS Y AUTO-ACTUALIZACIÓN GLOBAL.
 ]]
 
 local Players = game:GetService("Players")
@@ -28,6 +30,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local Lighting = game:GetService("Lighting")
 local TextService = game:GetService("TextService")
 local RbxAnalytics = game:GetService("RbxAnalyticsService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 repeat task.wait() until Players.LocalPlayer
 local LocalPlayer = Players.LocalPlayer
@@ -160,8 +163,7 @@ task.spawn(function()
                 if _GlobalUpdateTimestamp == 0 then
                     _GlobalUpdateTimestamp = dat.updateTime
                 elseif dat.updateTime > _GlobalUpdateTimestamp then
-                    -- Actualización Global Detectada
-                    scriptActivoTags = false -- Frena el bucle sin usar break
+                    scriptActivoTags = false
                     AutoRestartScript()
                 end
             end
@@ -1057,6 +1059,82 @@ TripKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
+-- 12. GENERADOR C.D.T (EVENT GENERATION SLIDERS)
+-- ==================================================================
+GenMain = Instance.new("Frame", ScreenGui); GenMain.Size = UDim2.new(0, 260, 0, 310); GenMain.Position = UDim2.new(0.5, 100, 0.5, -150); GenMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GenMain.BorderSizePixel = 0; GenMain.ClipsDescendants = true; GenMain.Visible = false; Instance.new("UICorner", GenMain).CornerRadius = UDim.new(0, 6); GenMainStroke = Instance.new("UIStroke", GenMain); GenMainStroke.Color = borderDark
+GenTopBar = Instance.new("Frame", GenMain); GenTopBar.Size = UDim2.new(1, 0, 0, 35); GenTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GenTopBar.BorderSizePixel = 0; Instance.new("UICorner", GenTopBar).CornerRadius = UDim.new(0, 6)
+GenFix = Instance.new("Frame", GenTopBar); GenFix.Size = UDim2.new(1, 0, 0, 5); GenFix.Position = UDim2.new(0, 0, 1, -5); GenFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GenFix.BorderSizePixel = 0
+GenTitle = Instance.new("TextLabel", GenTopBar); GenTitle.Size = UDim2.new(1, -70, 1, 0); GenTitle.Position = UDim2.new(0, 15, 0, 0); GenTitle.BackgroundTransparency = 1; GenTitle.Text = "GENERADOR C.D.T"; GenTitle.TextColor3 = tWhite; GenTitle.Font = Enum.Font.GothamBold; GenTitle.TextSize = 13; GenTitle.TextXAlignment = Enum.TextXAlignment.Left
+GenMinBtn = Instance.new("TextButton", GenTopBar); GenMinBtn.Size = UDim2.new(0, 35, 1, 0); GenMinBtn.Position = UDim2.new(1, -70, 0, 0); GenMinBtn.BackgroundTransparency = 1; GenMinBtn.Text = "—"; GenMinBtn.TextColor3 = tGreen; GenMinBtn.Font = Enum.Font.GothamBlack; GenMinBtn.TextSize = 14
+GenCloseBtn = Instance.new("TextButton", GenTopBar); GenCloseBtn.Size = UDim2.new(0, 35, 1, 0); GenCloseBtn.Position = UDim2.new(1, -35, 0, 0); GenCloseBtn.BackgroundTransparency = 1; GenCloseBtn.Text = "X"; GenCloseBtn.TextColor3 = tRed; GenCloseBtn.Font = Enum.Font.GothamBlack; GenCloseBtn.TextSize = 12
+
+local GenInput = Instance.new("TextBox", GenMain)
+GenInput.Size = UDim2.new(1, -20, 0, 30); GenInput.Position = UDim2.new(0, 10, 0, 45); GenInput.BackgroundColor3 = Color3.fromRGB(20, 20, 20); GenInput.TextColor3 = tWhite; GenInput.Text = ""; GenInput.PlaceholderText = "Nombre del objeto..."; GenInput.Font = Enum.Font.Gotham; GenInput.TextSize = 12; GenInput.ClearTextOnFocus = false; Instance.new("UICorner", GenInput).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", GenInput).Color = Color3.fromRGB(50, 50, 50); Instance.new("UIPadding", GenInput).PaddingLeft = UDim.new(0, 5)
+
+local function CreateCDTSlider(parent, name, yPos, defaultValue)
+    local SliderFrame = Instance.new("Frame", parent)
+    SliderFrame.Size = UDim2.new(1, -20, 0, 40); SliderFrame.Position = UDim2.new(0, 10, 0, yPos); SliderFrame.BackgroundTransparency = 1
+    
+    local Label = Instance.new("TextLabel", SliderFrame)
+    Label.Size = UDim2.new(1, 0, 0, 15); Label.BackgroundTransparency = 1; Label.Text = name .. ": " .. defaultValue; Label.TextColor3 = tWhite; Label.Font = Enum.Font.GothamMedium; Label.TextSize = 12; Label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local Bar = Instance.new("Frame", SliderFrame)
+    Bar.Size = UDim2.new(1, 0, 0, 6); Bar.Position = UDim2.new(0, 0, 0, 22); Bar.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
+    
+    local Fill = Instance.new("Frame", Bar)
+    Fill.Size = UDim2.new(defaultValue/200, 0, 1, 0); Fill.BackgroundColor3 = tCyan; Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+    
+    local SliderBtn = Instance.new("TextButton", Bar)
+    SliderBtn.Size = UDim2.new(0, 12, 0, 18); SliderBtn.Position = UDim2.new(defaultValue/200, -6, 0.5, -9); SliderBtn.Text = ""; SliderBtn.BackgroundColor3 = tWhite; Instance.new("UICorner", SliderBtn).CornerRadius = UDim.new(1, 0)
+    
+    local value = defaultValue
+    local dragging = false
+
+    local function update(input)
+        local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+        value = math.floor(1 + (pos * 199))
+        Fill.Size = UDim2.new(pos, 0, 1, 0)
+        SliderBtn.Position = UDim2.new(pos, -6, 0.5, -9)
+        Label.Text = name .. ": " .. value
+    end
+
+    SliderBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true end end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
+    UserInputService.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then update(input) end end)
+
+    return function() return value end
+end
+
+local getX = CreateCDTSlider(GenMain, "Ancho (X)", 85, 2)
+local getY = CreateCDTSlider(GenMain, "Alto (Y)", 135, 2)
+local getZ = CreateCDTSlider(GenMain, "Largo (Z)", 185, 2)
+
+local GenFireBtn = Instance.new("TextButton", GenMain)
+GenFireBtn.Size = UDim2.new(1, -20, 0, 40); GenFireBtn.Position = UDim2.new(0, 10, 0, 250); GenFireBtn.BackgroundColor3 = tGreen; GenFireBtn.TextColor3 = Color3.fromRGB(10, 10, 10); GenFireBtn.Text = "GENERAR OBJETO"; GenFireBtn.Font = Enum.Font.GothamBold; GenFireBtn.TextSize = 13; Instance.new("UICorner", GenFireBtn).CornerRadius = UDim.new(0, 6)
+
+ApplyResponsiveScale(GenMain); MakeDraggable(GenTopBar, GenMain)
+
+local genMinimized = false
+GenMinBtn.MouseButton1Click:Connect(function()
+    genMinimized = not genMinimized; GenMain:TweenSize(genMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 310), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true); GenMinBtn.Text = genMinimized and "+" or "—"; GenFix.Visible = not genMinimized
+end)
+GenCloseBtn.MouseButton1Click:Connect(function() GenMain.Visible = false end)
+
+GenFireBtn.MouseButton1Click:Connect(function()
+    local Event = ReplicatedStorage:FindFirstChild("event_generation")
+    if Event then
+        local valX, valY, valZ = getX(), getY(), getZ()
+        Event:FireServer(GenInput.Text, Vector3.new(valX, valY, valZ))
+        -- Feedback visual en el botón
+        local oldText = GenFireBtn.Text; GenFireBtn.Text = "¡ENVIADO!"; task.wait(1); GenFireBtn.Text = oldText
+    else
+        -- Feedback de error
+        local oldText = GenFireBtn.Text; GenFireBtn.BackgroundColor3 = tRed; GenFireBtn.TextColor3 = tWhite; GenFireBtn.Text = "ERROR: EVENTO NO ENCONTRADO"; task.wait(2); GenFireBtn.BackgroundColor3 = tGreen; GenFireBtn.TextColor3 = Color3.fromRGB(10, 10, 10); GenFireBtn.Text = oldText
+    end
+end)
+
+
+-- ==================================================================
 -- 11. INTERFAZ DE AJUSTES Y TEMAS (SETTINGS / THEMES)
 -- ==================================================================
 SetMain = Instance.new("Frame", ScreenGui); SetMain.Size = UDim2.new(0, 260, 0, 100); SetMain.Position = UDim2.new(0.5, 0, 0.5, 0); SetMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); SetMain.BorderSizePixel = 0; SetMain.ClipsDescendants = true; SetMain.Visible = false; Instance.new("UICorner", SetMain).CornerRadius = UDim.new(0, 6); SetMainStroke = Instance.new("UIStroke", SetMain); SetMainStroke.Color = borderDark
@@ -1100,10 +1178,10 @@ ThemeToggleBtn.MouseButton1Click:Connect(function()
     local strokeColor = isGlass and tCyan or borderDark
     local strokeTrans = isGlass and 0.3 or 0
 
-    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain, HideMain}
-    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar, HideTopBar}
-    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix, HideFix}
-    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke}
+    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain, HideMain, GenMain}
+    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar, HideTopBar, GenTopBar}
+    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix, HideFix, GenFix}
+    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke}
     
     for _, f in ipairs(frames) do if f then f.BackgroundTransparency = bgTrans; f.BackgroundColor3 = bgColor end end
     for _, tb in ipairs(topbars) do if tb then tb.BackgroundTransparency = tbTrans; tb.BackgroundColor3 = tbColor end end
@@ -1261,7 +1339,7 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
     if not gp then
         if input.KeyCode == Enum.KeyCode.Insert then 
             if Main.Visible then
-                Main.Visible = false; MPMain.Visible = false; TPMain.Visible = false; InvMain.Visible = false; FlyMain.Visible = false; VFlyMain.Visible = false; NoclipMain.Visible = false; TripMain.Visible = false; ChatMain.Visible = false; SetMain.Visible = false; HideMain.Visible = false
+                Main.Visible = false; MPMain.Visible = false; TPMain.Visible = false; InvMain.Visible = false; FlyMain.Visible = false; VFlyMain.Visible = false; NoclipMain.Visible = false; TripMain.Visible = false; ChatMain.Visible = false; SetMain.Visible = false; HideMain.Visible = false; GenMain.Visible = false
             else
                 Main.Visible = true
             end
@@ -1366,6 +1444,112 @@ AddCmd("re", "Fuerza el respawn y te devuelve a tu posición actual", function()
     end
 end)
 
+-- INTEGRACIÓN DE INFINITE BASEPLATE COMO COMANDO
+local infBaseActivo = false
+AddCmd("infbase", "Genera baseplates infinitas alrededor de los jugadores", function()
+    if infBaseActivo then
+        LogMessage("Baseplate infinita ya está activa.", tYellow)
+        return
+    end
+    
+    local baseplateOriginal = workspace:FindFirstChild("Baseplate")
+    if not baseplateOriginal then
+        LogMessage("Error: No se encontró 'Baseplate' en el mapa.", tRed)
+        return
+    end
+    
+    infBaseActivo = true
+    LogMessage("Iniciando sistema de Baseplate Infinita...", tGreen)
+    
+    task.spawn(function()
+        local ORIGIN_POS = baseplateOriginal.Position
+        local TILE_SIZE = 648
+        local TILE_HEIGHT = 16
+
+        local RENDER_DISTANCE = 2
+        local DELETE_DISTANCE = 4
+        local UPDATE_TICK = 0.0
+
+        baseplateOriginal.Size = Vector3.new(TILE_SIZE, TILE_HEIGHT, TILE_SIZE)
+        local plantilla = baseplateOriginal:Clone()
+        baseplateOriginal:Destroy() 
+
+        local activeChunks = {}
+        local baseplateFolder = Instance.new("Folder", workspace)
+        baseplateFolder.Name = "BaseplatesInfinitas"
+
+        local function getChunkKey(x, z)
+            return x .. "_" .. z
+        end
+
+        while scriptActivoTags and infBaseActivo do
+            task.wait(UPDATE_TICK)
+            local chunksNecesarios = {}
+            local playerPositions = {}
+
+            for _, player in ipairs(Players:GetPlayers()) do
+                local char = player.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    table.insert(playerPositions, char.HumanoidRootPart.Position)
+                end
+            end
+
+            for _, pos in ipairs(playerPositions) do
+                local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
+                local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
+
+                for x = -RENDER_DISTANCE, RENDER_DISTANCE do
+                    for z = -RENDER_DISTANCE, RENDER_DISTANCE do
+                        local key = getChunkKey(currentX + x, currentZ + z)
+                        chunksNecesarios[key] = {X = currentX + x, Z = currentZ + z}
+                    end
+                end
+            end
+
+            for key, coords in pairs(chunksNecesarios) do
+                if not activeChunks[key] then
+                    local nueva = plantilla:Clone()
+                    nueva.Name = "Chunk_" .. key
+                    nueva.Position = Vector3.new(
+                        ORIGIN_POS.X + (coords.X * TILE_SIZE),
+                        ORIGIN_POS.Y,
+                        ORIGIN_POS.Z + (coords.Z * TILE_SIZE)
+                    )
+                    nueva.Parent = baseplateFolder
+                    activeChunks[key] = {Instance = nueva, X = coords.X, Z = coords.Z}
+                end
+            end
+
+            for key, data in pairs(activeChunks) do
+                local estaCerca = false
+                for _, pos in ipairs(playerPositions) do
+                    local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
+                    local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
+                    
+                    local dist = math.max(math.abs(data.X - currentX), math.abs(data.Z - currentZ))
+                    
+                    if dist <= DELETE_DISTANCE then
+                        estaCerca = true
+                        break
+                    end
+                end
+
+                if not estaCerca then
+                    data.Instance:Destroy()
+                    activeChunks[key] = nil
+                end
+            end
+        end
+    end)
+end)
+
+-- INTEGRACIÓN DE COMANDO GENERACION C.D.T
+AddCmd("generacion", "Abre el panel del Generador de Objetos", function()
+    GenMain.Visible = true
+    LogMessage("Generador C.D.T abierto.", tCyan)
+end)
+
+
 -- ==================================================================
 -- DEFINICIÓN DE DESTRUCCIÓN TOTAL PARA EL COMANDO /DESTROY
 -- ==================================================================
@@ -1392,6 +1576,7 @@ DestruirScriptCompleto = function()
     end)
     
     scriptActivoTags = false 
+    infBaseActivo = false 
     for _, v in pairs(UIsActivos) do if v.UI then v.UI:Destroy() end end
     UIsActivos = {}
     
