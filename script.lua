@@ -1149,7 +1149,7 @@ ReverseMinBtn.MouseButton1Click:Connect(function()
 end)
 
 local isReverseActive = false; local reverseKeybind = nil; local isReverseBinding = false; local isMobileRewinding = false
-local flashbacklength = 300; local flashbackspeed = 1; local frames = {}
+local flashbacklength = 500; local flashbackspeed = 2; local frames = {}
 local flashbackName = "CDT_FlashbackSystem"
 local flashback = { lastinput = false, canrevert = true }
 
