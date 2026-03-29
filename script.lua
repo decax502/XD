@@ -1859,7 +1859,7 @@ end)
 -- COMANDO: TP TOOL (CLICK / TOUCH TELEPORT)
 -- ==================================================================
 AddCmd("tptool", "Te da una herramienta para hacer TP donde hagas click", function()
-    local toolName = "⚡ C.D.T TP Tool"
+    local toolName = "TP"
     
     -- Verificar si ya lo tiene equipado o en la mochila
     local hasTool = LocalPlayer.Backpack:FindFirstChild(toolName) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(toolName))
