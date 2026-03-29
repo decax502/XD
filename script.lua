@@ -1125,7 +1125,7 @@ TripKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 14. FREECAM MENU (EXPLORACIÓN LIBRE + SHIFT LOCK + MOBILE)
+-- 14. FREECAM MENU (EXPLORACIÓN LIBRE + SHIFT LOCK FIX)
 -- ==================================================================
 FreecamMain = Instance.new("Frame", ScreenGui); FreecamMain.Size = UDim2.new(0, 260, 0, 145); FreecamMain.Position = UDim2.new(0, 20, 0, 140); FreecamMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FreecamMain.BorderSizePixel = 0; FreecamMain.ClipsDescendants = true; FreecamMain.Visible = false; Instance.new("UICorner", FreecamMain).CornerRadius = UDim.new(0, 6); FreecamMainStroke = Instance.new("UIStroke", FreecamMain); FreecamMainStroke.Color = borderDark
 FreecamTopBar = Instance.new("Frame", FreecamMain); FreecamTopBar.Size = UDim2.new(1, 0, 0, 35); FreecamTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FreecamTopBar.BorderSizePixel = 0; Instance.new("UICorner", FreecamTopBar).CornerRadius = UDim.new(0, 6)
@@ -1182,35 +1182,23 @@ local function ToggleFreecam()
         fcPitch, fcYaw = rx, ry
         Camera.CameraType = Enum.CameraType.Scriptable
         
-        -- Eventos de Input para mover la cámara libremente
         fcInputConn1 = UserInputService.InputBegan:Connect(function(input, gp)
             if gp then return end
             
-            -- Activar/Desactivar Shift Lock en Freecam
+            -- Detectar presionar Shift
             if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
                 isShiftLocked = not isShiftLocked
-                if isShiftLocked then
-                    UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
-                else
-                    UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-                end
             end
 
-            -- Mirar manteniendo Click Derecho o Touch
+            -- Detectar Click Derecho / Touch
             if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch then
                 isHoldingRightClick = true
-                if not isShiftLocked and input.UserInputType == Enum.UserInputType.MouseButton2 then 
-                    UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition 
-                end
             end
         end)
         
         fcInputConn2 = UserInputService.InputEnded:Connect(function(input, gp)
             if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch then
                 isHoldingRightClick = false
-                if not isShiftLocked and input.UserInputType == Enum.UserInputType.MouseButton2 then 
-                    UserInputService.MouseBehavior = Enum.MouseBehavior.Default 
-                end
             end
         end)
 
@@ -1223,6 +1211,15 @@ local function ToggleFreecam()
         end)
         
         fcRenderConn = RunService.RenderStepped:Connect(function(dt)
+            -- FIX: Forzar el control del mouse en cada frame para que Roblox no lo quite
+            if isShiftLocked then
+                UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+            elseif isHoldingRightClick then
+                UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
+            else
+                UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+            end
+
             local moveVec = getFCMovement()
             local rotCFrame = CFrame.new(Vector3.zero) * CFrame.Angles(0, fcYaw, 0) * CFrame.Angles(fcPitch, 0, 0)
             local targetVelocity = rotCFrame:VectorToWorldSpace(moveVec) * fcSpeed
@@ -1232,7 +1229,6 @@ local function ToggleFreecam()
             Camera.CFrame = Camera.CFrame:Lerp(fcTargetCFrame, fcSmoothness)
         end)
         
-        -- Guardar la conexión de movimiento para limpiarla después
         fcRenderConn.Name = "FC_Render"
         _G.FCMoveConn = moveConn
     else
@@ -1241,7 +1237,7 @@ local function ToggleFreecam()
         Camera.CameraType = Enum.CameraType.Custom
         if char and char:FindFirstChild("Humanoid") then Camera.CameraSubject = char.Humanoid end
         
-        -- Limpiar estados de ratón
+        -- Limpiar estados
         isHoldingRightClick = false
         isShiftLocked = false
         UserInputService.MouseBehavior = Enum.MouseBehavior.Default
