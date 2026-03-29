@@ -1125,32 +1125,6 @@ TripKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 15. ANTI-AFK (TOGGLE CON COMANDO)
--- ==================================================================
-local VirtualUser = game:GetService("VirtualUser")
-local isAntiAfkActive = false
-local afkConnection = nil
-
-AddCmd("afk", "Activa o desactiva el sistema Anti-AFK", function()
-    isAntiAfkActive = not isAntiAfkActive
-    
-    if isAntiAfkActive then
-        afkConnection = LocalPlayer.Idled:Connect(function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new())
-            LogMessage("Anti-AFK evadió una desconexión por inactividad.", tYellow)
-        end)
-        LogMessage("Anti-AFK Activado. Puedes dejar el juego en segundo plano.", tGreen)
-    else
-        if afkConnection then
-            afkConnection:Disconnect()
-            afkConnection = nil
-        end
-        LogMessage("Anti-AFK Desactivado.", tOrange)
-    end
-end)
-
--- ==================================================================
 -- 14. FREECAM MENU (EXPLORACIÓN LIBRE + SHIFT LOCK FIX DEFINITIVO)
 -- ==================================================================
 FreecamMain = Instance.new("Frame", ScreenGui); FreecamMain.Size = UDim2.new(0, 260, 0, 145); FreecamMain.Position = UDim2.new(0, 20, 0, 140); FreecamMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FreecamMain.BorderSizePixel = 0; FreecamMain.ClipsDescendants = true; FreecamMain.Visible = false; Instance.new("UICorner", FreecamMain).CornerRadius = UDim.new(0, 6); FreecamMainStroke = Instance.new("UIStroke", FreecamMain); FreecamMainStroke.Color = borderDark
