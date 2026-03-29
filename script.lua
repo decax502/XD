@@ -1502,6 +1502,71 @@ GenFireBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
+-- COMANDO: CLEAR MODE (FULLBRIGHT + NO EFFECTS)
+-- ==================================================================
+local isClearModeActive = false
+local originalLightingProps = {}
+local disabledEffects = {}
+
+AddCmd("clear", "Hace de día, quita la niebla, efectos (bloom/blur) y mejora la visión", function()
+    isClearModeActive = not isClearModeActive
+    local Lighting = game:GetService("Lighting")
+
+    if isClearModeActive then
+        -- 1. Guardamos cómo estaba el mapa antes de modificarlo
+        originalLightingProps.ClockTime = Lighting.ClockTime
+        originalLightingProps.FogEnd = Lighting.FogEnd
+        originalLightingProps.GlobalShadows = Lighting.GlobalShadows
+        originalLightingProps.Ambient = Lighting.Ambient
+        originalLightingProps.OutdoorAmbient = Lighting.OutdoorAmbient
+        originalLightingProps.Brightness = Lighting.Brightness
+
+        -- 2. Aplicamos los gráficos ultra claros (Fullbright)
+        Lighting.ClockTime = 14 -- Pleno día (2 PM)
+        Lighting.FogEnd = 100000 -- Distancia de niebla al máximo (la desaparece)
+        Lighting.GlobalShadows = false -- Quita las sombras para ver en lugares oscuros
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        Lighting.Brightness = 2
+
+        -- 3. Apagamos Bloom, Blur, ColorCorrection, SunRays y Atmósferas pesadas
+        for _, obj in pairs(Lighting:GetChildren()) do
+            if obj:IsA("PostEffect") or obj:IsA("Atmosphere") or obj:IsA("Sky") then
+                -- Guardamos en la memoria solo los que estaban puestos
+                table.insert(disabledEffects, obj)
+                if obj:IsA("Sky") then
+                    obj.Parent = nil -- El cielo no se puede "apagar", así que lo guardamos en la nada temporalmente
+                else
+                    obj.Enabled = false
+                end
+            end
+        end
+
+        LogMessage("Clear Mode ACTIVADO: Visión perfecta y sin lag.", tCyan)
+    else
+        -- 1. Restauramos la iluminación a la normalidad
+        if originalLightingProps.ClockTime then Lighting.ClockTime = originalLightingProps.ClockTime end
+        if originalLightingProps.FogEnd then Lighting.FogEnd = originalLightingProps.FogEnd end
+        if originalLightingProps.GlobalShadows ~= nil then Lighting.GlobalShadows = originalLightingProps.GlobalShadows end
+        if originalLightingProps.Ambient then Lighting.Ambient = originalLightingProps.Ambient end
+        if originalLightingProps.OutdoorAmbient then Lighting.OutdoorAmbient = originalLightingProps.OutdoorAmbient end
+        if originalLightingProps.Brightness then Lighting.Brightness = originalLightingProps.Brightness end
+
+        -- 2. Devolvemos los efectos visuales a su estado original
+        for _, obj in ipairs(disabledEffects) do
+            if obj:IsA("Sky") then
+                obj.Parent = Lighting
+            elseif obj.Parent then
+                obj.Enabled = true
+            end
+        end
+        disabledEffects = {} -- Limpiamos la memoria
+
+        LogMessage("Clear Mode DESACTIVADO: Gráficos originales restaurados.", tOrange)
+    end
+end)
+
+-- ==================================================================
 -- COMANDOS Y CONSOLA DE EVENTOS
 -- ==================================================================
 local function GetPlayer(nameString)
