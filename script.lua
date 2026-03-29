@@ -297,14 +297,30 @@ local function crearUITag(player, datos, userId)
 
     local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -54, 0, 36); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 50, 0.5, 0); infoGroup.BackgroundTransparency = 1
 
-    local txtTitle = Instance.new("TextLabel", infoGroup); txtTitle.BackgroundTransparency = 1; txtTitle.Size = UDim2.new(1, 0, 0, 18); txtTitle.Position = UDim2.new(0, 0, 0, 0)
-    txtTitle.Font = fU; txtTitle.Text = tTit; txtTitle.TextColor3 = Color3.new(1,1,1); txtTitle.TextSize = 16; txtTitle.TextXAlignment = Enum.TextXAlignment.Left
+    local txtTitle = Instance.new("TextLabel", infoGroup)
+    txtTitle.BackgroundTransparency = 1
+    txtTitle.Size = UDim2.new(1, 0, 0, 16)
+    txtTitle.Position = UDim2.new(0, 0, 0, 0) -- Pegado arriba
+    txtTitle.Font = fU
+    txtTitle.Text = tTit
+    txtTitle.TextColor3 = Color3.new(1,1,1)
+    txtTitle.TextSize = 14
+    txtTitle.TextXAlignment = Enum.TextXAlignment.Left
+    txtTitle.TextYAlignment = Enum.TextYAlignment.Center
     local titleGrad = Instance.new("UIGradient", txtTitle); titleGrad.Rotation = 45; titleGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorTitulo1 or datos.colorTitulo, "#ffffff")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorTitulo2 or datos.colorTitulo, "#ffffff")) })
 
-    local txtName = Instance.new("TextLabel", infoGroup); txtName.BackgroundTransparency = 1; txtName.Size = UDim2.new(1, 0, 0, 14); txtName.Position = UDim2.new(0, 0, 0, 18)
-    txtName.Font = Enum.Font.GothamBold; txtName.Text = tNom; txtName.TextColor3 = Color3.new(1,1,1); txtName.TextSize = 13; txtName.TextXAlignment = Enum.TextXAlignment.Left
+    local txtName = Instance.new("TextLabel", infoGroup)
+    txtName.BackgroundTransparency = 1
+    txtName.Size = UDim2.new(1, 0, 0, 14)
+    txtName.Position = UDim2.new(0, 0, 0, 18) -- Separado exactamente 18 píxeles del título
+    txtName.Font = Enum.Font.GothamBold
+    txtName.Text = tNom
+    txtName.TextColor3 = Color3.new(1,1,1)
+    txtName.TextSize = 13
+    txtName.TextXAlignment = Enum.TextXAlignment.Left
+    txtName.TextYAlignment = Enum.TextYAlignment.Center
     local nameGrad = Instance.new("UIGradient", txtName); nameGrad.Rotation = 45; nameGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorNombre1 or datos.colorNombre, "#a0a0b0")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorNombre2 or datos.colorNombre, "#a0a0b0")) })
-
+    
     local btnTP = Instance.new("TextButton", card); btnTP.Size = UDim2.new(1, 0, 1, 0); btnTP.BackgroundTransparency = 1; btnTP.Text = ""; btnTP.ZIndex = 100
     btnTP.MouseButton1Click:Connect(function()
         if player.Character and LocalPlayer.Character and player ~= LocalPlayer then
