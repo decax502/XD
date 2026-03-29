@@ -802,7 +802,7 @@ end)
 FlyMain = Instance.new("Frame", ScreenGui); FlyMain.Size = UDim2.new(0, 260, 0, 145); FlyMain.Position = UDim2.new(0, 20, 0, 140); FlyMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FlyMain.BorderSizePixel = 0; FlyMain.ClipsDescendants = true; FlyMain.Visible = false; Instance.new("UICorner", FlyMain).CornerRadius = UDim.new(0, 6); FlyMainStroke = Instance.new("UIStroke", FlyMain); FlyMainStroke.Color = borderDark
 FlyTopBar = Instance.new("Frame", FlyMain); FlyTopBar.Size = UDim2.new(1, 0, 0, 35); FlyTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FlyTopBar.BorderSizePixel = 0; Instance.new("UICorner", FlyTopBar).CornerRadius = UDim.new(0, 6)
 FlyFix = Instance.new("Frame", FlyTopBar); FlyFix.Size = UDim2.new(1, 0, 0, 5); FlyFix.Position = UDim2.new(0, 0, 1, -5); FlyFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FlyFix.BorderSizePixel = 0
-FlyTitle = Instance.new("TextLabel", FlyTopBar); FlyTitle.Size = UDim2.new(1, -70, 1, 0); FlyTitle.Position = UDim2.new(0, 15, 0, 0); FlyTitle.BackgroundTransparency = 1; FlyTitle.Text = "NOCLIP FLY"; FlyTitle.TextColor3 = tWhite; FlyTitle.Font = Enum.Font.GothamBold; FlyTitle.TextSize = 13; FlyTitle.TextXAlignment = Enum.TextXAlignment.Left
+FlyTitle = Instance.new("TextLabel", FlyTopBar); FlyTitle.Size = UDim2.new(1, -70, 1, 0); FlyTitle.Position = UDim2.new(0, 15, 0, 0); FlyTitle.BackgroundTransparency = 1; FlyTitle.Text = "NORMAL FLY"; FlyTitle.TextColor3 = tWhite; FlyTitle.Font = Enum.Font.GothamBold; FlyTitle.TextSize = 13; FlyTitle.TextXAlignment = Enum.TextXAlignment.Left
 FlyMinBtn = Instance.new("TextButton", FlyTopBar); FlyMinBtn.Size = UDim2.new(0, 35, 1, 0); FlyMinBtn.Position = UDim2.new(1, -70, 0, 0); FlyMinBtn.BackgroundTransparency = 1; FlyMinBtn.Text = "—"; FlyMinBtn.TextColor3 = tGreen; FlyMinBtn.Font = Enum.Font.GothamBlack; FlyMinBtn.TextSize = 14
 FlyCloseBtn = Instance.new("TextButton", FlyTopBar); FlyCloseBtn.Size = UDim2.new(0, 35, 1, 0); FlyCloseBtn.Position = UDim2.new(1, -35, 0, 0); FlyCloseBtn.BackgroundTransparency = 1; FlyCloseBtn.Text = "X"; FlyCloseBtn.TextColor3 = tRed; FlyCloseBtn.Font = Enum.Font.GothamBlack; FlyCloseBtn.TextSize = 12
 
@@ -839,7 +839,6 @@ local function ToggleFly()
         flyLoop = RunService.Stepped:Connect(function()
             if not isFlying or not hrp or not hum then return end
             hum.PlatformStand = true
-            for _, child in pairs(char:GetDescendants()) do if child:IsA("BasePart") then child.CanCollide = false end end
             local camCF = Workspace.CurrentCamera.CFrame
             bv.Velocity = (camCF.LookVector * ((flycontrol.F - flycontrol.B) * flySpeed)) + (camCF.RightVector * ((flycontrol.R - flycontrol.L) * flySpeed)) + (camCF.UpVector * ((flycontrol.U - flycontrol.D) * flySpeed))
             bg.CFrame = camCF
@@ -848,7 +847,7 @@ local function ToggleFly()
         FlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); FlyToggleBtn.TextColor3 = tWhite; FlyToggleBtn.Text = "VUELO: OFF"
         if flyLoop then flyLoop:Disconnect() flyLoop = nil end
         if hrp:FindFirstChild("AK_FlyVel") then hrp.AK_FlyVel:Destroy() end; if hrp:FindFirstChild("AK_FlyGyro") then hrp.AK_FlyGyro:Destroy() end
-        hum.PlatformStand = false; for _, child in pairs(char:GetDescendants()) do if child:IsA("BasePart") then child.CanCollide = true end end
+        hum.PlatformStand = false
     end
 end
 FlyToggleBtn.MouseButton1Click:Connect(ToggleFly)
