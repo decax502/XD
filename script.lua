@@ -1255,6 +1255,23 @@ FreecamKeyBtn.MouseButton1Click:Connect(function()
     else isFcBinding = true; FreecamKeyBtn.Text = "..."; FreecamKeyBtn.BackgroundColor3 = tOrange end
 end)
 
+-- Lógica Independiente de Teclas para la Freecam
+UserInputService.InputBegan:Connect(function(input, gp)
+    -- Asignar nueva tecla
+    if isFcBinding and input.UserInputType == Enum.UserInputType.Keyboard then
+        fcKeybind = input.KeyCode
+        FreecamKeyBtn.Text = input.KeyCode.Name
+        FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        isFcBinding = false
+        return
+    end
+    
+    -- Activar/Desactivar con la tecla guardada
+    if not gp and fcKeybind and input.KeyCode == fcKeybind then
+        ToggleFreecam()
+    end
+end)
+
 -- ==================================================================
 -- 13. REVERSE MODE (FLASHBACK / TIME REWIND)
 -- ==================================================================
