@@ -1,5 +1,5 @@
 --[[
-    C.D.T OPTIFINE - V10.8 PROJECT SAFE (MASTER EDITION)
+    C.D.T OPTIFINE - V10.9 PROJECT SAFE (MASTER EDITION)
     - Trip Mode Inteligente (Anti Shift-Lock Bug).
     - Inyección Segura (Bulletproof) y Responsive UI.
     - TP Menu & Map Points (Buscador dinámico).
@@ -8,10 +8,11 @@
     - REVERSE MODE (Flashback System).
     - FREECAM MODE (Shift-Lock Native Override).
     - ESP SYSTEM (Highlights + Team Check).
+    - SPINBOT (Velocidad Ajustable + Keybind).
     - GLOBAL CHAT SMART (Auto-Scroll).
-    - Comandos AFK, Hop, Rejoin, TPTool, infbase, generacion.
+    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion.
     - Panel de Ajustes (⚙) con Temas Consistentes.
-    - SISTEMA DE KEY, HWID, RECORDATORIO DE 30 DÍAS Y AUTO-ACTUALIZACIÓN.
+    - SISTEMA DE KEY, HWID Y AUTO-ACTUALIZACIÓN.
 ]]
 
 local Players = game:GetService("Players")
@@ -94,9 +95,7 @@ pcall(function() targetGuiParent = gethui() end)
 if not targetGuiParent then pcall(function() targetGuiParent = CoreGui end) end
 if not targetGuiParent then targetGuiParent = LocalPlayer:WaitForChild("PlayerGui") end
 
-if targetGuiParent:FindFirstChild("CDT_Optifine_Fluid") then
-    targetGuiParent:FindFirstChild("CDT_Optifine_Fluid"):Destroy()
-end
+if targetGuiParent:FindFirstChild("CDT_Optifine_Fluid") then targetGuiParent:FindFirstChild("CDT_Optifine_Fluid"):Destroy() end
 if _G.DestruirTags then pcall(function() _G.DestruirTags() end) end
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -105,9 +104,6 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false 
 ScreenGui.Parent = targetGuiParent
 
--- ==================================================================
--- FUNCION REINICIO GLOBAL AUTOMATICO Y DESTRUCCIÓN TOTAL
--- ==================================================================
 local function AutoRestartScript()
     if DestruirScriptCompleto then DestruirScriptCompleto() end
     StarterGui:SetCore("SendNotification", { Title="SAFE DEV", Text="El servidor ha forzado una actualización Global. Por favor, reinyecta el script.", Duration=10 })
@@ -119,10 +115,8 @@ end
 local function OcultarAvatar(character, ocultar)
     if not character then return end
     for _, obj in ipairs(character:GetDescendants()) do
-        if obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" then
-            obj.Transparency = ocultar and 1 or 0
-        elseif obj:IsA("Decal") or obj:IsA("Texture") then
-            obj.Transparency = ocultar and 1 or 0
+        if obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" then obj.Transparency = ocultar and 1 or 0
+        elseif obj:IsA("Decal") or obj:IsA("Texture") then obj.Transparency = ocultar and 1 or 0
         elseif obj:IsA("Sound") or obj:IsA("AudioEmitter") or string.match(obj.ClassName, "Voice") then
             pcall(function()
                 if ocultar then
@@ -223,23 +217,19 @@ local function actualizarAnimacionNombreTag(uiData, cfg)
             end)
         end
     else
-        uiData.animNameTask = false
-        if uiData.TxtName then uiData.TxtName.TextColor3 = Color3.new(1,1,1) end
+        uiData.animNameTask = false; if uiData.TxtName then uiData.TxtName.TextColor3 = Color3.new(1,1,1) end
     end
 end
 
 local function crearUITag(player, datos, userId)
-    local head = player.Character and player.Character:FindFirstChild("Head")
-    if not head then return end
-    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-    if humanoid then humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
+    local head = player.Character and player.Character:FindFirstChild("Head"); if not head then return end
+    local humanoid = player.Character:FindFirstChildOfClass("Humanoid"); if humanoid then humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
 
     local nombreUI = "SafeHTML_" .. userId
     if targetGuiParent:FindFirstChild(nombreUI) then targetGuiParent[nombreUI]:Destroy() end
 
     local tTit = datos.titulo or "USER"; local tNom = player.Name:upper()
-    local sF, fU = pcall(function() return Enum.Font[datos.fuente] end)
-    if not sF or not fU then fU = Enum.Font.GothamBold end
+    local sF, fU = pcall(function() return Enum.Font[datos.fuente] end); if not sF or not fU then fU = Enum.Font.GothamBold end
     
     local bT = TextService:GetTextSize(tTit, 16, fU, Vector2.new(1000, 50)); 
     local bN = TextService:GetTextSize(tNom, 13, Enum.Font.GothamBold, Vector2.new(1000, 50))
@@ -271,7 +261,6 @@ local function crearUITag(player, datos, userId)
 
     local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -54, 0, 36); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 50, 0.5, 0); infoGroup.BackgroundTransparency = 1
 
-    -- FIX VISUAL: Títulos limpios sin amontonarse
     local txtTitle = Instance.new("TextLabel", infoGroup)
     txtTitle.BackgroundTransparency = 1; txtTitle.Size = UDim2.new(1, 0, 0, 16); txtTitle.Position = UDim2.new(0, 0, 0, 0)
     txtTitle.Font = fU; txtTitle.Text = tTit; txtTitle.TextColor3 = Color3.new(1,1,1); txtTitle.TextSize = 14; txtTitle.TextXAlignment = Enum.TextXAlignment.Left; txtTitle.TextYAlignment = Enum.TextYAlignment.Center
@@ -311,10 +300,7 @@ task.spawn(function()
                 for _, player in ipairs(Players:GetPlayers()) do
                     local id = tostring(player.UserId)
                     
-                    if hiddenTags[id] then 
-                        OcultarAvatar(player.Character, true) 
-                        MutearVoiceChat(player, true) 
-                    end
+                    if hiddenTags[id] then OcultarAvatar(player.Character, true); MutearVoiceChat(player, true) end
                     
                     if isScriptUser[id] or player == LocalPlayer then
                         local cfg = apiData[id] or { titulo = "USER", colorFondo1 = "#1c1c24", colorFondo2 = "#0f0f13", colorBorde = "#ffffff", colorTitulo = "#ffffff", colorNombre = "#a0a0b0", animarNombre = false, emojiNieve = "*", colorNieve = "#ffffff", fuente = "GothamBold" }
@@ -333,10 +319,8 @@ task.spawn(function()
                                     if ui.TitleGrad then ui.TitleGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorTitulo1 or cfg.colorTitulo, "#ffffff")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorTitulo2 or cfg.colorTitulo, "#ffffff")) }) end
                                     if ui.NameGrad then ui.NameGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorNombre1 or cfg.colorNombre, "#a0a0b0")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorNombre2 or cfg.colorNombre, "#a0a0b0")) }) end
                                     ui.TxtTitle.Text = cfg.titulo or "USER"
-                                    local sF, fU = pcall(function() return Enum.Font[cfg.fuente] end)
-                                    if sF and fU then ui.TxtTitle.Font = fU end
-                                    ui.TxtTitle.TextColor3 = Color3.new(1,1,1)
-                                    if not cfg.animarNombre then ui.TxtName.TextColor3 = Color3.new(1,1,1) end
+                                    local sF, fU = pcall(function() return Enum.Font[cfg.fuente] end); if sF and fU then ui.TxtTitle.Font = fU end
+                                    ui.TxtTitle.TextColor3 = Color3.new(1,1,1); if not cfg.animarNombre then ui.TxtName.TextColor3 = Color3.new(1,1,1) end
                                     task.spawn(function() local newImg = obtenerImagenTag(cfg.imagen, id); if ui.AvatarImg and ui.AvatarImg.Parent then ui.AvatarImg.Image = newImg end end)
                                     ui.DotStroke.Color = parseHexTag(cfg.colorFondo2, "#0f0f13")
                                     for _, copo in ipairs(ui.Copos) do if copo.Parent then copo.Text = cfg.emojiNieve or "*"; copo.TextColor3 = parseHexTag(cfg.colorNieve, "#ffffff") end end
@@ -454,7 +438,7 @@ SpinMinBtn.MouseButton1Click:Connect(function()
     SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
 end)
 
-isSpinning = false; spinSpeedNum = 50; spinKeybind = nil; isSpinBinding = false; local spinBav = nil
+local isSpinning = false; local spinSpeedNum = 50; local spinKeybind = nil; local isSpinBinding = false; local spinBav = nil
 
 local function UpdateSpinSpeed()
     if spinBav then spinBav.AngularVelocity = Vector3.new(0, spinSpeedNum, 0) end
@@ -473,7 +457,7 @@ ToggleSpin = function()
         SpinToggleBtn.BackgroundColor3 = tCyan; SpinToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); SpinToggleBtn.Text = "SPIN: ON"
         if hrp:FindFirstChild("CDT_Spin") then hrp.CDT_Spin:Destroy() end
         spinBav = Instance.new("BodyAngularVelocity")
-        spinBav.Name = "CDT_Spin"; spinBav.MaxTorque = Vector3.new(0, math.huge, 0) -- Bloqueado en Y para no caerte
+        spinBav.Name = "CDT_Spin"; spinBav.MaxTorque = Vector3.new(0, math.huge, 0)
         spinBav.AngularVelocity = Vector3.new(0, spinSpeedNum, 0); spinBav.Parent = hrp
     else
         SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Text = "SPIN: OFF"
@@ -492,6 +476,7 @@ SpinKeyBtn.MouseButton1Click:Connect(function()
     if spinKeybind ~= nil then spinKeybind = nil; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isSpinBinding = false
     else isSpinBinding = true; SpinKeyBtn.Text = "..."; SpinKeyBtn.BackgroundColor3 = tOrange end
 end)
+
 
 -- ==================================================================
 -- 2. MAP POINTS (WAYPOINTS MANAGER)
@@ -574,7 +559,7 @@ local function RefreshMPList()
         local Item = Instance.new("Frame", MPScroll); Item.Size = UDim2.new(1, -5, 0, 30); Item.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Item).CornerRadius = UDim.new(0, 4)
         local NameBox = Instance.new("TextBox", Item); NameBox.Size = UDim2.new(0, 120, 1, 0); NameBox.Position = UDim2.new(0, 5, 0, 0); NameBox.BackgroundTransparency = 1; NameBox.TextColor3 = tWhite; NameBox.Text = wpName; NameBox.TextXAlignment = Enum.TextXAlignment.Left; NameBox.Font = Enum.Font.Gotham; NameBox.TextSize = 12; NameBox.ClearTextOnFocus = false
         local TpBtn = Instance.new("TextButton", Item); TpBtn.Size = UDim2.new(0, 35, 0, 22); TpBtn.Position = UDim2.new(1, -85, 0.5, -11); TpBtn.BackgroundColor3 = tCyan; TpBtn.TextColor3 = Color3.fromRGB(10,10,10); TpBtn.Text = "TP"; TpBtn.Font = Enum.Font.GothamBold; TpBtn.TextSize = 11; Instance.new("UICorner", TpBtn).CornerRadius = UDim.new(0, 4)
-        local UpdBtn = Instance.new("TextButton", Item); UpdBtn.Size = UDim2.new(0, 22, 0, 22); UpdBtn.Position = UDim2.new(1, -45, 0.5, -11); TpBtn.BackgroundColor3 = tCyan; UpdBtn.BackgroundColor3 = tOrange; UpdBtn.TextColor3 = tWhite; UpdBtn.Text = "↺"; UpdBtn.Font = Enum.Font.GothamBold; UpdBtn.TextSize = 14; Instance.new("UICorner", UpdBtn).CornerRadius = UDim.new(0, 4)
+        local UpdBtn = Instance.new("TextButton", Item); UpdBtn.Size = UDim2.new(0, 22, 0, 22); UpdBtn.Position = UDim2.new(1, -45, 0.5, -11); UpdBtn.BackgroundColor3 = tOrange; UpdBtn.TextColor3 = tWhite; UpdBtn.Text = "↺"; UpdBtn.Font = Enum.Font.GothamBold; UpdBtn.TextSize = 14; Instance.new("UICorner", UpdBtn).CornerRadius = UDim.new(0, 4)
         local DelBtn = Instance.new("TextButton", Item); DelBtn.Size = UDim2.new(0, 18, 0, 22); DelBtn.Position = UDim2.new(1, -20, 0.5, -11); DelBtn.BackgroundColor3 = tRed; DelBtn.TextColor3 = tWhite; DelBtn.Text = "X"; DelBtn.Font = Enum.Font.GothamBold; DelBtn.TextSize = 11; Instance.new("UICorner", DelBtn).CornerRadius = UDim.new(0, 4)
 
         NameBox.FocusLost:Connect(function()
@@ -586,7 +571,6 @@ local function RefreshMPList()
         TpBtn.MouseButton1Click:Connect(function()
             local char = LocalPlayer.Character; if char and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.CFrame = CFrame.new(coords.X, coords.Y, coords.Z) end
         end)
-        
         UpdBtn.MouseButton1Click:Connect(function()
             accionPendiente = "actualizar"; waypointPendiente = wpName
             ConfirmMsg.Text = "¿ACTUALIZAR '" .. wpName .. "' a tu posición actual?"
@@ -602,13 +586,11 @@ local function RefreshMPList()
 end
 
 YesBtn.MouseButton1Click:Connect(function()
-    if accionPendiente == "eliminar" then
-        waypoints[waypointPendiente] = nil
+    if accionPendiente == "eliminar" then waypoints[waypointPendiente] = nil
     elseif accionPendiente == "actualizar" then
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
-            local pos = char.HumanoidRootPart.Position
-            waypoints[waypointPendiente] = {X = pos.X, Y = pos.Y, Z = pos.Z}
+            local pos = char.HumanoidRootPart.Position; waypoints[waypointPendiente] = {X = pos.X, Y = pos.Y, Z = pos.Z}
         end
     end
     SaveWaypoints(); RefreshMPList(); ConfirmPopup.Visible = false
@@ -701,7 +683,6 @@ local function RefreshHideMenu(filterText)
                 
                 local idStr = tostring(plr.UserId)
                 local isHid = hiddenTags[idStr]
-                
                 if isHid then MutearVoiceChat(plr, true) end
                 
                 local HBtn = Instance.new("TextButton", Card); HBtn.Size = UDim2.new(0, 60, 0, 26); HBtn.Position = UDim2.new(1, -65, 0.5, -13)
@@ -716,7 +697,6 @@ local function RefreshHideMenu(filterText)
                     HBtn.BackgroundColor3 = h and tGreen or Color3.fromRGB(40, 40, 40)
                     HBtn.Text = h and "OCULTO" or "VISIBLE"
                     HBtn.TextColor3 = h and Color3.fromRGB(10, 10, 10) or tWhite
-                    
                     if plr.Character then OcultarAvatar(plr.Character, h) end
                     MutearVoiceChat(plr, h) 
                 end)
@@ -1120,7 +1100,7 @@ TripKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 13. REVERSE MODE (FLASHBACK / TIME REWIND)
+-- 13. REVERSE MODE (FLASHBACK / TIME REWIND) + FIX DE KEYBIND
 -- ==================================================================
 ReverseMain = Instance.new("Frame", ScreenGui); ReverseMain.Size = UDim2.new(0, 260, 0, 145); ReverseMain.Position = UDim2.new(0, 20, 0, 660); ReverseMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ReverseMain.BorderSizePixel = 0; ReverseMain.ClipsDescendants = true; ReverseMain.Visible = false; Instance.new("UICorner", ReverseMain).CornerRadius = UDim.new(0, 6); ReverseMainStroke = Instance.new("UIStroke", ReverseMain); ReverseMainStroke.Color = borderDark
 ReverseTopBar = Instance.new("Frame", ReverseMain); ReverseTopBar.Size = UDim2.new(1, 0, 0, 35); ReverseTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ReverseTopBar.BorderSizePixel = 0; Instance.new("UICorner", ReverseTopBar).CornerRadius = UDim.new(0, 6)
@@ -1184,6 +1164,7 @@ ToggleReverse = function()
             local char2 = LocalPlayer.Character; if not char2 then return end
             local hrp2 = char2:FindFirstChild("HumanoidRootPart"); local hum2 = char2:FindFirstChildOfClass("Humanoid")
             if not hrp2 or not hum2 then return end
+            -- AQUÍ ES EL FIX: Si se mantiene la tecla de reversa O el botón en móvil
             if (reverseKeybind and UserInputService:IsKeyDown(reverseKeybind)) or isMobileRewinding then
                 flashback:Revert(char2, hrp2, hum2)
             else
@@ -1491,10 +1472,10 @@ ThemeToggleBtn.MouseButton1Click:Connect(function()
     local strokeColor = isGlass and tCyan or borderDark
     local strokeTrans = isGlass and 0.3 or 0
 
-    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain, HideMain, GenMain, ReverseMain, FreecamMain, ESPMain}
-    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar, HideTopBar, GenTopBar, ReverseTopBar, FreecamTopBar, ESPTopBar}
-    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix, HideFix, GenFix, ReverseFix, FreecamFix, ESPFix}
-    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke, ReverseMainStroke, FreecamMainStroke, ESPMainStroke}
+    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain, HideMain, GenMain, ReverseMain, FreecamMain, ESPMain, SpinMain}
+    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar, HideTopBar, GenTopBar, ReverseTopBar, FreecamTopBar, ESPTopBar, SpinTopBar}
+    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix, HideFix, GenFix, ReverseFix, FreecamFix, ESPFix, SpinFix}
+    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke, ReverseMainStroke, FreecamMainStroke, ESPMainStroke, SpinMainStroke}
     
     for _, f in ipairs(frames) do if f then f.BackgroundTransparency = bgTrans; f.BackgroundColor3 = bgColor end end
     for _, tb in ipairs(topbars) do if tb then tb.BackgroundTransparency = tbTrans; tb.BackgroundColor3 = tbColor end end
@@ -1563,6 +1544,70 @@ GenFireBtn.MouseButton1Click:Connect(function()
     else
         local oldText = GenFireBtn.Text; GenFireBtn.BackgroundColor3 = tRed; GenFireBtn.TextColor3 = tWhite; GenFireBtn.Text = "ERROR: EVENTO NO ENCONTRADO"; task.wait(2); GenFireBtn.BackgroundColor3 = tGreen; GenFireBtn.TextColor3 = Color3.fromRGB(10, 10, 10); GenFireBtn.Text = oldText
     end
+end)
+
+-- ==================================================================
+-- 18. SPINBOT MENU (ROTACIÓN CON VELOCIDAD AJUSTABLE)
+-- ==================================================================
+SpinMain = Instance.new("Frame", ScreenGui); SpinMain.Size = UDim2.new(0, 260, 0, 145); SpinMain.Position = UDim2.new(0, 20, 0, 140); SpinMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); SpinMain.BorderSizePixel = 0; SpinMain.ClipsDescendants = true; SpinMain.Visible = false; Instance.new("UICorner", SpinMain).CornerRadius = UDim.new(0, 6); SpinMainStroke = Instance.new("UIStroke", SpinMain); SpinMainStroke.Color = borderDark
+SpinTopBar = Instance.new("Frame", SpinMain); SpinTopBar.Size = UDim2.new(1, 0, 0, 35); SpinTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinTopBar.BorderSizePixel = 0; Instance.new("UICorner", SpinTopBar).CornerRadius = UDim.new(0, 6)
+SpinFix = Instance.new("Frame", SpinTopBar); SpinFix.Size = UDim2.new(1, 0, 0, 5); SpinFix.Position = UDim2.new(0, 0, 1, -5); SpinFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinFix.BorderSizePixel = 0
+SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
+SpinMinBtn = Instance.new("TextButton", SpinTopBar); SpinMinBtn.Size = UDim2.new(0, 35, 1, 0); SpinMinBtn.Position = UDim2.new(1, -70, 0, 0); SpinMinBtn.BackgroundTransparency = 1; SpinMinBtn.Text = "—"; SpinMinBtn.TextColor3 = tGreen; SpinMinBtn.Font = Enum.Font.GothamBlack; SpinMinBtn.TextSize = 14
+SpinCloseBtn = Instance.new("TextButton", SpinTopBar); SpinCloseBtn.Size = UDim2.new(0, 35, 1, 0); SpinCloseBtn.Position = UDim2.new(1, -35, 0, 0); SpinCloseBtn.BackgroundTransparency = 1; SpinCloseBtn.Text = "X"; SpinCloseBtn.TextColor3 = tRed; SpinCloseBtn.Font = Enum.Font.GothamBlack; SpinCloseBtn.TextSize = 12
+
+SpinToggleBtn = Instance.new("TextButton", SpinMain); SpinToggleBtn.Size = UDim2.new(1, -75, 0, 45); SpinToggleBtn.Position = UDim2.new(0, 10, 0, 45); SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.Text = "SPIN: OFF"; SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Font = Enum.Font.GothamBold; SpinToggleBtn.TextSize = 12; Instance.new("UICorner", SpinToggleBtn).CornerRadius = UDim.new(0, 6)
+SpinKeyBtn = Instance.new("TextButton", SpinMain); SpinKeyBtn.Size = UDim2.new(0, 50, 0, 45); SpinKeyBtn.Position = UDim2.new(1, -60, 0, 45); SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinKeyBtn.Text = "KEY"; SpinKeyBtn.TextColor3 = tWhite; SpinKeyBtn.Font = Enum.Font.GothamBold; SpinKeyBtn.TextSize = 11; Instance.new("UICorner", SpinKeyBtn).CornerRadius = UDim.new(0, 6)
+
+SpinSpeedMinus = Instance.new("TextButton", SpinMain); SpinSpeedMinus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedMinus.Position = UDim2.new(0, 10, 0, 100); SpinSpeedMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedMinus.Text = "-"; SpinSpeedMinus.TextColor3 = tWhite; SpinSpeedMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedMinus)
+SpinSpeedDisplay = Instance.new("TextBox", SpinMain); SpinSpeedDisplay.Size = UDim2.new(1, -110, 0, 35); SpinSpeedDisplay.Position = UDim2.new(0, 55, 0, 100); SpinSpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); SpinSpeedDisplay.Text = ""; SpinSpeedDisplay.PlaceholderText = "SPEED: 50"; SpinSpeedDisplay.TextColor3 = tWhite; SpinSpeedDisplay.Font = Enum.Font.GothamSemibold; SpinSpeedDisplay.TextSize = 14; SpinSpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", SpinSpeedDisplay); Instance.new("UIStroke", SpinSpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
+SpinSpeedPlus = Instance.new("TextButton", SpinMain); SpinSpeedPlus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedPlus.Position = UDim2.new(1, -50, 0, 100); SpinSpeedPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedPlus.Text = "+"; SpinSpeedPlus.TextColor3 = tWhite; SpinSpeedPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedPlus)
+
+ApplyResponsiveScale(SpinMain); MakeDraggable(SpinTopBar, SpinMain)
+
+local spinMinimized = false
+SpinMinBtn.MouseButton1Click:Connect(function()
+    spinMinimized = not spinMinimized; SpinMain:TweenSize(spinMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
+end)
+
+local isSpinning = false; local spinSpeedNum = 50; local spinKeybind = nil; local isSpinBinding = false; local spinBav = nil
+
+local function UpdateSpinSpeed()
+    if spinBav then spinBav.AngularVelocity = Vector3.new(0, spinSpeedNum, 0) end
+end
+
+SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(10, spinSpeedNum - 10); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum; UpdateSpinSpeed() end)
+SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 10; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum; UpdateSpinSpeed() end)
+SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum; UpdateSpinSpeed() end)
+
+ToggleSpin = function()
+    local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    isSpinning = not isSpinning
+    if isSpinning then
+        SpinToggleBtn.BackgroundColor3 = tCyan; SpinToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); SpinToggleBtn.Text = "SPIN: ON"
+        if hrp:FindFirstChild("CDT_Spin") then hrp.CDT_Spin:Destroy() end
+        spinBav = Instance.new("BodyAngularVelocity")
+        spinBav.Name = "CDT_Spin"; spinBav.MaxTorque = Vector3.new(0, math.huge, 0)
+        spinBav.AngularVelocity = Vector3.new(0, spinSpeedNum, 0); spinBav.Parent = hrp
+    else
+        SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Text = "SPIN: OFF"
+        if spinBav then spinBav:Destroy(); spinBav = nil end
+        if hrp:FindFirstChild("CDT_Spin") then hrp.CDT_Spin:Destroy() end
+    end
+end
+SpinToggleBtn.MouseButton1Click:Connect(ToggleSpin)
+
+SpinCloseBtn.MouseButton1Click:Connect(function() 
+    SpinMain.Visible = false; spinKeybind = nil; isSpinBinding = false; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isSpinning then ToggleSpin() end
+end)
+
+SpinKeyBtn.MouseButton1Click:Connect(function()
+    if spinKeybind ~= nil then spinKeybind = nil; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isSpinBinding = false
+    else isSpinBinding = true; SpinKeyBtn.Text = "..."; SpinKeyBtn.BackgroundColor3 = tOrange end
 end)
 
 -- ==================================================================
@@ -1650,6 +1695,51 @@ AddCmd("tptool", "Te da una herramienta para hacer TP donde hagas click", functi
     end)
     tpTool.Parent = LocalPlayer.Backpack
     LogMessage("TP Tool creado. Equípalo y toca donde quieras ir.", tGreen)
+end)
+
+local isClearModeActive = false
+local originalLightingProps = {}
+local disabledEffects = {}
+
+AddCmd("clear", "Hace de día, quita la niebla, efectos (bloom/blur) y mejora la visión", function()
+    isClearModeActive = not isClearModeActive
+
+    if isClearModeActive then
+        originalLightingProps.ClockTime = Lighting.ClockTime
+        originalLightingProps.FogEnd = Lighting.FogEnd
+        originalLightingProps.GlobalShadows = Lighting.GlobalShadows
+        originalLightingProps.Ambient = Lighting.Ambient
+        originalLightingProps.OutdoorAmbient = Lighting.OutdoorAmbient
+        originalLightingProps.Brightness = Lighting.Brightness
+
+        Lighting.ClockTime = 14 
+        Lighting.FogEnd = 100000 
+        Lighting.GlobalShadows = false 
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        Lighting.Brightness = 2
+
+        for _, obj in pairs(Lighting:GetChildren()) do
+            if obj:IsA("PostEffect") or obj:IsA("Atmosphere") or obj:IsA("Sky") then
+                table.insert(disabledEffects, obj)
+                if obj:IsA("Sky") then obj.Parent = nil else obj.Enabled = false end
+            end
+        end
+        LogMessage("Clear Mode ACTIVADO: Visión perfecta y sin lag.", tCyan)
+    else
+        if originalLightingProps.ClockTime then Lighting.ClockTime = originalLightingProps.ClockTime end
+        if originalLightingProps.FogEnd then Lighting.FogEnd = originalLightingProps.FogEnd end
+        if originalLightingProps.GlobalShadows ~= nil then Lighting.GlobalShadows = originalLightingProps.GlobalShadows end
+        if originalLightingProps.Ambient then Lighting.Ambient = originalLightingProps.Ambient end
+        if originalLightingProps.OutdoorAmbient then Lighting.OutdoorAmbient = originalLightingProps.OutdoorAmbient end
+        if originalLightingProps.Brightness then Lighting.Brightness = originalLightingProps.Brightness end
+
+        for _, obj in ipairs(disabledEffects) do
+            if obj:IsA("Sky") then obj.Parent = Lighting elseif obj.Parent then obj.Enabled = true end
+        end
+        disabledEffects = {} 
+        LogMessage("Clear Mode DESACTIVADO: Gráficos originales restaurados.", tOrange)
+    end
 end)
 
 local infBaseActivo = false
@@ -1763,6 +1853,7 @@ DestruirScriptCompleto = function()
     if isTripped then GetUpFromTrip(false) end
     if isFreecamActive then ToggleFreecam() end
     if isESPActive then ToggleESP() end
+    if isSpinning then ToggleSpin() end
     
     if inputBeganConn then inputBeganConn:Disconnect() end
     if inputEndedConn then inputEndedConn:Disconnect() end
@@ -1856,6 +1947,7 @@ charAddedConn = LocalPlayer.CharacterAdded:Connect(function(character)
     if isReverseActive then frames = {} end
     if isTripped then GetUpFromTrip(false) end
     if isFreecamActive then ToggleFreecam() end
+    if isSpinning then ToggleSpin() end
 
     if posicionGuardadaRE then
         task.spawn(function()
@@ -1875,36 +1967,44 @@ if inputBeganConn then inputBeganConn:Disconnect() end
 if inputEndedConn then inputEndedConn:Disconnect() end
 
 inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
-    -- Asignación de teclas clásicas
+    -- Asignación de teclas
     if isInvBinding and input.UserInputType == Enum.UserInputType.Keyboard then invKeybind = input.KeyCode; InvKeyBtn.Text = input.KeyCode.Name; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false; return end
     if isFlyBinding and input.UserInputType == Enum.UserInputType.Keyboard then flyKeybind = input.KeyCode; FlyKeyBtn.Text = input.KeyCode.Name; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFlyBinding = false; return end
     if isVFlyBinding and input.UserInputType == Enum.UserInputType.Keyboard then vFlyKeybind = input.KeyCode; VFlyKeyBtn.Text = input.KeyCode.Name; VFlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isVFlyBinding = false; return end
     if isNoclipBinding and input.UserInputType == Enum.UserInputType.Keyboard then noclipKeybind = input.KeyCode; NoclipKeyBtn.Text = input.KeyCode.Name; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isNoclipBinding = false; return end
     if isTripBinding and input.UserInputType == Enum.UserInputType.Keyboard then tripKeybind = input.KeyCode; TripKeyBtn.Text = input.KeyCode.Name; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false; return end
     if isSpinBinding and input.UserInputType == Enum.UserInputType.Keyboard then spinKeybind = input.KeyCode; SpinKeyBtn.Text = input.KeyCode.Name; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isSpinBinding = false; return end
+    if isReverseBinding and input.UserInputType == Enum.UserInputType.Keyboard then reverseKeybind = input.KeyCode; ReverseKeyBtn.Text = input.KeyCode.Name; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isReverseBinding = false; return end
     
     if not gp then
-        -- Ocultar/Mostrar Menú Completo (Botón Insert)
+        -- Ocultar/Mostrar Menú (Botón Insert)
         if input.KeyCode == Enum.KeyCode.Insert then 
             if Main.Visible then
                 Main.Visible = false; MPMain.Visible = false; TPMain.Visible = false; InvMain.Visible = false; FlyMain.Visible = false; VFlyMain.Visible = false; NoclipMain.Visible = false; TripMain.Visible = false; ChatMain.Visible = false; SetMain.Visible = false; HideMain.Visible = false; GenMain.Visible = false
                 if ReverseMain then ReverseMain.Visible = false end
                 if FreecamMain then FreecamMain.Visible = false end
                 if ESPMain then ESPMain.Visible = false end
+                if SpinMain then SpinMain.Visible = false end
             else
                 Main.Visible = true
             end
         end
         
-        -- Ejecución de Paneles Segura
+        -- Ejecución Segura
         if invKeybind and input.KeyCode == invKeybind and type(ToggleGhost) == "function" then ToggleGhost() end
         if flyKeybind and input.KeyCode == flyKeybind and type(ToggleFly) == "function" then ToggleFly() end
         if vFlyKeybind and input.KeyCode == vFlyKeybind and type(ToggleVFly) == "function" then ToggleVFly() end
         if noclipKeybind and input.KeyCode == noclipKeybind and type(ToggleNoclipWalk) == "function" then ToggleNoclipWalk() end
         if tripKeybind and input.KeyCode == tripKeybind and type(DoTrip) == "function" then DoTrip() end
         if isTripped and input.KeyCode == Enum.KeyCode.Space and type(GetUpFromTrip) == "function" then GetUpFromTrip(false) end
+        if spinKeybind and input.KeyCode == spinKeybind and type(ToggleSpin) == "function" then ToggleSpin() end
         
-        -- Controles direccionales del vuelo aéreo clásico
+        -- FIX REVERSE: Activación por Teclado
+        if reverseKeybind and input.KeyCode == reverseKeybind and isReverseActive then
+            -- El Rewind se activa mientras se mantenga presionada la tecla (Manejado en el RenderStepped de Reverse)
+        end
+        
+        -- Controles Vuelo
         if isFlying and type(flycontrol) == "table" then
             if input.KeyCode == Enum.KeyCode.W then flycontrol.F = 1
             elseif input.KeyCode == Enum.KeyCode.S then flycontrol.B = 1
@@ -2024,70 +2124,5 @@ GetKeyBtn.MouseButton1Click:Connect(function()
         local success = pcall(function() if open_url then open_url(link) else setclipboard(link) end end)
         if success then SubTitle.Text = "Link abierto / copiado. Entra al Discord."; SubTitle.TextColor3 = tYellow
         else SubTitle.Text = "Error al copiar el link. Únete manual."; SubTitle.TextColor3 = tRed end
-    end
-end)
-
--- ==================================================================
--- COMANDO: CLEAR MODE (FULLBRIGHT + NO EFFECTS)
--- ==================================================================
-local isClearModeActive = false
-local originalLightingProps = {}
-local disabledEffects = {}
-
-AddCmd("clear", "Hace de día, quita la niebla, efectos (bloom/blur) y mejora la visión", function()
-    isClearModeActive = not isClearModeActive
-    local Lighting = game:GetService("Lighting")
-
-    if isClearModeActive then
-        -- 1. Guardamos cómo estaba el mapa antes de modificarlo
-        originalLightingProps.ClockTime = Lighting.ClockTime
-        originalLightingProps.FogEnd = Lighting.FogEnd
-        originalLightingProps.GlobalShadows = Lighting.GlobalShadows
-        originalLightingProps.Ambient = Lighting.Ambient
-        originalLightingProps.OutdoorAmbient = Lighting.OutdoorAmbient
-        originalLightingProps.Brightness = Lighting.Brightness
-
-        -- 2. Aplicamos los gráficos ultra claros (Fullbright)
-        Lighting.ClockTime = 14 -- Pleno día (2 PM)
-        Lighting.FogEnd = 100000 -- Distancia de niebla al máximo (la desaparece)
-        Lighting.GlobalShadows = false -- Quita las sombras para ver en lugares oscuros
-        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
-        Lighting.Brightness = 2
-
-        -- 3. Apagamos Bloom, Blur, ColorCorrection, SunRays y Atmósferas pesadas
-        for _, obj in pairs(Lighting:GetChildren()) do
-            if obj:IsA("PostEffect") or obj:IsA("Atmosphere") or obj:IsA("Sky") then
-                -- Guardamos en la memoria solo los que estaban puestos
-                table.insert(disabledEffects, obj)
-                if obj:IsA("Sky") then
-                    obj.Parent = nil -- El cielo no se puede "apagar", así que lo guardamos en la nada temporalmente
-                else
-                    obj.Enabled = false
-                end
-            end
-        end
-
-        LogMessage("Clear Mode ACTIVADO: Visión perfecta y sin lag.", tCyan)
-    else
-        -- 1. Restauramos la iluminación a la normalidad
-        if originalLightingProps.ClockTime then Lighting.ClockTime = originalLightingProps.ClockTime end
-        if originalLightingProps.FogEnd then Lighting.FogEnd = originalLightingProps.FogEnd end
-        if originalLightingProps.GlobalShadows ~= nil then Lighting.GlobalShadows = originalLightingProps.GlobalShadows end
-        if originalLightingProps.Ambient then Lighting.Ambient = originalLightingProps.Ambient end
-        if originalLightingProps.OutdoorAmbient then Lighting.OutdoorAmbient = originalLightingProps.OutdoorAmbient end
-        if originalLightingProps.Brightness then Lighting.Brightness = originalLightingProps.Brightness end
-
-        -- 2. Devolvemos los efectos visuales a su estado original
-        for _, obj in ipairs(disabledEffects) do
-            if obj:IsA("Sky") then
-                obj.Parent = Lighting
-            elseif obj.Parent then
-                obj.Enabled = true
-            end
-        end
-        disabledEffects = {} -- Limpiamos la memoria
-
-        LogMessage("Clear Mode DESACTIVADO: Gráficos originales restaurados.", tOrange)
     end
 end)
