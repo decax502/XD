@@ -1006,6 +1006,43 @@ end)
 local isTripped = false
 local tripKeybind = nil
 local isTripBinding = false
+local tripStateConn = nil -- Variable para la detección inteligente
+
+local function CleanTripConnections()
+    if tripStateConn then tripStateConn:Disconnect(); tripStateConn = nil end
+end
+
+-- El parámetro "autoClean" avisa si el juego lo levantó por su cuenta
+local function GetUpFromTrip(autoClean)
+    if not isTripped then return end
+    isTripped = false
+    CleanTripConnections()
+    
+    -- El botón vuelve a la normalidad
+    TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    TripToggleBtn.TextColor3 = tWhite
+    TripToggleBtn.Text = "TRIP (CLICK)"
+
+    local char = LocalPlayer.Character; if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not root then return end
+
+    -- Si no fue forzado por el juego, ejecutamos la rutina para levantarlo nosotros
+    if not autoClean then
+        humanoid.PlatformStand = false
+        humanoid.AutoRotate = true
+        root.AssemblyLinearVelocity = root.AssemblyLinearVelocity + Vector3.new(0, 10, 0)
+        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+    end
+    
+    -- Siempre limpiamos las físicas personalizadas
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CustomPhysicalProperties = nil 
+        end
+    end
+end
 
 local function DoTrip()
     if isTripped then return end
@@ -1014,17 +1051,20 @@ local function DoTrip()
     if not humanoid or not root then return end
 
     isTripped = true 
+    CleanTripConnections()
+    
+    -- Evento Inteligente: Detectar si el juego u otro script levanta al personaje
+    tripStateConn = humanoid.StateChanged:Connect(function(oldState, newState)
+        if not isTripped then return end
+        if newState == Enum.HumanoidStateType.Running or newState == Enum.HumanoidStateType.Jumping or newState == Enum.HumanoidStateType.Walking or newState == Enum.HumanoidStateType.Dead then
+            -- El juego lo levantó o mató, limpiamos la UI sin forzar físicas de nuevo
+            GetUpFromTrip(true)
+        end
+    end)
     
     TripToggleBtn.BackgroundColor3 = tRed
     TripToggleBtn.TextColor3 = tWhite
-    TripToggleBtn.Text = "TRIPPED!"
-    
-    task.delay(0.5, function()
-        if TripToggleBtn then
-            TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-            TripToggleBtn.Text = "TRIP (CLICK)"
-        end
-    end)
+    TripToggleBtn.Text = "LEVANTARSE (CLICK)"
 
     local currentVelocity = root.AssemblyLinearVelocity
     local speed = currentVelocity.Magnitude
@@ -1038,39 +1078,24 @@ local function DoTrip()
     local spin = speed > 5 and 20 or 10
     root.AssemblyAngularVelocity = Vector3.new(math.random(-spin, spin), math.random(-spin, spin), math.random(-spin, spin))
 
-    for _, part in pairs(char:GetChildren()) do
+    for _, part in pairs(char:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.1, 1, 1)
         end
     end
 end
 
-local function GetUpFromTrip()
-    if not isTripped then return end
-    isTripped = false
-    
-    local char = LocalPlayer.Character; if not char then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not root then return end
-
-    humanoid.PlatformStand = false
-    humanoid.AutoRotate = true
-    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-    
-    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-    
-    for _, part in pairs(char:GetChildren()) do
-        if part:IsA("BasePart") then
-            part.CustomPhysicalProperties = nil 
-        end
+TripToggleBtn.MouseButton1Click:Connect(function()
+    if isTripped then
+        GetUpFromTrip(false)
+    else
+        DoTrip()
     end
-end
-
-TripToggleBtn.MouseButton1Click:Connect(DoTrip)
+end)
 
 TripCloseBtn.MouseButton1Click:Connect(function() 
     TripMain.Visible = false; tripKeybind = nil; isTripBinding = false; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
-    if isTripped then GetUpFromTrip() end
+    if isTripped then GetUpFromTrip(false) end
 end)
 
 TripKeyBtn.MouseButton1Click:Connect(function()
