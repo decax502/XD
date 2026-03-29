@@ -983,7 +983,7 @@ VFlyKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 8. TRIP MODE MENU (CAÍDA INFINITA + LEVANTARSE INTELIGENTE)
+-- 8. TRIP MODE MENU (CAÍDA INFINITA + LEVANTARSE)
 -- ==================================================================
 TripMain = Instance.new("Frame", ScreenGui); TripMain.Size = UDim2.new(0, 260, 0, 100); TripMain.Position = UDim2.new(0, 20, 0, 540); TripMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); TripMain.BorderSizePixel = 0; TripMain.ClipsDescendants = true; TripMain.Visible = false; Instance.new("UICorner", TripMain).CornerRadius = UDim.new(0, 6); TripMainStroke = Instance.new("UIStroke", TripMain); TripMainStroke.Color = borderDark
 TripTopBar = Instance.new("Frame", TripMain); TripTopBar.Size = UDim2.new(1, 0, 0, 35); TripTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripTopBar.BorderSizePixel = 0; Instance.new("UICorner", TripTopBar).CornerRadius = UDim.new(0, 6)
@@ -1006,43 +1006,6 @@ end)
 local isTripped = false
 local tripKeybind = nil
 local isTripBinding = false
-local tripStateConn = nil -- Variable para la detección inteligente
-
-local function CleanTripConnections()
-    if tripStateConn then tripStateConn:Disconnect(); tripStateConn = nil end
-end
-
--- El parámetro "autoClean" avisa si el juego lo levantó por su cuenta
-local function GetUpFromTrip(autoClean)
-    if not isTripped then return end
-    isTripped = false
-    CleanTripConnections()
-    
-    -- El botón vuelve a la normalidad
-    TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    TripToggleBtn.TextColor3 = tWhite
-    TripToggleBtn.Text = "TRIP (CLICK)"
-
-    local char = LocalPlayer.Character; if not char then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not root then return end
-
-    -- Si no fue forzado por el juego, ejecutamos la rutina para levantarlo nosotros
-    if not autoClean then
-        humanoid.PlatformStand = false
-        humanoid.AutoRotate = true
-        root.AssemblyLinearVelocity = root.AssemblyLinearVelocity + Vector3.new(0, 10, 0)
-        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-    end
-    
-    -- Siempre limpiamos las físicas personalizadas
-    for _, part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CustomPhysicalProperties = nil 
-        end
-    end
-end
 
 local function DoTrip()
     if isTripped then return end
@@ -1051,17 +1014,8 @@ local function DoTrip()
     if not humanoid or not root then return end
 
     isTripped = true 
-    CleanTripConnections()
     
-    -- Evento Inteligente: Detectar si el juego u otro script levanta al personaje
-    tripStateConn = humanoid.StateChanged:Connect(function(oldState, newState)
-        if not isTripped then return end
-        if newState == Enum.HumanoidStateType.Running or newState == Enum.HumanoidStateType.Jumping or newState == Enum.HumanoidStateType.Walking or newState == Enum.HumanoidStateType.Dead then
-            -- El juego lo levantó o mató, limpiamos la UI sin forzar físicas de nuevo
-            GetUpFromTrip(true)
-        end
-    end)
-    
+    -- Fix UX: El botón ahora se queda rojo indicando que estás tirado
     TripToggleBtn.BackgroundColor3 = tRed
     TripToggleBtn.TextColor3 = tWhite
     TripToggleBtn.Text = "LEVANTARSE (CLICK)"
@@ -1078,6 +1032,7 @@ local function DoTrip()
     local spin = speed > 5 and 20 or 10
     root.AssemblyAngularVelocity = Vector3.new(math.random(-spin, spin), math.random(-spin, spin), math.random(-spin, spin))
 
+    -- Fix Físicas: GetDescendants hace que sombreros y pelo también pierdan fricción
     for _, part in pairs(char:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.1, 1, 1)
@@ -1085,9 +1040,39 @@ local function DoTrip()
     end
 end
 
+local function GetUpFromTrip()
+    if not isTripped then return end
+    isTripped = false
+    
+    -- Fix UX: El botón vuelve a la normalidad
+    TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    TripToggleBtn.TextColor3 = tWhite
+    TripToggleBtn.Text = "TRIP (CLICK)"
+
+    local char = LocalPlayer.Character; if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not root then return end
+
+    humanoid.PlatformStand = false
+    humanoid.AutoRotate = true
+    
+    -- Fix Físicas: Mini impulso hacia arriba para que el muñeco no se quede pegado al piso de Roblox
+    root.AssemblyLinearVelocity = root.AssemblyLinearVelocity + Vector3.new(0, 10, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+    
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CustomPhysicalProperties = nil 
+        end
+    end
+end
+
+-- FIX PRINCIPAL MÓVILES: El botón ahora actúa como un Toggle
 TripToggleBtn.MouseButton1Click:Connect(function()
     if isTripped then
-        GetUpFromTrip(false)
+        GetUpFromTrip()
     else
         DoTrip()
     end
@@ -1095,7 +1080,7 @@ end)
 
 TripCloseBtn.MouseButton1Click:Connect(function() 
     TripMain.Visible = false; tripKeybind = nil; isTripBinding = false; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
-    if isTripped then GetUpFromTrip(false) end
+    if isTripped then GetUpFromTrip() end
 end)
 
 TripKeyBtn.MouseButton1Click:Connect(function()
@@ -1203,6 +1188,7 @@ ReverseKeyBtn.MouseButton1Click:Connect(function()
     if reverseKeybind ~= nil then reverseKeybind = nil; ReverseKeyBtn.Text = "KEY"; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isReverseBinding = false
     else isReverseBinding = true; ReverseKeyBtn.Text = "..."; ReverseKeyBtn.BackgroundColor3 = tOrange end
 end)
+
 
 -- ==================================================================
 -- 12. GENERADOR C.D.T (EVENT GENERATION SLIDERS)
