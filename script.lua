@@ -983,7 +983,7 @@ VFlyKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 8. TRIP MODE MENU (CAÍDA INFINITA + LEVANTARSE CON ESPACIO)
+-- 8. TRIP MODE MENU (CAÍDA INFINITA + LEVANTARSE)
 -- ==================================================================
 TripMain = Instance.new("Frame", ScreenGui); TripMain.Size = UDim2.new(0, 260, 0, 100); TripMain.Position = UDim2.new(0, 20, 0, 540); TripMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); TripMain.BorderSizePixel = 0; TripMain.ClipsDescendants = true; TripMain.Visible = false; Instance.new("UICorner", TripMain).CornerRadius = UDim.new(0, 6); TripMainStroke = Instance.new("UIStroke", TripMain); TripMainStroke.Color = borderDark
 TripTopBar = Instance.new("Frame", TripMain); TripTopBar.Size = UDim2.new(1, 0, 0, 35); TripTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripTopBar.BorderSizePixel = 0; Instance.new("UICorner", TripTopBar).CornerRadius = UDim.new(0, 6)
@@ -1015,16 +1015,10 @@ local function DoTrip()
 
     isTripped = true 
     
+    -- Fix UX: El botón ahora se queda rojo indicando que estás tirado
     TripToggleBtn.BackgroundColor3 = tRed
     TripToggleBtn.TextColor3 = tWhite
-    TripToggleBtn.Text = "TRIPPED!"
-    
-    task.delay(0.5, function()
-        if TripToggleBtn then
-            TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-            TripToggleBtn.Text = "TRIP (CLICK)"
-        end
-    end)
+    TripToggleBtn.Text = "LEVANTARSE (CLICK)"
 
     local currentVelocity = root.AssemblyLinearVelocity
     local speed = currentVelocity.Magnitude
@@ -1038,7 +1032,8 @@ local function DoTrip()
     local spin = speed > 5 and 20 or 10
     root.AssemblyAngularVelocity = Vector3.new(math.random(-spin, spin), math.random(-spin, spin), math.random(-spin, spin))
 
-    for _, part in pairs(char:GetChildren()) do
+    -- Fix Físicas: GetDescendants hace que sombreros y pelo también pierdan fricción
+    for _, part in pairs(char:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.1, 1, 1)
         end
@@ -1049,24 +1044,39 @@ local function GetUpFromTrip()
     if not isTripped then return end
     isTripped = false
     
+    -- Fix UX: El botón vuelve a la normalidad
+    TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    TripToggleBtn.TextColor3 = tWhite
+    TripToggleBtn.Text = "TRIP (CLICK)"
+
     local char = LocalPlayer.Character; if not char then return end
     local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
     if not humanoid or not root then return end
 
     humanoid.PlatformStand = false
     humanoid.AutoRotate = true
+    
+    -- Fix Físicas: Mini impulso hacia arriba para que el muñeco no se quede pegado al piso de Roblox
+    root.AssemblyLinearVelocity = root.AssemblyLinearVelocity + Vector3.new(0, 10, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
     humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
     
-    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-    
-    for _, part in pairs(char:GetChildren()) do
+    for _, part in pairs(char:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CustomPhysicalProperties = nil 
         end
     end
 end
 
-TripToggleBtn.MouseButton1Click:Connect(DoTrip)
+-- FIX PRINCIPAL MÓVILES: El botón ahora actúa como un Toggle
+TripToggleBtn.MouseButton1Click:Connect(function()
+    if isTripped then
+        GetUpFromTrip()
+    else
+        DoTrip()
+    end
+end)
 
 TripCloseBtn.MouseButton1Click:Connect(function() 
     TripMain.Visible = false; tripKeybind = nil; isTripBinding = false; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
@@ -1077,6 +1087,7 @@ TripKeyBtn.MouseButton1Click:Connect(function()
     if tripKeybind ~= nil then tripKeybind = nil; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false
     else isTripBinding = true; TripKeyBtn.Text = "..."; TripKeyBtn.BackgroundColor3 = tOrange end
 end)
+
 
 -- ==================================================================
 -- 13. REVERSE MODE (FLASHBACK / TIME REWIND) - MOBILE SUPPORT
