@@ -1006,19 +1006,17 @@ end)
 local isTripped = false
 local tripKeybind = nil
 local isTripBinding = false
-local tripStateConn = nil -- Variable para la detección inteligente
+local tripStateConn = nil
 
 local function CleanTripConnections()
     if tripStateConn then tripStateConn:Disconnect(); tripStateConn = nil end
 end
 
--- El parámetro "autoClean" avisa si el juego lo levantó por su cuenta
 local function GetUpFromTrip(autoClean)
     if not isTripped then return end
     isTripped = false
     CleanTripConnections()
     
-    -- El botón vuelve a la normalidad
     TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     TripToggleBtn.TextColor3 = tWhite
     TripToggleBtn.Text = "TRIP (CLICK)"
@@ -1027,16 +1025,24 @@ local function GetUpFromTrip(autoClean)
     local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
     if not humanoid or not root then return end
 
-    -- Si no fue forzado por el juego, ejecutamos la rutina para levantarlo nosotros
     if not autoClean then
         humanoid.PlatformStand = false
         humanoid.AutoRotate = true
         root.AssemblyLinearVelocity = root.AssemblyLinearVelocity + Vector3.new(0, 10, 0)
         root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
         humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+        
+        -- FIX SHIFT LOCK: Patear el script de animaciones de Roblox
+        task.spawn(function()
+            task.wait(0.05)
+            if humanoid and humanoid.Parent then
+                humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+                task.wait()
+                humanoid:ChangeState(Enum.HumanoidStateType.Running)
+            end
+        end)
     end
     
-    -- Siempre limpiamos las físicas personalizadas
     for _, part in pairs(char:GetDescendants()) do
         if part:IsA("BasePart") then
             part.CustomPhysicalProperties = nil 
@@ -1053,11 +1059,9 @@ local function DoTrip()
     isTripped = true 
     CleanTripConnections()
     
-    -- Evento Inteligente: Detectar si el juego u otro script levanta al personaje
     tripStateConn = humanoid.StateChanged:Connect(function(oldState, newState)
         if not isTripped then return end
         if newState == Enum.HumanoidStateType.Running or newState == Enum.HumanoidStateType.Jumping or newState == Enum.HumanoidStateType.Walking or newState == Enum.HumanoidStateType.Dead then
-            -- El juego lo levantó o mató, limpiamos la UI sin forzar físicas de nuevo
             GetUpFromTrip(true)
         end
     end)
