@@ -1125,6 +1125,127 @@ TripKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
+-- 14. FREECAM MENU (EXPLORACIÓN LIBRE + MOBILE SUPPORT)
+-- ==================================================================
+FreecamMain = Instance.new("Frame", ScreenGui); FreecamMain.Size = UDim2.new(0, 260, 0, 145); FreecamMain.Position = UDim2.new(0, 20, 0, 140); FreecamMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FreecamMain.BorderSizePixel = 0; FreecamMain.ClipsDescendants = true; FreecamMain.Visible = false; Instance.new("UICorner", FreecamMain).CornerRadius = UDim.new(0, 6); FreecamMainStroke = Instance.new("UIStroke", FreecamMain); FreecamMainStroke.Color = borderDark
+FreecamTopBar = Instance.new("Frame", FreecamMain); FreecamTopBar.Size = UDim2.new(1, 0, 0, 35); FreecamTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FreecamTopBar.BorderSizePixel = 0; Instance.new("UICorner", FreecamTopBar).CornerRadius = UDim.new(0, 6)
+FreecamFix = Instance.new("Frame", FreecamTopBar); FreecamFix.Size = UDim2.new(1, 0, 0, 5); FreecamFix.Position = UDim2.new(0, 0, 1, -5); FreecamFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FreecamFix.BorderSizePixel = 0
+FreecamTitle = Instance.new("TextLabel", FreecamTopBar); FreecamTitle.Size = UDim2.new(1, -70, 1, 0); FreecamTitle.Position = UDim2.new(0, 15, 0, 0); FreecamTitle.BackgroundTransparency = 1; FreecamTitle.Text = "FREECAM"; FreecamTitle.TextColor3 = tWhite; FreecamTitle.Font = Enum.Font.GothamBold; FreecamTitle.TextSize = 13; FreecamTitle.TextXAlignment = Enum.TextXAlignment.Left
+FreecamMinBtn = Instance.new("TextButton", FreecamTopBar); FreecamMinBtn.Size = UDim2.new(0, 35, 1, 0); FreecamMinBtn.Position = UDim2.new(1, -70, 0, 0); FreecamMinBtn.BackgroundTransparency = 1; FreecamMinBtn.Text = "—"; FreecamMinBtn.TextColor3 = tGreen; FreecamMinBtn.Font = Enum.Font.GothamBlack; FreecamMinBtn.TextSize = 14
+FreecamCloseBtn = Instance.new("TextButton", FreecamTopBar); FreecamCloseBtn.Size = UDim2.new(0, 35, 1, 0); FreecamCloseBtn.Position = UDim2.new(1, -35, 0, 0); FreecamCloseBtn.BackgroundTransparency = 1; FreecamCloseBtn.Text = "X"; FreecamCloseBtn.TextColor3 = tRed; FreecamCloseBtn.Font = Enum.Font.GothamBlack; FreecamCloseBtn.TextSize = 12
+
+FreecamToggleBtn = Instance.new("TextButton", FreecamMain); FreecamToggleBtn.Size = UDim2.new(1, -75, 0, 45); FreecamToggleBtn.Position = UDim2.new(0, 10, 0, 45); FreecamToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); FreecamToggleBtn.Text = "FREECAM: OFF"; FreecamToggleBtn.TextColor3 = tWhite; FreecamToggleBtn.Font = Enum.Font.GothamBold; FreecamToggleBtn.TextSize = 12; Instance.new("UICorner", FreecamToggleBtn).CornerRadius = UDim.new(0, 6)
+FreecamKeyBtn = Instance.new("TextButton", FreecamMain); FreecamKeyBtn.Size = UDim2.new(0, 50, 0, 45); FreecamKeyBtn.Position = UDim2.new(1, -60, 0, 45); FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FreecamKeyBtn.Text = "KEY"; FreecamKeyBtn.TextColor3 = tWhite; FreecamKeyBtn.Font = Enum.Font.GothamBold; FreecamKeyBtn.TextSize = 11; Instance.new("UICorner", FreecamKeyBtn).CornerRadius = UDim.new(0, 6)
+
+FreecamSpeedMinus = Instance.new("TextButton", FreecamMain); FreecamSpeedMinus.Size = UDim2.new(0, 40, 0, 35); FreecamSpeedMinus.Position = UDim2.new(0, 10, 0, 100); FreecamSpeedMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FreecamSpeedMinus.Text = "-"; FreecamSpeedMinus.TextColor3 = tWhite; FreecamSpeedMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", FreecamSpeedMinus)
+FreecamSpeedDisplay = Instance.new("TextBox", FreecamMain); FreecamSpeedDisplay.Size = UDim2.new(1, -110, 0, 35); FreecamSpeedDisplay.Position = UDim2.new(0, 55, 0, 100); FreecamSpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); FreecamSpeedDisplay.Text = ""; FreecamSpeedDisplay.PlaceholderText = "SPEED: 60"; FreecamSpeedDisplay.TextColor3 = tWhite; FreecamSpeedDisplay.Font = Enum.Font.GothamSemibold; FreecamSpeedDisplay.TextSize = 14; FreecamSpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", FreecamSpeedDisplay); Instance.new("UIStroke", FreecamSpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
+FreecamSpeedPlus = Instance.new("TextButton", FreecamMain); FreecamSpeedPlus.Size = UDim2.new(0, 40, 0, 35); FreecamSpeedPlus.Position = UDim2.new(1, -50, 0, 100); FreecamSpeedPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); FreecamSpeedPlus.Text = "+"; FreecamSpeedPlus.TextColor3 = tWhite; FreecamSpeedPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", FreecamSpeedPlus)
+
+ApplyResponsiveScale(FreecamMain); MakeDraggable(FreecamTopBar, FreecamMain)
+
+local fcMinimized = false
+FreecamMinBtn.MouseButton1Click:Connect(function()
+    fcMinimized = not fcMinimized; FreecamMain:TweenSize(fcMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    FreecamMinBtn.Text = fcMinimized and "+" or "—"; FreecamFix.Visible = not fcMinimized
+end)
+
+local isFreecamActive = false; local fcSpeed = 60; local fcSmoothness = 0.1; local fcKeybind = nil; local isFcBinding = false
+local fcTargetCFrame = CFrame.new(); local fcVelocity = Vector3.zero; local fcPitch, fcYaw = 0, 0
+local fcRenderConn, fcInputConn1, fcInputConn2; local isLooking = false
+
+FreecamSpeedMinus.MouseButton1Click:Connect(function() fcSpeed = math.max(10, fcSpeed - 10); FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
+FreecamSpeedPlus.MouseButton1Click:Connect(function() fcSpeed = fcSpeed + 10; FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
+FreecamSpeedDisplay.FocusLost:Connect(function() local num = tonumber(FreecamSpeedDisplay.Text:match("%d+")); if num then fcSpeed = num end; FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
+
+local function getFCMovement()
+    local vec = Vector3.zero
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then vec = vec + Vector3.new(0, 0, -1) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then vec = vec + Vector3.new(0, 0, 1) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then vec = vec + Vector3.new(-1, 0, 0) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then vec = vec + Vector3.new(1, 0, 0) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.E) or UserInputService:IsKeyDown(Enum.KeyCode.Space) then vec = vec + Vector3.new(0, 1, 0) end
+    if UserInputService:IsKeyDown(Enum.KeyCode.Q) or UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then vec = vec + Vector3.new(0, -1, 0) end
+    return vec.Magnitude > 0 and vec.Unit or vec
+end
+
+local function ToggleFreecam()
+    isFreecamActive = not isFreecamActive
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+    if isFreecamActive then
+        FreecamToggleBtn.BackgroundColor3 = tCyan; FreecamToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); FreecamToggleBtn.Text = "FREECAM: ON"
+        if hrp then hrp.Anchored = true end
+        
+        fcTargetCFrame = Camera.CFrame
+        local rx, ry, rz = Camera.CFrame:ToEulerAnglesYXZ()
+        fcPitch, fcYaw = rx, ry
+        Camera.CameraType = Enum.CameraType.Scriptable
+        
+        -- Eventos de Input para mover la cámara libremente
+        fcInputConn1 = UserInputService.InputBegan:Connect(function(input, gp)
+            if gp then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch then
+                isLooking = true
+                if input.UserInputType == Enum.UserInputType.MouseButton2 then UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition end
+            end
+        end)
+        
+        fcInputConn2 = UserInputService.InputEnded:Connect(function(input, gp)
+            if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch then
+                isLooking = false
+                if input.UserInputType == Enum.UserInputType.MouseButton2 then UserInputService.MouseBehavior = Enum.MouseBehavior.Default end
+            end
+        end)
+
+        local moveConn = UserInputService.InputChanged:Connect(function(input, gp)
+            if isLooking and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Delta
+                fcPitch = math.clamp(fcPitch - delta.Y * 0.005, -math.rad(89), math.rad(89))
+                fcYaw = fcYaw - delta.X * 0.005
+            end
+        end)
+        
+        fcRenderConn = RunService.RenderStepped:Connect(function(dt)
+            local moveVec = getFCMovement()
+            local rotCFrame = CFrame.new(Vector3.zero) * CFrame.Angles(0, fcYaw, 0) * CFrame.Angles(fcPitch, 0, 0)
+            local targetVelocity = rotCFrame:VectorToWorldSpace(moveVec) * fcSpeed
+            
+            fcVelocity = fcVelocity:Lerp(targetVelocity, fcSmoothness)
+            fcTargetCFrame = CFrame.new(fcTargetCFrame.Position + (fcVelocity * dt)) * rotCFrame
+            Camera.CFrame = Camera.CFrame:Lerp(fcTargetCFrame, fcSmoothness)
+        end)
+        
+        -- Guardar la conexión de movimiento en la tabla del Render para limpiarla después
+        fcRenderConn.Name = "FC_Render"
+        _G.FCMoveConn = moveConn
+    else
+        FreecamToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); FreecamToggleBtn.TextColor3 = tWhite; FreecamToggleBtn.Text = "FREECAM: OFF"
+        if hrp then hrp.Anchored = false end
+        Camera.CameraType = Enum.CameraType.Custom
+        if char and char:FindFirstChild("Humanoid") then Camera.CameraSubject = char.Humanoid end
+        UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+        isLooking = false
+        
+        if fcInputConn1 then fcInputConn1:Disconnect() end
+        if fcInputConn2 then fcInputConn2:Disconnect() end
+        if fcRenderConn then fcRenderConn:Disconnect() end
+        if _G.FCMoveConn then _G.FCMoveConn:Disconnect() end
+    end
+end
+FreecamToggleBtn.MouseButton1Click:Connect(ToggleFreecam)
+
+FreecamCloseBtn.MouseButton1Click:Connect(function() 
+    FreecamMain.Visible = false; fcKeybind = nil; isFcBinding = false; FreecamKeyBtn.Text = "KEY"; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isFreecamActive then ToggleFreecam() end
+end)
+
+FreecamKeyBtn.MouseButton1Click:Connect(function()
+    if fcKeybind ~= nil then fcKeybind = nil; FreecamKeyBtn.Text = "KEY"; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFcBinding = false
+    else isFcBinding = true; FreecamKeyBtn.Text = "..."; FreecamKeyBtn.BackgroundColor3 = tOrange end
+end)
+
+-- ==================================================================
 -- 13. REVERSE MODE (FLASHBACK / TIME REWIND)
 -- ==================================================================
 ReverseMain = Instance.new("Frame", ScreenGui); ReverseMain.Size = UDim2.new(0, 260, 0, 145); ReverseMain.Position = UDim2.new(0, 20, 0, 660); ReverseMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ReverseMain.BorderSizePixel = 0; ReverseMain.ClipsDescendants = true; ReverseMain.Visible = false; Instance.new("UICorner", ReverseMain).CornerRadius = UDim.new(0, 6); ReverseMainStroke = Instance.new("UIStroke", ReverseMain); ReverseMainStroke.Color = borderDark
@@ -1505,6 +1626,7 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
     if isNoclipBinding and input.UserInputType == Enum.UserInputType.Keyboard then noclipKeybind = input.KeyCode; NoclipKeyBtn.Text = input.KeyCode.Name; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isNoclipBinding = false; return end
     if isTripBinding and input.UserInputType == Enum.UserInputType.Keyboard then tripKeybind = input.KeyCode; TripKeyBtn.Text = input.KeyCode.Name; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false; return end
     if isReverseBinding and input.UserInputType == Enum.UserInputType.Keyboard then reverseKeybind = input.KeyCode; ReverseKeyBtn.Text = input.KeyCode.Name; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isReverseBinding = false; return end
+    if isFcBinding and input.UserInputType == Enum.UserInputType.Keyboard then fcKeybind = input.KeyCode; FreecamKeyBtn.Text = input.KeyCode.Name; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFcBinding = false; return end
     
     if not gp then
         if input.KeyCode == Enum.KeyCode.Insert then 
@@ -1520,6 +1642,7 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
         if noclipKeybind and input.KeyCode == noclipKeybind then ToggleNoclipWalk() end
         if tripKeybind and input.KeyCode == tripKeybind then DoTrip() end
         if isTripped and input.KeyCode == Enum.KeyCode.Space then GetUpFromTrip() end
+        if fcKeybind and input.KeyCode == fcKeybind then ToggleFreecam() end
         
         if isFlying then
             if input.KeyCode == Enum.KeyCode.W then flycontrol.F = 1
@@ -1575,13 +1698,14 @@ end)
 AddCmd("mp", "Abre la lista de Puntos de Mapa", function() MPInput.Text = ""; RefreshMPList(); MPMain.Visible = true; LogMessage("Map Points abierto.", tPurple) end)
 AddCmd("tpmenu", "Abre la lista de TP visual", function() TPSearchBox.Text = ""; RefreshTPMenu(); TPMain.Visible = true; LogMessage("TP Menu abierto.", tOrange) end)
 AddCmd("invisible", "Abre el panel de Invisibilidad", function() InvMain.Visible = true; LogMessage("Menú Invisible abierto.", tPurple) end)
-AddCmd("fly", "Abre el panel de Vuelo Noclip", function() FlyMain.Visible = true; LogMessage("Menú de Vuelo abierto.", tYellow) end)
+AddCmd("fly", "Abre el panel de Vuelo", function() FlyMain.Visible = true; LogMessage("Menú de Vuelo abierto.", tYellow) end)
 AddCmd("vfly", "Abre el panel de Vehicle Fly", function() VFlyMain.Visible = true; LogMessage("Menú de Vehicle Fly abierto.", tPurple) end)
 AddCmd("noclip", "Abre el panel de Noclip Walk", function() NoclipMain.Visible = true; LogMessage("Menú de Noclip Walk abierto.", tCyan) end)
 AddCmd("trip", "Abre el panel de Trip Mode", function() TripMain.Visible = true; LogMessage("Menú Trip abierto.", tGreen) end)
 AddCmd("reverse", "Abre el panel de Flashback / Rewind", function() ReverseMain.Visible = true; LogMessage("Menú Reverse abierto.", tCyan) end)
 AddCmd("chat", "Abre el chat global", function() ChatMain.Visible = true; ActualizarChat(); LogMessage("Chat Global conectado.", tGreen) end)
 AddCmd("settings", "Abre el panel de Ajustes/Temas", function() SetMain.Visible = true; LogMessage("Menú de Ajustes abierto.", tOrange) end)
+AddCmd("freecam", "Abre el panel de Cámara Libre", function() FreecamMain.Visible = true; LogMessage("Menú Freecam abierto.", tCyan) end)
 
 -- [ACTUALIZADO] El comando abre el menú actual con muteo de Voice Chat
 AddCmd("hide", "Abre el menú para ocultar avatares, sonidos locales y Voice Chat", function() 
