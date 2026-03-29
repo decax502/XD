@@ -1636,7 +1636,7 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
     if isNoclipBinding and input.UserInputType == Enum.UserInputType.Keyboard then noclipKeybind = input.KeyCode; NoclipKeyBtn.Text = input.KeyCode.Name; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isNoclipBinding = false; return end
     if isTripBinding and input.UserInputType == Enum.UserInputType.Keyboard then tripKeybind = input.KeyCode; TripKeyBtn.Text = input.KeyCode.Name; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false; return end
     if isReverseBinding and input.UserInputType == Enum.UserInputType.Keyboard then reverseKeybind = input.KeyCode; ReverseKeyBtn.Text = input.KeyCode.Name; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isReverseBinding = false; return end
-    if isFcBinding and input.UserInputType == Enum.UserInputType.Keyboard then fcKeybind = input.KeyCode; FreecamKeyBtn.Text = input.KeyCode.Name; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFcBinding = false; return end
+    
     
     if not gp then
         if input.KeyCode == Enum.KeyCode.Insert then 
@@ -1652,7 +1652,6 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
         if noclipKeybind and input.KeyCode == noclipKeybind then ToggleNoclipWalk() end
         if tripKeybind and input.KeyCode == tripKeybind then DoTrip() end
         if isTripped and input.KeyCode == Enum.KeyCode.Space then GetUpFromTrip() end
-        if fcKeybind and input.KeyCode == fcKeybind then ToggleFreecam() end
         
         if isFlying then
             if input.KeyCode == Enum.KeyCode.W then flycontrol.F = 1
