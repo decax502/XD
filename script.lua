@@ -1855,6 +1855,52 @@ AddCmd("generacion", "Abre el panel del Generador de Objetos", function()
     LogMessage("Generador C.D.T abierto.", tCyan)
 end)
 
+-- ==================================================================
+-- COMANDO: TP TOOL (CLICK / TOUCH TELEPORT)
+-- ==================================================================
+AddCmd("tptool", "Te da una herramienta para hacer TP donde hagas click", function()
+    local toolName = "⚡ C.D.T TP Tool"
+    
+    -- Verificar si ya lo tiene equipado o en la mochila
+    local hasTool = LocalPlayer.Backpack:FindFirstChild(toolName) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(toolName))
+    
+    if hasTool then
+        LogMessage("Ya tienes el TP Tool en tu inventario.", tYellow)
+        return
+    end
+
+    -- Crear la herramienta
+    local tpTool = Instance.new("Tool")
+    tpTool.Name = toolName
+    tpTool.RequiresHandle = false -- Permite usarlo sin un Part físico (ideal para móvil y PC)
+    tpTool.CanBeDropped = false
+
+    local mouse = LocalPlayer:GetMouse()
+
+    -- Lógica al hacer Click o tocar la pantalla
+    tpTool.Activated:Connect(function()
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        
+        if hrp and mouse.Hit then
+            -- Offset de +3.5 en Y para no quedar atrapado en el suelo
+            local targetPos = mouse.Hit.Position + Vector3.new(0, 3.5, 0)
+            hrp.CFrame = CFrame.new(targetPos)
+            
+            -- Efecto visual premium (Flash)
+            pcall(function()
+                local flash = Instance.new("ColorCorrectionEffect", Lighting)
+                flash.Brightness = 1
+                TweenService:Create(flash, TweenInfo.new(0.3), {Brightness = 0}):Play()
+                game.Debris:AddItem(flash, 0.4)
+            end)
+        end
+    end)
+
+    -- Entregar al jugador
+    tpTool.Parent = LocalPlayer.Backpack
+    LogMessage("TP Tool creado. Equípalo y toca donde quieras ir.", tGreen)
+end)
 
 -- ==================================================================
 -- DEFINICIÓN DE DESTRUCCIÓN TOTAL PARA EL COMANDO /DESTROY
