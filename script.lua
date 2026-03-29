@@ -1125,7 +1125,7 @@ TripKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 14. FREECAM MENU (EXPLORACIÓN LIBRE + SHIFT LOCK FIX DEFINITIVO)
+-- 14. FREECAM MENU (EXPLORACIÓN LIBRE + SHIFT LOCK + KEYBIND FIX)
 -- ==================================================================
 FreecamMain = Instance.new("Frame", ScreenGui); FreecamMain.Size = UDim2.new(0, 260, 0, 145); FreecamMain.Position = UDim2.new(0, 20, 0, 140); FreecamMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FreecamMain.BorderSizePixel = 0; FreecamMain.ClipsDescendants = true; FreecamMain.Visible = false; Instance.new("UICorner", FreecamMain).CornerRadius = UDim.new(0, 6); FreecamMainStroke = Instance.new("UIStroke", FreecamMain); FreecamMainStroke.Color = borderDark
 FreecamTopBar = Instance.new("Frame", FreecamMain); FreecamTopBar.Size = UDim2.new(1, 0, 0, 35); FreecamTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FreecamTopBar.BorderSizePixel = 0; Instance.new("UICorner", FreecamTopBar).CornerRadius = UDim.new(0, 6)
@@ -1149,9 +1149,10 @@ FreecamMinBtn.MouseButton1Click:Connect(function()
     FreecamMinBtn.Text = fcMinimized and "+" or "—"; FreecamFix.Visible = not fcMinimized
 end)
 
+-- Variables de Estado Limpias
 local isFreecamActive = false; local fcSpeed = 60; local fcSmoothness = 0.1; local fcKeybind = nil; local isFcBinding = false
 local fcTargetCFrame = CFrame.new(); local fcVelocity = Vector3.zero; local fcPitch, fcYaw = 0, 0
-local fcRenderConn, fcInputConn1, fcInputConn2; local isHoldingRightClick = false; local isShiftLocked = false
+local fcRenderConn, fcInputConn1, fcInputConn2, fcMoveConn; local isHoldingRightClick = false; local isShiftLocked = false
 
 FreecamSpeedMinus.MouseButton1Click:Connect(function() fcSpeed = math.max(10, fcSpeed - 10); FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
 FreecamSpeedPlus.MouseButton1Click:Connect(function() fcSpeed = fcSpeed + 10; FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
@@ -1183,14 +1184,11 @@ local function ToggleFreecam()
         Camera.CameraType = Enum.CameraType.Scriptable
         
         fcInputConn1 = UserInputService.InputBegan:Connect(function(input, gp)
-            -- FIX 1: Priorizamos el Shift por encima del GameProcessed (gp)
             if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
                 isShiftLocked = not isShiftLocked
                 return
             end
-            
             if gp then return end
-
             if input.UserInputType == Enum.UserInputType.MouseButton2 or input.UserInputType == Enum.UserInputType.Touch then
                 isHoldingRightClick = true
             end
@@ -1211,7 +1209,6 @@ local function ToggleFreecam()
                 UserInputService.MouseBehavior = Enum.MouseBehavior.Default
             end
 
-            -- FIX 2: El GetMouseDelta() nativo de Roblox, a prueba de fallos.
             if isShiftLocked or isHoldingRightClick then
                 local delta = UserInputService:GetMouseDelta()
                 fcPitch = math.clamp(fcPitch - delta.Y * 0.005, -math.rad(89), math.rad(89))
@@ -1226,8 +1223,6 @@ local function ToggleFreecam()
             fcTargetCFrame = CFrame.new(fcTargetCFrame.Position + (fcVelocity * dt)) * rotCFrame
             Camera.CFrame = Camera.CFrame:Lerp(fcTargetCFrame, fcSmoothness)
         end)
-        
-        fcRenderConn.Name = "FC_Render"
     else
         FreecamToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); FreecamToggleBtn.TextColor3 = tWhite; FreecamToggleBtn.Text = "FREECAM: OFF"
         if hrp then hrp.Anchored = false end
@@ -1250,14 +1245,24 @@ FreecamCloseBtn.MouseButton1Click:Connect(function()
     if isFreecamActive then ToggleFreecam() end
 end)
 
+-- ==================================================================
+-- MANEJADOR AISLADO DE KEYBINDS PARA FREECAM
+-- ==================================================================
 FreecamKeyBtn.MouseButton1Click:Connect(function()
-    if fcKeybind ~= nil then fcKeybind = nil; FreecamKeyBtn.Text = "KEY"; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFcBinding = false
-    else isFcBinding = true; FreecamKeyBtn.Text = "..."; FreecamKeyBtn.BackgroundColor3 = tOrange end
+    if fcKeybind ~= nil then 
+        fcKeybind = nil
+        FreecamKeyBtn.Text = "KEY"
+        FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        isFcBinding = false
+    else 
+        isFcBinding = true
+        FreecamKeyBtn.Text = "..."
+        FreecamKeyBtn.BackgroundColor3 = tOrange 
+    end
 end)
 
--- Lógica Independiente de Teclas para la Freecam
 UserInputService.InputBegan:Connect(function(input, gp)
-    -- Asignar nueva tecla
+    -- Guardar la tecla
     if isFcBinding and input.UserInputType == Enum.UserInputType.Keyboard then
         fcKeybind = input.KeyCode
         FreecamKeyBtn.Text = input.KeyCode.Name
@@ -1266,8 +1271,8 @@ UserInputService.InputBegan:Connect(function(input, gp)
         return
     end
     
-    -- Activar/Desactivar con la tecla guardada
-    if not gp and fcKeybind and input.KeyCode == fcKeybind then
+    -- Ejecutar Freecam (ignora chat/UI para no buguearse)
+    if fcKeybind and input.KeyCode == fcKeybind and not UserInputService:GetFocusedTextBox() then
         ToggleFreecam()
     end
 end)
