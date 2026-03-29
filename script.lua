@@ -1079,7 +1079,7 @@ TripKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 13. REVERSE MODE (FLASHBACK / TIME REWIND) - MOBILE SUPPORT
+-- 13. REVERSE MODE (FLASHBACK / TIME REWIND)
 -- ==================================================================
 ReverseMain = Instance.new("Frame", ScreenGui); ReverseMain.Size = UDim2.new(0, 260, 0, 145); ReverseMain.Position = UDim2.new(0, 20, 0, 660); ReverseMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ReverseMain.BorderSizePixel = 0; ReverseMain.ClipsDescendants = true; ReverseMain.Visible = false; Instance.new("UICorner", ReverseMain).CornerRadius = UDim.new(0, 6); ReverseMainStroke = Instance.new("UIStroke", ReverseMain); ReverseMainStroke.Color = borderDark
 ReverseTopBar = Instance.new("Frame", ReverseMain); ReverseTopBar.Size = UDim2.new(1, 0, 0, 35); ReverseTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ReverseTopBar.BorderSizePixel = 0; Instance.new("UICorner", ReverseTopBar).CornerRadius = UDim.new(0, 6)
