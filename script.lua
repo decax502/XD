@@ -1,22 +1,17 @@
 --[[
-    C.D.T OPTIFINE - V10.8 PROJECT SAFE (KEY & AUTO-UPDATE)
-    - Trip Mode (Un solo toque para caer, te quedas tirado hasta saltar con ESPACIO).
+    C.D.T OPTIFINE - V10.8 PROJECT SAFE (MASTER EDITION)
+    - Trip Mode Inteligente (Anti Shift-Lock Bug).
     - Inyección Segura (Bulletproof) y Responsive UI.
-    - TP Menu (Buscador dinámico).
-    - Map Points (Comando 'mp', Guarda lugares por juego).
+    - TP Menu & Map Points (Buscador dinámico).
     - Menú Invisible (SEAT MODE PERFECTO + KEYBIND).
-    - Menú de Vuelo (Noclip Fly).
-    - VEHICLE FLY (Lerp Suave).
-    - REVERSE MODE (Flashback System + Custom Keybind).
+    - Menú de Vuelo Normal & VEHICLE FLY (Lerp Suave).
+    - REVERSE MODE (Flashback System).
+    - FREECAM MODE (Shift-Lock Native Override).
+    - ESP SYSTEM (Highlights + Team Check).
     - GLOBAL CHAT SMART (Auto-Scroll).
-    - Consola Inteligente.
-    - Comando 'vtag' para ocultar/mostrar tu propio tag visualmente.
+    - Comandos AFK, Hop, Rejoin, TPTool, infbase, generacion.
     - Panel de Ajustes (⚙) con Temas Consistentes.
-    - Comando 'hide' que OCULTA EL AVATAR, MUTEA SONIDOS LOCALES Y MUTEA VOICE CHAT (AudioDeviceInput).
-    - Comando !re integrado en chat y consola.
-    - Comando 'infbase' para generar baseplates infinitas.
-    - Comando 'generacion' para crear objetos en el servidor (Sliders X, Y, Z integrados).
-    - SISTEMA DE KEY, HWID, RECORDATORIO DE 30 DÍAS Y AUTO-ACTUALIZACIÓN GLOBAL.
+    - SISTEMA DE KEY, HWID, RECORDATORIO DE 30 DÍAS Y AUTO-ACTUALIZACIÓN.
 ]]
 
 local Players = game:GetService("Players")
@@ -32,6 +27,7 @@ local Lighting = game:GetService("Lighting")
 local TextService = game:GetService("TextService")
 local RbxAnalytics = game:GetService("RbxAnalyticsService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
 
 repeat task.wait() until Players.LocalPlayer
 local LocalPlayer = Players.LocalPlayer
@@ -113,20 +109,13 @@ ScreenGui.Parent = targetGuiParent
 -- FUNCION REINICIO GLOBAL AUTOMATICO Y DESTRUCCIÓN TOTAL
 -- ==================================================================
 local function AutoRestartScript()
-    if DestruirScriptCompleto then
-        DestruirScriptCompleto()
-    end
-    StarterGui:SetCore("SendNotification", {
-        Title="SAFE DEV", 
-        Text="El servidor ha forzado una actualización Global. Por favor, reinyecta el script.", 
-        Duration=10
-    })
+    if DestruirScriptCompleto then DestruirScriptCompleto() end
+    StarterGui:SetCore("SendNotification", { Title="SAFE DEV", Text="El servidor ha forzado una actualización Global. Por favor, reinyecta el script.", Duration=10 })
 end
 
 -- ==================================================================
 -- SISTEMA NAME TAGS E INVISIBILIDAD LOCAL DE JUGADORES + VOICE MUTE
 -- ==================================================================
-
 local function OcultarAvatar(character, ocultar)
     if not character then return end
     for _, obj in ipairs(character:GetDescendants()) do
@@ -150,33 +139,21 @@ end
 local function MutearVoiceChat(player, ocultar)
     pcall(function()
         local audioInput = player:FindFirstChild("AudioDeviceInput")
-        if audioInput then
-            audioInput.Muted = ocultar
-        end
+        if audioInput then audioInput.Muted = ocultar end
     end)
 end
 
--- Bucle de Radar y Chequeo de Actualización
 task.spawn(function()
     while scriptActivoTags do
         local successPing, resPing = pcall(function()
-            return request({
-                Url = BASE_URL .. "/api/ping/" .. tostring(LocalPlayer.UserId),
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = "{}"
-            })
+            return request({ Url = BASE_URL .. "/api/ping/" .. tostring(LocalPlayer.UserId), Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = "{}" })
         end)
         
         if successPing and resPing and resPing.StatusCode == 200 then
             local sDecode, dat = pcall(function() return HttpService:JSONDecode(resPing.Body) end)
             if sDecode and dat and dat.updateTime then
-                if _GlobalUpdateTimestamp == 0 then
-                    _GlobalUpdateTimestamp = dat.updateTime
-                elseif dat.updateTime > _GlobalUpdateTimestamp then
-                    scriptActivoTags = false
-                    AutoRestartScript()
-                end
+                if _GlobalUpdateTimestamp == 0 then _GlobalUpdateTimestamp = dat.updateTime
+                elseif dat.updateTime > _GlobalUpdateTimestamp then scriptActivoTags = false; AutoRestartScript() end
             end
         end
         task.wait(4)
@@ -212,8 +189,7 @@ local function crearNieveTag(container, emojiText, colorNieveHex)
         local snow = Instance.new("TextLabel", container)
         snow.BackgroundTransparency = 1; snow.Text = emojiText or "*"; snow.Font = Enum.Font.GothamBlack 
         snow.TextColor3 = parseHexTag(colorNieveHex, "#ffffff"); snow.TextTransparency = 0.4; snow.TextSize = math.random(16, 24) 
-        snow.Position = UDim2.new(math.random(5, 95)/100, 0, -0.3, 0)
-        snow.ZIndex = 2
+        snow.Position = UDim2.new(math.random(5, 95)/100, 0, -0.3, 0); snow.ZIndex = 2
         table.insert(listaCopos, snow)
 
         local speed = math.random(30, 50) / 10; local delay = math.random(0, 20) / 10
@@ -270,9 +246,7 @@ local function crearUITag(player, datos, userId)
     local aI = 8 + 36 + 10 + math.max(bT.X, bN.X) + 16; if aI < 110 then aI = 110 end 
 
     local bill = Instance.new("BillboardGui", targetGuiParent)
-    bill.Name = nombreUI; bill.Adornee = head; bill.Size = UDim2.new(0, aI, 0, 50); 
-    bill.StudsOffset = Vector3.new(0, 1.8, 0); 
-    bill.AlwaysOnTop = true; bill.MaxDistance = math.huge; bill.ResetOnSpawn = false; bill.Active = true 
+    bill.Name = nombreUI; bill.Adornee = head; bill.Size = UDim2.new(0, aI, 0, 50); bill.StudsOffset = Vector3.new(0, 1.8, 0); bill.AlwaysOnTop = true; bill.MaxDistance = math.huge; bill.ResetOnSpawn = false; bill.Active = true 
     local scale = Instance.new("UIScale", bill); scale.Scale = 1
     local card = Instance.new("Frame", bill); card.Size = UDim2.new(0, aI, 0, 50); card.AnchorPoint = Vector2.new(0.5, 0.5); card.Position = UDim2.new(0.5, 0, 0.5, 0); card.BackgroundColor3 = Color3.new(1, 1, 1) 
     local corner = Instance.new("UICorner", card); corner.CornerRadius = UDim.new(0, 8)
@@ -297,28 +271,15 @@ local function crearUITag(player, datos, userId)
 
     local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -54, 0, 36); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 50, 0.5, 0); infoGroup.BackgroundTransparency = 1
 
+    -- FIX VISUAL: Títulos limpios sin amontonarse
     local txtTitle = Instance.new("TextLabel", infoGroup)
-    txtTitle.BackgroundTransparency = 1
-    txtTitle.Size = UDim2.new(1, 0, 0, 16)
-    txtTitle.Position = UDim2.new(0, 0, 0, 0) -- Pegado arriba
-    txtTitle.Font = fU
-    txtTitle.Text = tTit
-    txtTitle.TextColor3 = Color3.new(1,1,1)
-    txtTitle.TextSize = 14
-    txtTitle.TextXAlignment = Enum.TextXAlignment.Left
-    txtTitle.TextYAlignment = Enum.TextYAlignment.Center
+    txtTitle.BackgroundTransparency = 1; txtTitle.Size = UDim2.new(1, 0, 0, 16); txtTitle.Position = UDim2.new(0, 0, 0, 0)
+    txtTitle.Font = fU; txtTitle.Text = tTit; txtTitle.TextColor3 = Color3.new(1,1,1); txtTitle.TextSize = 14; txtTitle.TextXAlignment = Enum.TextXAlignment.Left; txtTitle.TextYAlignment = Enum.TextYAlignment.Center
     local titleGrad = Instance.new("UIGradient", txtTitle); titleGrad.Rotation = 45; titleGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorTitulo1 or datos.colorTitulo, "#ffffff")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorTitulo2 or datos.colorTitulo, "#ffffff")) })
 
     local txtName = Instance.new("TextLabel", infoGroup)
-    txtName.BackgroundTransparency = 1
-    txtName.Size = UDim2.new(1, 0, 0, 14)
-    txtName.Position = UDim2.new(0, 0, 0, 18) -- Separado exactamente 18 píxeles del título
-    txtName.Font = Enum.Font.GothamBold
-    txtName.Text = tNom
-    txtName.TextColor3 = Color3.new(1,1,1)
-    txtName.TextSize = 13
-    txtName.TextXAlignment = Enum.TextXAlignment.Left
-    txtName.TextYAlignment = Enum.TextYAlignment.Center
+    txtName.BackgroundTransparency = 1; txtName.Size = UDim2.new(1, 0, 0, 14); txtName.Position = UDim2.new(0, 0, 0, 18)
+    txtName.Font = Enum.Font.GothamBold; txtName.Text = tNom; txtName.TextColor3 = Color3.new(1,1,1); txtName.TextSize = 13; txtName.TextXAlignment = Enum.TextXAlignment.Left; txtName.TextYAlignment = Enum.TextYAlignment.Center
     local nameGrad = Instance.new("UIGradient", txtName); nameGrad.Rotation = 45; nameGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorNombre1 or datos.colorNombre, "#a0a0b0")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorNombre2 or datos.colorNombre, "#a0a0b0")) })
     
     local btnTP = Instance.new("TextButton", card); btnTP.Size = UDim2.new(1, 0, 1, 0); btnTP.BackgroundTransparency = 1; btnTP.Text = ""; btnTP.ZIndex = 100
@@ -436,7 +397,6 @@ TopBar = Instance.new("Frame", FullUI); TopBar.Size = UDim2.new(1, 0, 0, 35); To
 Fix = Instance.new("Frame", TopBar); Fix.Size = UDim2.new(1, 0, 0, 5); Fix.Position = UDim2.new(0, 0, 1, -5); Fix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Fix.BorderSizePixel = 0
 Title = Instance.new("TextLabel", TopBar); Title.Size = UDim2.new(1, -150, 1, 0); Title.Position = UDim2.new(0, 15, 0, 0); Title.BackgroundTransparency = 1; Title.Text = "C.D.T OPTIFINE // SYSTEM"; Title.TextColor3 = tWhite; Title.Font = Enum.Font.GothamBold; Title.TextSize = 12; Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- LABEL DE EXPIRACIÓN EN LA BARRA
 local ExpLabel = Instance.new("TextLabel", TopBar)
 ExpLabel.Size = UDim2.new(0, 100, 1, 0); ExpLabel.Position = UDim2.new(1, -180, 0, 0)
 ExpLabel.BackgroundTransparency = 1; ExpLabel.Text = "Verificando..."
@@ -550,7 +510,7 @@ local function RefreshMPList()
         local Item = Instance.new("Frame", MPScroll); Item.Size = UDim2.new(1, -5, 0, 30); Item.BackgroundColor3 = Color3.fromRGB(25, 25, 25); Instance.new("UICorner", Item).CornerRadius = UDim.new(0, 4)
         local NameBox = Instance.new("TextBox", Item); NameBox.Size = UDim2.new(0, 120, 1, 0); NameBox.Position = UDim2.new(0, 5, 0, 0); NameBox.BackgroundTransparency = 1; NameBox.TextColor3 = tWhite; NameBox.Text = wpName; NameBox.TextXAlignment = Enum.TextXAlignment.Left; NameBox.Font = Enum.Font.Gotham; NameBox.TextSize = 12; NameBox.ClearTextOnFocus = false
         local TpBtn = Instance.new("TextButton", Item); TpBtn.Size = UDim2.new(0, 35, 0, 22); TpBtn.Position = UDim2.new(1, -85, 0.5, -11); TpBtn.BackgroundColor3 = tCyan; TpBtn.TextColor3 = Color3.fromRGB(10,10,10); TpBtn.Text = "TP"; TpBtn.Font = Enum.Font.GothamBold; TpBtn.TextSize = 11; Instance.new("UICorner", TpBtn).CornerRadius = UDim.new(0, 4)
-        local UpdBtn = Instance.new("TextButton", Item); UpdBtn.Size = UDim2.new(0, 22, 0, 22); UpdBtn.Position = UDim2.new(1, -45, 0.5, -11); UpdBtn.BackgroundColor3 = tOrange; UpdBtn.TextColor3 = tWhite; UpdBtn.Text = "↺"; UpdBtn.Font = Enum.Font.GothamBold; UpdBtn.TextSize = 14; Instance.new("UICorner", UpdBtn).CornerRadius = UDim.new(0, 4)
+        local UpdBtn = Instance.new("TextButton", Item); UpdBtn.Size = UDim2.new(0, 22, 0, 22); UpdBtn.Position = UDim2.new(1, -45, 0.5, -11); TpBtn.BackgroundColor3 = tCyan; UpdBtn.BackgroundColor3 = tOrange; UpdBtn.TextColor3 = tWhite; UpdBtn.Text = "↺"; UpdBtn.Font = Enum.Font.GothamBold; UpdBtn.TextSize = 14; Instance.new("UICorner", UpdBtn).CornerRadius = UDim.new(0, 4)
         local DelBtn = Instance.new("TextButton", Item); DelBtn.Size = UDim2.new(0, 18, 0, 22); DelBtn.Position = UDim2.new(1, -20, 0.5, -11); DelBtn.BackgroundColor3 = tRed; DelBtn.TextColor3 = tWhite; DelBtn.Text = "X"; DelBtn.Font = Enum.Font.GothamBold; DelBtn.TextSize = 11; Instance.new("UICorner", DelBtn).CornerRadius = UDim.new(0, 4)
 
         NameBox.FocusLost:Connect(function()
@@ -678,9 +638,7 @@ local function RefreshHideMenu(filterText)
                 local idStr = tostring(plr.UserId)
                 local isHid = hiddenTags[idStr]
                 
-                if isHid then
-                    MutearVoiceChat(plr, true)
-                end
+                if isHid then MutearVoiceChat(plr, true) end
                 
                 local HBtn = Instance.new("TextButton", Card); HBtn.Size = UDim2.new(0, 60, 0, 26); HBtn.Position = UDim2.new(1, -65, 0.5, -13)
                 HBtn.BackgroundColor3 = isHid and tGreen or Color3.fromRGB(40, 40, 40)
@@ -735,20 +693,16 @@ local function showNotice(txt)
 end
 
 local isGhostActive = false; local invKeybind = nil; local isInvBinding = false; local ghostDebounce = false
-local currentInvisSeat = nil -- FIX: Variable para no perder el asiento
+local currentInvisSeat = nil 
 
--- FIX: Modificado para afectar también caras y texturas
 local function setCharacterTransparency(char, val)
     for _, p in ipairs(char:GetDescendants()) do
-        if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
-            p.Transparency = val
-        elseif p:IsA("Decal") or p:IsA("Texture") then
-            p.Transparency = val
-        end
+        if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = val
+        elseif p:IsA("Decal") or p:IsA("Texture") then p.Transparency = val end
     end
 end
 
-local function ToggleGhost()
+ToggleGhost = function()
     if ghostDebounce then return end
     ghostDebounce = true
     isGhostActive = not isGhostActive
@@ -763,7 +717,6 @@ local function ToggleGhost()
             task.wait(0.15)
             
             if currentInvisSeat and currentInvisSeat.Parent then currentInvisSeat:Destroy() end
-
             currentInvisSeat = Instance.new("Seat", Workspace)
             currentInvisSeat.Anchored = false; currentInvisSeat.CanCollide = false; currentInvisSeat.Name = "invischair"; currentInvisSeat.Transparency = 1; currentInvisSeat.Position = Vector3.new(-25.95, 84, 3537.55)
             
@@ -776,7 +729,6 @@ local function ToggleGhost()
                 InvToggleBtn.BackgroundColor3 = tGreen; InvToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); InvToggleBtn.Text = "INVISIBILIDAD: ON"
                 showNotice("Invisibility Enabled")
             else 
-                -- FIX: Limpieza correcta si no encuentra el torso y reset de UI
                 if currentInvisSeat then currentInvisSeat:Destroy(); currentInvisSeat = nil end
                 isGhostActive = false; setCharacterTransparency(char, 0) 
                 InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
@@ -784,17 +736,10 @@ local function ToggleGhost()
         end
     else
         if char then setCharacterTransparency(char, 0) end
-        
-        -- FIX: Eliminación exacta del asiento
-        if currentInvisSeat and currentInvisSeat.Parent then 
-            pcall(function() currentInvisSeat:Destroy() end) 
-        end
+        if currentInvisSeat and currentInvisSeat.Parent then pcall(function() currentInvisSeat:Destroy() end) end
         currentInvisSeat = nil
-        
-        -- Fallback de seguridad por si otro script creó uno
         local inv = Workspace:FindFirstChild("invischair")
         if inv then pcall(function() inv:Destroy() end) end
-        
         InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
         showNotice("Invisibility Disabled")
     end
@@ -806,14 +751,13 @@ InvCloseBtn.MouseButton1Click:Connect(function()
     InvMain.Visible = false; invKeybind = nil; isInvBinding = false; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     if isGhostActive then ToggleGhost() end
 end)
-
 InvKeyBtn.MouseButton1Click:Connect(function()
     if invKeybind ~= nil then invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
     else isInvBinding = true; InvKeyBtn.Text = "..."; InvKeyBtn.BackgroundColor3 = tOrange end
 end)
 
 -- ==================================================================
--- 5. INTERFAZ Y LÓGICA DEL MENÚ FLY (NOCLIP FLY AEREO)
+-- 5. INTERFAZ Y LÓGICA DEL MENÚ FLY (NORMAL FLY SIN NOCLIP)
 -- ==================================================================
 FlyMain = Instance.new("Frame", ScreenGui); FlyMain.Size = UDim2.new(0, 260, 0, 145); FlyMain.Position = UDim2.new(0, 20, 0, 140); FlyMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FlyMain.BorderSizePixel = 0; FlyMain.ClipsDescendants = true; FlyMain.Visible = false; Instance.new("UICorner", FlyMain).CornerRadius = UDim.new(0, 6); FlyMainStroke = Instance.new("UIStroke", FlyMain); FlyMainStroke.Color = borderDark
 FlyTopBar = Instance.new("Frame", FlyMain); FlyTopBar.Size = UDim2.new(1, 0, 0, 35); FlyTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FlyTopBar.BorderSizePixel = 0; Instance.new("UICorner", FlyTopBar).CornerRadius = UDim.new(0, 6)
@@ -837,13 +781,14 @@ FlyMinBtn.MouseButton1Click:Connect(function()
     FlyMinBtn.Text = flyMinimized and "+" or "—"; FlyFix.Visible = not flyMinimized
 end)
 
-local isFlying = false; local flySpeed = 100; local flyKeybind = nil; local isFlyBinding = false; local flyLoop = nil; local flycontrol = {F = 0, R = 0, B = 0, L = 0, U = 0, D = 0}
+isFlying = false; flycontrol = {F = 0, R = 0, B = 0, L = 0, U = 0, D = 0}
+local flySpeed = 100; local flyKeybind = nil; local isFlyBinding = false; local flyLoop = nil
 
 FlySpeedMinus.MouseButton1Click:Connect(function() flySpeed = math.max(10, flySpeed - 10); FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
 FlySpeedPlus.MouseButton1Click:Connect(function() flySpeed = flySpeed + 10; FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
 FlySpeedDisplay.FocusLost:Connect(function() local num = tonumber(FlySpeedDisplay.Text:match("%d+")); if num then flySpeed = num end; FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
 
-local function ToggleFly()
+ToggleFly = function()
     local char = LocalPlayer.Character; if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart"); local hum = char:FindFirstChildWhichIsA("Humanoid")
     if not hrp or not hum then return end
@@ -872,7 +817,6 @@ FlyCloseBtn.MouseButton1Click:Connect(function()
     FlyMain.Visible = false; flyKeybind = nil; isFlyBinding = false; FlyKeyBtn.Text = "KEY"; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     if isFlying then ToggleFly() end
 end)
-
 FlyKeyBtn.MouseButton1Click:Connect(function()
     if flyKeybind ~= nil then flyKeybind = nil; FlyKeyBtn.Text = "KEY"; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFlyBinding = false
     else isFlyBinding = true; FlyKeyBtn.Text = "..."; FlyKeyBtn.BackgroundColor3 = tOrange end
@@ -901,7 +845,7 @@ end)
 
 local isNoclipActive = false; local noclipLoop = nil; local noclipFloor = nil; local noclipKeybind = nil; local isNoclipBinding = false
 
-local function ToggleNoclipWalk()
+ToggleNoclipWalk = function()
     isNoclipActive = not isNoclipActive; local char = LocalPlayer.Character
     if isNoclipActive then
         NoclipToggleBtn.BackgroundColor3 = tCyan; NoclipToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); NoclipToggleBtn.Text = "NOCLIP: ON"
@@ -933,7 +877,6 @@ NoclipCloseBtn.MouseButton1Click:Connect(function()
     NoclipMain.Visible = false; noclipKeybind = nil; isNoclipBinding = false; NoclipKeyBtn.Text = "KEY"; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
     if isNoclipActive then ToggleNoclipWalk() end
 end)
-
 NoclipKeyBtn.MouseButton1Click:Connect(function()
     if noclipKeybind ~= nil then noclipKeybind = nil; NoclipKeyBtn.Text = "KEY"; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isNoclipBinding = false
     else isNoclipBinding = true; NoclipKeyBtn.Text = "..."; NoclipKeyBtn.BackgroundColor3 = tOrange end
@@ -992,7 +935,7 @@ local function VFlyLoop(delta)
     if car ~= root then car.RotVelocity = Vector3.new(0,0,0); local flatLv = (vFlyCurrentVel + camCF.LookVector) * Vector3.new(1,0,1); car.CFrame = car.CFrame:Lerp(CFrame.lookAt(car.Position, car.Position + flatLv), math.clamp(delta * vFlyTurn, 0, 1)) end
 end
 
-local function ToggleVFly()
+ToggleVFly = function()
     isVFlying = not isVFlying; local char = LocalPlayer.Character; local root = char and char:FindFirstChild("HumanoidRootPart")
     if isVFlying then
         VFlyToggleBtn.BackgroundColor3 = tPurple; VFlyToggleBtn.Text = "V-FLY: ON"
@@ -1008,14 +951,13 @@ VFlyCloseBtn.MouseButton1Click:Connect(function()
     VFlyMain.Visible = false; vFlyKeybind = nil; isVFlyBinding = false; VFlyKeyBtn.Text = "KEY"; VFlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
     if isVFlying then ToggleVFly() end
 end)
-
 VFlyKeyBtn.MouseButton1Click:Connect(function()
     if vFlyKeybind ~= nil then vFlyKeybind = nil; VFlyKeyBtn.Text = "KEY"; VFlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isVFlyBinding = false
     else isVFlyBinding = true; VFlyKeyBtn.Text = "..."; VFlyKeyBtn.BackgroundColor3 = tOrange end
 end)
 
 -- ==================================================================
--- 8. TRIP MODE MENU (CAÍDA INFINITA + LEVANTARSE CON ESPACIO)
+-- 8. TRIP MODE MENU (CAÍDA INFINITA + LEVANTARSE)
 -- ==================================================================
 TripMain = Instance.new("Frame", ScreenGui); TripMain.Size = UDim2.new(0, 260, 0, 100); TripMain.Position = UDim2.new(0, 20, 0, 540); TripMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); TripMain.BorderSizePixel = 0; TripMain.ClipsDescendants = true; TripMain.Visible = false; Instance.new("UICorner", TripMain).CornerRadius = UDim.new(0, 6); TripMainStroke = Instance.new("UIStroke", TripMain); TripMainStroke.Color = borderDark
 TripTopBar = Instance.new("Frame", TripMain); TripTopBar.Size = UDim2.new(1, 0, 0, 35); TripTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripTopBar.BorderSizePixel = 0; Instance.new("UICorner", TripTopBar).CornerRadius = UDim.new(0, 6)
@@ -1035,50 +977,39 @@ TripMinBtn.MouseButton1Click:Connect(function()
     TripMinBtn.Text = tripMinimized and "+" or "—"; TripFix.Visible = not tripMinimized
 end)
 
-local isTripped = false
-local tripKeybind = nil
-local isTripBinding = false
-local tripStateConn = nil -- Variable para la detección inteligente
+local tripKeybind = nil; local isTripBinding = false; local tripStateConn = nil 
+isTripped = false
 
 local function CleanTripConnections()
     if tripStateConn then tripStateConn:Disconnect(); tripStateConn = nil end
 end
 
--- El parámetro "autoClean" avisa si el juego lo levantó por su cuenta
-local function GetUpFromTrip(autoClean)
+GetUpFromTrip = function(autoClean)
     if not isTripped then return end
     isTripped = false
     CleanTripConnections()
     
-    -- El botón vuelve a la normalidad
-    TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    TripToggleBtn.TextColor3 = tWhite
-    TripToggleBtn.Text = "TRIP (CLICK)"
+    TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "TRIP (CLICK)"
 
     local char = LocalPlayer.Character; if not char then return end
     local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
     if not humanoid or not root then return end
 
-    -- FIX: Restaurar físicas base SIEMPRE para que el Shift Lock y la rotación no se bugueen
     humanoid.PlatformStand = false
     humanoid.AutoRotate = true
 
-    -- Si no fue forzado por el juego, ejecutamos la rutina para levantarlo nosotros
     if not autoClean then
         root.AssemblyLinearVelocity = root.AssemblyLinearVelocity + Vector3.new(0, 10, 0)
         root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
         humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
     end
     
-    -- Siempre limpiamos las físicas personalizadas
     for _, part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CustomPhysicalProperties = nil 
-        end
+        if part:IsA("BasePart") then part.CustomPhysicalProperties = nil end
     end
 end
 
-local function DoTrip()
+DoTrip = function()
     if isTripped then return end
     local char = LocalPlayer.Character; if not char then return end
     local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
@@ -1087,18 +1018,14 @@ local function DoTrip()
     isTripped = true 
     CleanTripConnections()
     
-    -- Evento Inteligente: Detectar si el juego u otro script levanta al personaje
     tripStateConn = humanoid.StateChanged:Connect(function(oldState, newState)
         if not isTripped then return end
         if newState == Enum.HumanoidStateType.Running or newState == Enum.HumanoidStateType.Jumping or newState == Enum.HumanoidStateType.Walking or newState == Enum.HumanoidStateType.Dead then
-            -- El juego lo levantó o mató, limpiamos la UI sin forzar físicas de nuevo
             GetUpFromTrip(true)
         end
     end)
     
-    TripToggleBtn.BackgroundColor3 = tRed
-    TripToggleBtn.TextColor3 = tWhite
-    TripToggleBtn.Text = "LEVANTARSE (CLICK)"
+    TripToggleBtn.BackgroundColor3 = tRed; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "LEVANTARSE (CLICK)"
 
     local currentVelocity = root.AssemblyLinearVelocity
     local speed = currentVelocity.Magnitude
@@ -1108,40 +1035,129 @@ local function DoTrip()
 
     local impulso = (speed > 5) and (currentVelocity * 1.3) or (root.CFrame.LookVector * 10)
     root.AssemblyLinearVelocity = impulso + Vector3.new(0, 8, 0)
-    
     local spin = speed > 5 and 20 or 10
     root.AssemblyAngularVelocity = Vector3.new(math.random(-spin, spin), math.random(-spin, spin), math.random(-spin, spin))
 
     for _, part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.1, 1, 1)
-        end
+        if part:IsA("BasePart") then part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.1, 1, 1) end
     end
 end
 
 TripToggleBtn.MouseButton1Click:Connect(function()
-    if isTripped then
-        GetUpFromTrip(false)
-    else
-        DoTrip()
-    end
+    if isTripped then GetUpFromTrip(false) else DoTrip() end
 end)
-
 TripCloseBtn.MouseButton1Click:Connect(function() 
     TripMain.Visible = false; tripKeybind = nil; isTripBinding = false; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
     if isTripped then GetUpFromTrip(false) end
 end)
-
 TripKeyBtn.MouseButton1Click:Connect(function()
-    if tripKeybind ~= nil then 
-        tripKeybind = nil; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false
-    else 
-        isTripBinding = true; TripKeyBtn.Text = "..."; TripKeyBtn.BackgroundColor3 = tOrange 
-    end
+    if tripKeybind ~= nil then tripKeybind = nil; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false
+    else isTripBinding = true; TripKeyBtn.Text = "..."; TripKeyBtn.BackgroundColor3 = tOrange end
 end)
 
 -- ==================================================================
--- 14. FREECAM MENU (EXPLORACIÓN LIBRE + SHIFT LOCK + KEYBIND FIX)
+-- 13. REVERSE MODE (FLASHBACK / TIME REWIND)
+-- ==================================================================
+ReverseMain = Instance.new("Frame", ScreenGui); ReverseMain.Size = UDim2.new(0, 260, 0, 145); ReverseMain.Position = UDim2.new(0, 20, 0, 660); ReverseMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ReverseMain.BorderSizePixel = 0; ReverseMain.ClipsDescendants = true; ReverseMain.Visible = false; Instance.new("UICorner", ReverseMain).CornerRadius = UDim.new(0, 6); ReverseMainStroke = Instance.new("UIStroke", ReverseMain); ReverseMainStroke.Color = borderDark
+ReverseTopBar = Instance.new("Frame", ReverseMain); ReverseTopBar.Size = UDim2.new(1, 0, 0, 35); ReverseTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ReverseTopBar.BorderSizePixel = 0; Instance.new("UICorner", ReverseTopBar).CornerRadius = UDim.new(0, 6)
+ReverseFix = Instance.new("Frame", ReverseTopBar); ReverseFix.Size = UDim2.new(1, 0, 0, 5); ReverseFix.Position = UDim2.new(0, 0, 1, -5); ReverseFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ReverseFix.BorderSizePixel = 0
+ReverseTitle = Instance.new("TextLabel", ReverseTopBar); ReverseTitle.Size = UDim2.new(1, -70, 1, 0); ReverseTitle.Position = UDim2.new(0, 15, 0, 0); ReverseTitle.BackgroundTransparency = 1; ReverseTitle.Text = "REVERSE (FLASHBACK)"; ReverseTitle.TextColor3 = tWhite; ReverseTitle.Font = Enum.Font.GothamBold; ReverseTitle.TextSize = 13; ReverseTitle.TextXAlignment = Enum.TextXAlignment.Left
+ReverseMinBtn = Instance.new("TextButton", ReverseTopBar); ReverseMinBtn.Size = UDim2.new(0, 35, 1, 0); ReverseMinBtn.Position = UDim2.new(1, -70, 0, 0); ReverseMinBtn.BackgroundTransparency = 1; ReverseMinBtn.Text = "—"; ReverseMinBtn.TextColor3 = tGreen; ReverseMinBtn.Font = Enum.Font.GothamBlack; ReverseMinBtn.TextSize = 14
+ReverseCloseBtn = Instance.new("TextButton", ReverseTopBar); ReverseCloseBtn.Size = UDim2.new(0, 35, 1, 0); ReverseCloseBtn.Position = UDim2.new(1, -35, 0, 0); ReverseCloseBtn.BackgroundTransparency = 1; ReverseCloseBtn.Text = "X"; ReverseCloseBtn.TextColor3 = tRed; ReverseCloseBtn.Font = Enum.Font.GothamBlack; ReverseCloseBtn.TextSize = 12
+
+ReverseToggleBtn = Instance.new("TextButton", ReverseMain); ReverseToggleBtn.Size = UDim2.new(1, -75, 0, 40); ReverseToggleBtn.Position = UDim2.new(0, 10, 0, 45); ReverseToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ReverseToggleBtn.Text = "SISTEMA: OFF"; ReverseToggleBtn.TextColor3 = tWhite; ReverseToggleBtn.Font = Enum.Font.GothamBold; ReverseToggleBtn.TextSize = 12; Instance.new("UICorner", ReverseToggleBtn).CornerRadius = UDim.new(0, 6)
+ReverseKeyBtn = Instance.new("TextButton", ReverseMain); ReverseKeyBtn.Size = UDim2.new(0, 50, 0, 40); ReverseKeyBtn.Position = UDim2.new(1, -60, 0, 45); ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); ReverseKeyBtn.Text = "KEY"; ReverseKeyBtn.TextColor3 = tWhite; ReverseKeyBtn.Font = Enum.Font.GothamBold; ReverseKeyBtn.TextSize = 11; Instance.new("UICorner", ReverseKeyBtn).CornerRadius = UDim.new(0, 6)
+
+ReverseActionBtn = Instance.new("TextButton", ReverseMain); ReverseActionBtn.Size = UDim2.new(1, -20, 0, 45); ReverseActionBtn.Position = UDim2.new(0, 10, 0, 90); ReverseActionBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); ReverseActionBtn.Text = "⏮ MANTENER PARA REBOBINAR"; ReverseActionBtn.TextColor3 = Color3.fromRGB(150, 150, 150); ReverseActionBtn.Font = Enum.Font.GothamBold; ReverseActionBtn.TextSize = 11; ReverseActionBtn.AutoButtonColor = false; Instance.new("UICorner", ReverseActionBtn).CornerRadius = UDim.new(0, 6)
+
+ApplyResponsiveScale(ReverseMain); MakeDraggable(ReverseTopBar, ReverseMain)
+
+local reverseMinimized = false
+ReverseMinBtn.MouseButton1Click:Connect(function()
+    reverseMinimized = not reverseMinimized; ReverseMain:TweenSize(reverseMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    ReverseMinBtn.Text = reverseMinimized and "+" or "—"; ReverseFix.Visible = not reverseMinimized
+end)
+
+local isReverseActive = false; local reverseKeybind = nil; local isReverseBinding = false; local isMobileRewinding = false
+local flashbacklength = 500; local flashbackspeed = 2; local frames = {}
+local flashbackName = "CDT_FlashbackSystem"
+local flashback = { lastinput = false, canrevert = true }
+
+local function CleanCharacterState(char, hrp, hum)
+    if not char or not hrp or not hum then return end
+    hum.PlatformStand = false; hum.AutoRotate = true
+    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    hum:ChangeState(Enum.HumanoidStateType.Running)
+    for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CustomPhysicalProperties = nil end end
+end
+
+function flashback:Advance(char, hrp, hum, allowinput)
+    if #frames > flashbacklength * 60 then table.remove(frames, 1) end
+    if allowinput and not self.canrevert then self.canrevert = true end
+    if self.lastinput then CleanCharacterState(char, hrp, hum); self.lastinput = false end
+    table.insert(frames, {hrp.CFrame, hrp.Velocity, hum:GetState(), hum.PlatformStand, char:FindFirstChildOfClass("Tool")})
+end
+
+function flashback:Revert(char, hrp, hum)
+    local num = #frames
+    if num == 0 or not self.canrevert then self.canrevert = false; self:Advance(char, hrp, hum); return end
+    for i = 1, flashbackspeed do table.remove(frames, num); num = num - 1; if num <= 0 then break end end
+    if num <= 0 then return end
+    self.lastinput = true; local lastframe = frames[num]; table.remove(frames, num)
+    hrp.CFrame = lastframe[1]; hrp.Velocity = -lastframe[2]; hum:ChangeState(lastframe[3]); hum.PlatformStand = lastframe[4]
+    local currenttool = char:FindFirstChildOfClass("Tool")
+    if lastframe[5] then if not currenttool then hum:EquipTool(lastframe[5]) end else hum:UnequipTools() end
+end
+
+ToggleReverse = function()
+    isReverseActive = not isReverseActive
+    local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart"); local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if isReverseActive then
+        ReverseToggleBtn.BackgroundColor3 = tCyan; ReverseToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ReverseToggleBtn.Text = "SISTEMA: ON"; frames = {}
+        ReverseActionBtn.TextColor3 = tWhite; ReverseActionBtn.BackgroundColor3 = tPurple
+        RunService:BindToRenderStep(flashbackName, 1, function()
+            local char2 = LocalPlayer.Character; if not char2 then return end
+            local hrp2 = char2:FindFirstChild("HumanoidRootPart"); local hum2 = char2:FindFirstChildOfClass("Humanoid")
+            if not hrp2 or not hum2 then return end
+            if (reverseKeybind and UserInputService:IsKeyDown(reverseKeybind)) or isMobileRewinding then
+                flashback:Revert(char2, hrp2, hum2)
+            else
+                flashback:Advance(char2, hrp2, hum2, true)
+            end
+        end)
+    else
+        ReverseToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ReverseToggleBtn.TextColor3 = tWhite; ReverseToggleBtn.Text = "SISTEMA: OFF"
+        ReverseActionBtn.TextColor3 = Color3.fromRGB(150, 150, 150); ReverseActionBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        isMobileRewinding = false
+        RunService:UnbindFromRenderStep(flashbackName); frames = {}
+        if char and hrp and hum then CleanCharacterState(char, hrp, hum) end
+    end
+end
+ReverseToggleBtn.MouseButton1Click:Connect(ToggleReverse)
+
+ReverseActionBtn.InputBegan:Connect(function(input)
+    if not isReverseActive then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isMobileRewinding = true; ReverseActionBtn.BackgroundColor3 = tCyan; ReverseActionBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
+    end
+end)
+ReverseActionBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isMobileRewinding = false; if isReverseActive then ReverseActionBtn.BackgroundColor3 = tPurple; ReverseActionBtn.TextColor3 = tWhite end
+    end
+end)
+ReverseCloseBtn.MouseButton1Click:Connect(function() 
+    ReverseMain.Visible = false; reverseKeybind = nil; isReverseBinding = false; ReverseKeyBtn.Text = "KEY"; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isMobileRewinding = false 
+    if isReverseActive then ToggleReverse() end
+end)
+ReverseKeyBtn.MouseButton1Click:Connect(function()
+    if reverseKeybind ~= nil then reverseKeybind = nil; ReverseKeyBtn.Text = "KEY"; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isReverseBinding = false
+    else isReverseBinding = true; ReverseKeyBtn.Text = "..."; ReverseKeyBtn.BackgroundColor3 = tOrange end
+end)
+
+-- ==================================================================
+-- 14. FREECAM MENU (EXPLORACIÓN LIBRE + SHIFT LOCK FIX)
 -- ==================================================================
 FreecamMain = Instance.new("Frame", ScreenGui); FreecamMain.Size = UDim2.new(0, 260, 0, 145); FreecamMain.Position = UDim2.new(0, 20, 0, 140); FreecamMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); FreecamMain.BorderSizePixel = 0; FreecamMain.ClipsDescendants = true; FreecamMain.Visible = false; Instance.new("UICorner", FreecamMain).CornerRadius = UDim.new(0, 6); FreecamMainStroke = Instance.new("UIStroke", FreecamMain); FreecamMainStroke.Color = borderDark
 FreecamTopBar = Instance.new("Frame", FreecamMain); FreecamTopBar.Size = UDim2.new(1, 0, 0, 35); FreecamTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); FreecamTopBar.BorderSizePixel = 0; Instance.new("UICorner", FreecamTopBar).CornerRadius = UDim.new(0, 6)
@@ -1165,10 +1181,9 @@ FreecamMinBtn.MouseButton1Click:Connect(function()
     FreecamMinBtn.Text = fcMinimized and "+" or "—"; FreecamFix.Visible = not fcMinimized
 end)
 
--- Variables de Estado Limpias
 local isFreecamActive = false; local fcSpeed = 60; local fcSmoothness = 0.1; local fcKeybind = nil; local isFcBinding = false
 local fcTargetCFrame = CFrame.new(); local fcVelocity = Vector3.zero; local fcPitch, fcYaw = 0, 0
-local fcRenderConn, fcInputConn1, fcInputConn2, fcMoveConn; local isHoldingRightClick = false; local isShiftLocked = false
+local fcRenderConn, fcInputConn1, fcInputConn2; local isHoldingRightClick = false; local isShiftLocked = false
 
 FreecamSpeedMinus.MouseButton1Click:Connect(function() fcSpeed = math.max(10, fcSpeed - 10); FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
 FreecamSpeedPlus.MouseButton1Click:Connect(function() fcSpeed = fcSpeed + 10; FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
@@ -1185,10 +1200,9 @@ local function getFCMovement()
     return vec.Magnitude > 0 and vec.Unit or vec
 end
 
-local function ToggleFreecam()
+ToggleFreecam = function()
     isFreecamActive = not isFreecamActive
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
     if isFreecamActive then
         FreecamToggleBtn.BackgroundColor3 = tCyan; FreecamToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); FreecamToggleBtn.Text = "FREECAM: ON"
@@ -1217,13 +1231,9 @@ local function ToggleFreecam()
         end)
         
         fcRenderConn = RunService.RenderStepped:Connect(function(dt)
-            if isShiftLocked then
-                UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
-            elseif isHoldingRightClick then
-                UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
-            else
-                UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-            end
+            if isShiftLocked then UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+            elseif isHoldingRightClick then UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
+            else UserInputService.MouseBehavior = Enum.MouseBehavior.Default end
 
             if isShiftLocked or isHoldingRightClick then
                 local delta = UserInputService:GetMouseDelta()
@@ -1245,8 +1255,7 @@ local function ToggleFreecam()
         Camera.CameraType = Enum.CameraType.Custom
         if char and char:FindFirstChild("Humanoid") then Camera.CameraSubject = char.Humanoid end
         
-        isHoldingRightClick = false
-        isShiftLocked = false
+        isHoldingRightClick = false; isShiftLocked = false
         UserInputService.MouseBehavior = Enum.MouseBehavior.Default
         
         if fcInputConn1 then fcInputConn1:Disconnect() end
@@ -1260,214 +1269,118 @@ FreecamCloseBtn.MouseButton1Click:Connect(function()
     FreecamMain.Visible = false; fcKeybind = nil; isFcBinding = false; FreecamKeyBtn.Text = "KEY"; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     if isFreecamActive then ToggleFreecam() end
 end)
-
--- ==================================================================
--- MANEJADOR AISLADO DE KEYBINDS PARA FREECAM
--- ==================================================================
 FreecamKeyBtn.MouseButton1Click:Connect(function()
-    if fcKeybind ~= nil then 
-        fcKeybind = nil
-        FreecamKeyBtn.Text = "KEY"
-        FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        isFcBinding = false
-    else 
-        isFcBinding = true
-        FreecamKeyBtn.Text = "..."
-        FreecamKeyBtn.BackgroundColor3 = tOrange 
-    end
+    if fcKeybind ~= nil then fcKeybind = nil; FreecamKeyBtn.Text = "KEY"; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFcBinding = false
+    else isFcBinding = true; FreecamKeyBtn.Text = "..."; FreecamKeyBtn.BackgroundColor3 = tOrange end
 end)
-
 UserInputService.InputBegan:Connect(function(input, gp)
-    -- Guardar la tecla
     if isFcBinding and input.UserInputType == Enum.UserInputType.Keyboard then
-        fcKeybind = input.KeyCode
-        FreecamKeyBtn.Text = input.KeyCode.Name
-        FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        isFcBinding = false
-        return
+        fcKeybind = input.KeyCode; FreecamKeyBtn.Text = input.KeyCode.Name; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFcBinding = false; return
     end
-    
-    -- Ejecutar Freecam (ignora chat/UI para no buguearse)
-    if fcKeybind and input.KeyCode == fcKeybind and not UserInputService:GetFocusedTextBox() then
-        ToggleFreecam()
-    end
+    if fcKeybind and input.KeyCode == fcKeybind and not UserInputService:GetFocusedTextBox() then ToggleFreecam() end
 end)
 
 -- ==================================================================
--- 13. REVERSE MODE (FLASHBACK / TIME REWIND)
+-- 17. ESP SYSTEM PREMIUM (HIGHLIGHTS + TEAM CHECK + KEYBIND FIX)
 -- ==================================================================
-ReverseMain = Instance.new("Frame", ScreenGui); ReverseMain.Size = UDim2.new(0, 260, 0, 145); ReverseMain.Position = UDim2.new(0, 20, 0, 660); ReverseMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ReverseMain.BorderSizePixel = 0; ReverseMain.ClipsDescendants = true; ReverseMain.Visible = false; Instance.new("UICorner", ReverseMain).CornerRadius = UDim.new(0, 6); ReverseMainStroke = Instance.new("UIStroke", ReverseMain); ReverseMainStroke.Color = borderDark
-ReverseTopBar = Instance.new("Frame", ReverseMain); ReverseTopBar.Size = UDim2.new(1, 0, 0, 35); ReverseTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ReverseTopBar.BorderSizePixel = 0; Instance.new("UICorner", ReverseTopBar).CornerRadius = UDim.new(0, 6)
-ReverseFix = Instance.new("Frame", ReverseTopBar); ReverseFix.Size = UDim2.new(1, 0, 0, 5); ReverseFix.Position = UDim2.new(0, 0, 1, -5); ReverseFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ReverseFix.BorderSizePixel = 0
-ReverseTitle = Instance.new("TextLabel", ReverseTopBar); ReverseTitle.Size = UDim2.new(1, -70, 1, 0); ReverseTitle.Position = UDim2.new(0, 15, 0, 0); ReverseTitle.BackgroundTransparency = 1; ReverseTitle.Text = "REVERSE (FLASHBACK)"; ReverseTitle.TextColor3 = tWhite; ReverseTitle.Font = Enum.Font.GothamBold; ReverseTitle.TextSize = 13; ReverseTitle.TextXAlignment = Enum.TextXAlignment.Left
-ReverseMinBtn = Instance.new("TextButton", ReverseTopBar); ReverseMinBtn.Size = UDim2.new(0, 35, 1, 0); ReverseMinBtn.Position = UDim2.new(1, -70, 0, 0); ReverseMinBtn.BackgroundTransparency = 1; ReverseMinBtn.Text = "—"; ReverseMinBtn.TextColor3 = tGreen; ReverseMinBtn.Font = Enum.Font.GothamBlack; ReverseMinBtn.TextSize = 14
-ReverseCloseBtn = Instance.new("TextButton", ReverseTopBar); ReverseCloseBtn.Size = UDim2.new(0, 35, 1, 0); ReverseCloseBtn.Position = UDim2.new(1, -35, 0, 0); ReverseCloseBtn.BackgroundTransparency = 1; ReverseCloseBtn.Text = "X"; ReverseCloseBtn.TextColor3 = tRed; ReverseCloseBtn.Font = Enum.Font.GothamBlack; ReverseCloseBtn.TextSize = 12
+ESPMain = Instance.new("Frame", ScreenGui); ESPMain.Size = UDim2.new(0, 260, 0, 145); ESPMain.Position = UDim2.new(0, 20, 0, 780); ESPMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ESPMain.BorderSizePixel = 0; ESPMain.ClipsDescendants = true; ESPMain.Visible = false; Instance.new("UICorner", ESPMain).CornerRadius = UDim.new(0, 6); ESPMainStroke = Instance.new("UIStroke", ESPMain); ESPMainStroke.Color = borderDark
+ESPTopBar = Instance.new("Frame", ESPMain); ESPTopBar.Size = UDim2.new(1, 0, 0, 35); ESPTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ESPTopBar.BorderSizePixel = 0; Instance.new("UICorner", ESPTopBar).CornerRadius = UDim.new(0, 6)
+ESPFix = Instance.new("Frame", ESPTopBar); ESPFix.Size = UDim2.new(1, 0, 0, 5); ESPFix.Position = UDim2.new(0, 0, 1, -5); ESPFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ESPFix.BorderSizePixel = 0
+ESPTitle = Instance.new("TextLabel", ESPTopBar); ESPTitle.Size = UDim2.new(1, -70, 1, 0); ESPTitle.Position = UDim2.new(0, 15, 0, 0); ESPTitle.BackgroundTransparency = 1; ESPTitle.Text = "ESP SYSTEM"; ESPTitle.TextColor3 = tWhite; ESPTitle.Font = Enum.Font.GothamBold; ESPTitle.TextSize = 13; ESPTitle.TextXAlignment = Enum.TextXAlignment.Left
+ESPMinBtn = Instance.new("TextButton", ESPTopBar); ESPMinBtn.Size = UDim2.new(0, 35, 1, 0); ESPMinBtn.Position = UDim2.new(1, -70, 0, 0); ESPMinBtn.BackgroundTransparency = 1; ESPMinBtn.Text = "—"; ESPMinBtn.TextColor3 = tGreen; ESPMinBtn.Font = Enum.Font.GothamBlack; ESPMinBtn.TextSize = 14
+ESPCloseBtn = Instance.new("TextButton", ESPTopBar); ESPCloseBtn.Size = UDim2.new(0, 35, 1, 0); ESPCloseBtn.Position = UDim2.new(1, -35, 0, 0); ESPCloseBtn.BackgroundTransparency = 1; ESPCloseBtn.Text = "X"; ESPCloseBtn.TextColor3 = tRed; ESPCloseBtn.Font = Enum.Font.GothamBlack; ESPCloseBtn.TextSize = 12
 
-ReverseToggleBtn = Instance.new("TextButton", ReverseMain); ReverseToggleBtn.Size = UDim2.new(1, -75, 0, 40); ReverseToggleBtn.Position = UDim2.new(0, 10, 0, 45); ReverseToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ReverseToggleBtn.Text = "SISTEMA: OFF"; ReverseToggleBtn.TextColor3 = tWhite; ReverseToggleBtn.Font = Enum.Font.GothamBold; ReverseToggleBtn.TextSize = 12; Instance.new("UICorner", ReverseToggleBtn).CornerRadius = UDim.new(0, 6)
-ReverseKeyBtn = Instance.new("TextButton", ReverseMain); ReverseKeyBtn.Size = UDim2.new(0, 50, 0, 40); ReverseKeyBtn.Position = UDim2.new(1, -60, 0, 45); ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); ReverseKeyBtn.Text = "KEY"; ReverseKeyBtn.TextColor3 = tWhite; ReverseKeyBtn.Font = Enum.Font.GothamBold; ReverseKeyBtn.TextSize = 11; Instance.new("UICorner", ReverseKeyBtn).CornerRadius = UDim.new(0, 6)
+ESPToggleBtn = Instance.new("TextButton", ESPMain); ESPToggleBtn.Size = UDim2.new(1, -75, 0, 40); ESPToggleBtn.Position = UDim2.new(0, 10, 0, 45); ESPToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ESPToggleBtn.Text = "ESP: OFF"; ESPToggleBtn.TextColor3 = tWhite; ESPToggleBtn.Font = Enum.Font.GothamBold; ESPToggleBtn.TextSize = 12; Instance.new("UICorner", ESPToggleBtn).CornerRadius = UDim.new(0, 6)
+ESPKeyBtn = Instance.new("TextButton", ESPMain); ESPKeyBtn.Size = UDim2.new(0, 50, 0, 40); ESPKeyBtn.Position = UDim2.new(1, -60, 0, 45); ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); ESPKeyBtn.Text = "KEY"; ESPKeyBtn.TextColor3 = tWhite; ESPKeyBtn.Font = Enum.Font.GothamBold; ESPKeyBtn.TextSize = 11; Instance.new("UICorner", ESPKeyBtn).CornerRadius = UDim.new(0, 6)
 
--- BOTÓN PARA MÓVILES (MANTENER PARA REBOBINAR)
-ReverseActionBtn = Instance.new("TextButton", ReverseMain); ReverseActionBtn.Size = UDim2.new(1, -20, 0, 45); ReverseActionBtn.Position = UDim2.new(0, 10, 0, 90); ReverseActionBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); ReverseActionBtn.Text = "⏮ MANTENER PARA REBOBINAR"; ReverseActionBtn.TextColor3 = Color3.fromRGB(150, 150, 150); ReverseActionBtn.Font = Enum.Font.GothamBold; ReverseActionBtn.TextSize = 11; ReverseActionBtn.AutoButtonColor = false; Instance.new("UICorner", ReverseActionBtn).CornerRadius = UDim.new(0, 6)
+ESPTeamBtn = Instance.new("TextButton", ESPMain); ESPTeamBtn.Size = UDim2.new(1, -20, 0, 40); ESPTeamBtn.Position = UDim2.new(0, 10, 0, 95); ESPTeamBtn.BackgroundColor3 = tGreen; ESPTeamBtn.Text = "TEAM CHECK: ON"; ESPTeamBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ESPTeamBtn.Font = Enum.Font.GothamBold; ESPTeamBtn.TextSize = 11; Instance.new("UICorner", ESPTeamBtn).CornerRadius = UDim.new(0, 6)
 
-ApplyResponsiveScale(ReverseMain); MakeDraggable(ReverseTopBar, ReverseMain)
+ApplyResponsiveScale(ESPMain); MakeDraggable(ESPTopBar, ESPMain)
 
-local reverseMinimized = false
-ReverseMinBtn.MouseButton1Click:Connect(function()
-    reverseMinimized = not reverseMinimized; ReverseMain:TweenSize(reverseMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
-    ReverseMinBtn.Text = reverseMinimized and "+" or "—"; ReverseFix.Visible = not reverseMinimized
+local espMinimized = false
+ESPMinBtn.MouseButton1Click:Connect(function()
+    espMinimized = not espMinimized; ESPMain:TweenSize(espMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    ESPMinBtn.Text = espMinimized and "+" or "—"; ESPFix.Visible = not espMinimized
 end)
 
-local isReverseActive = false; local reverseKeybind = nil; local isReverseBinding = false; local isMobileRewinding = false
-local flashbacklength = 500; local flashbackspeed = 2; local frames = {}
-local flashbackName = "CDT_FlashbackSystem"
-local flashback = { lastinput = false, canrevert = true }
+local isESPActive = false; local useTeamCheck = true; local espKeybind = nil; local isEspBinding = false
+local espFolder = Instance.new("Folder", CoreGui); espFolder.Name = "CDT_ESP_Folder"
 
-function flashback:Advance(char, hrp, hum, allowinput)
-    if #frames > flashbacklength * 60 then table.remove(frames, 1) end
-    if allowinput and not self.canrevert then self.canrevert = true end
-    if self.lastinput then hum.PlatformStand = false; self.lastinput = false end
-    table.insert(frames, {hrp.CFrame, hrp.Velocity, hum:GetState(), hum.PlatformStand, char:FindFirstChildOfClass("Tool")})
+local function ClearESP() espFolder:ClearAllChildren() end
+
+local function UpdateESP()
+    ClearESP()
+    if not isESPActive then return end
+
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+            if useTeamCheck and p.Team == LocalPlayer.Team then continue end
+
+            local char = p.Character
+            local color = p.TeamColor and p.TeamColor.Color or tRed
+
+            local hl = Instance.new("Highlight")
+            hl.Adornee = char; hl.FillColor = color; hl.FillTransparency = 0.6; hl.OutlineColor = color; hl.OutlineTransparency = 0.2; hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; hl.Parent = espFolder
+
+            local bill = Instance.new("BillboardGui")
+            bill.Adornee = char:FindFirstChild("Head") or char.HumanoidRootPart
+            bill.Size = UDim2.new(0, 200, 0, 50); bill.StudsOffset = Vector3.new(0, 2.5, 0); bill.AlwaysOnTop = true
+            
+            local txt = Instance.new("TextLabel", bill)
+            txt.Size = UDim2.new(1, 0, 1, 0); txt.BackgroundTransparency = 1; txt.Font = Enum.Font.GothamBold; txt.TextSize = 12; txt.TextColor3 = color; txt.TextStrokeTransparency = 0.2
+            
+            local dist = math.floor((Camera.CFrame.Position - char.HumanoidRootPart.Position).Magnitude)
+            txt.Text = p.DisplayName .. "\n[" .. dist .. "m]"; bill.Parent = espFolder
+        end
+    end
 end
 
-function flashback:Revert(char, hrp, hum)
-    local num = #frames
-    if num == 0 or not self.canrevert then self.canrevert = false; self:Advance(char, hrp, hum); return end
-    for i = 1, flashbackspeed do table.remove(frames, num); num = num - 1; if num <= 0 then break end end
-    if num <= 0 then return end
-    self.lastinput = true; local lastframe = frames[num]; table.remove(frames, num)
-    hrp.CFrame = lastframe[1]; hrp.Velocity = -lastframe[2]; hum:ChangeState(lastframe[3]); hum.PlatformStand = lastframe[4]
-    local currenttool = char:FindFirstChildOfClass("Tool")
-    if lastframe[5] then if not currenttool then hum:EquipTool(lastframe[5]) end else hum:UnequipTools() end
-end
-
-local function ToggleReverse()
-    isReverseActive = not isReverseActive
-    if isReverseActive then
-        ReverseToggleBtn.BackgroundColor3 = tCyan; ReverseToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ReverseToggleBtn.Text = "SISTEMA: ON"; frames = {}
-        ReverseActionBtn.TextColor3 = tWhite; ReverseActionBtn.BackgroundColor3 = tPurple
-        RunService:BindToRenderStep(flashbackName, 1, function()
-            local char = LocalPlayer.Character; if not char then return end
-            local hrp = char:FindFirstChild("HumanoidRootPart"); local hum = char:FindFirstChildOfClass("Humanoid")
-            if not hrp or not hum then return end
-            if (reverseKeybind and UserInputService:IsKeyDown(reverseKeybind)) or isMobileRewinding then
-                flashback:Revert(char, hrp, hum)
-            else
-                flashback:Advance(char, hrp, hum, true)
+RunService.RenderStepped:Connect(function()
+    if isESPActive then
+        for _, bill in pairs(espFolder:GetChildren()) do
+            if bill:IsA("BillboardGui") and bill.Adornee then
+                local dist = math.floor((Camera.CFrame.Position - bill.Adornee.Position).Magnitude)
+                local txt = bill:FindFirstChildOfClass("TextLabel")
+                local p = Players:GetPlayerFromCharacter(bill.Adornee.Parent)
+                if txt and p then txt.Text = p.DisplayName .. "\n[" .. dist .. "m]" end
             end
-        end)
-    else
-        ReverseToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ReverseToggleBtn.TextColor3 = tWhite; ReverseToggleBtn.Text = "SISTEMA: OFF"
-        ReverseActionBtn.TextColor3 = Color3.fromRGB(150, 150, 150); ReverseActionBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        isMobileRewinding = false
-        RunService:UnbindFromRenderStep(flashbackName); frames = {}
-    end
-end
-ReverseToggleBtn.MouseButton1Click:Connect(ToggleReverse)
-
--- LÓGICA TOUCH/CLICK PARA EL BOTÓN DE ACCIÓN
-ReverseActionBtn.InputBegan:Connect(function(input)
-    if not isReverseActive then return end
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isMobileRewinding = true
-        ReverseActionBtn.BackgroundColor3 = tCyan
-        ReverseActionBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
-    end
-end)
-
-ReverseActionBtn.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isMobileRewinding = false
-        if isReverseActive then
-            ReverseActionBtn.BackgroundColor3 = tPurple
-            ReverseActionBtn.TextColor3 = tWhite
         end
     end
 end)
 
-ReverseCloseBtn.MouseButton1Click:Connect(function() 
-    ReverseMain.Visible = false; reverseKeybind = nil; isReverseBinding = false; ReverseKeyBtn.Text = "KEY"; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isMobileRewinding = false 
-    if isReverseActive then ToggleReverse() end
-end)
+task.spawn(function() while task.wait(1) do if isESPActive then UpdateESP() end end end)
 
-ReverseKeyBtn.MouseButton1Click:Connect(function()
-    if reverseKeybind ~= nil then reverseKeybind = nil; ReverseKeyBtn.Text = "KEY"; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isReverseBinding = false
-    else isReverseBinding = true; ReverseKeyBtn.Text = "..."; ReverseKeyBtn.BackgroundColor3 = tOrange end
-end)
-
-
--- ==================================================================
--- 12. GENERADOR C.D.T (EVENT GENERATION SLIDERS)
--- ==================================================================
-GenMain = Instance.new("Frame", ScreenGui); GenMain.Size = UDim2.new(0, 260, 0, 310); GenMain.Position = UDim2.new(0.5, 100, 0.5, -150); GenMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GenMain.BorderSizePixel = 0; GenMain.ClipsDescendants = true; GenMain.Visible = false; Instance.new("UICorner", GenMain).CornerRadius = UDim.new(0, 6); GenMainStroke = Instance.new("UIStroke", GenMain); GenMainStroke.Color = borderDark
-GenTopBar = Instance.new("Frame", GenMain); GenTopBar.Size = UDim2.new(1, 0, 0, 35); GenTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GenTopBar.BorderSizePixel = 0; Instance.new("UICorner", GenTopBar).CornerRadius = UDim.new(0, 6)
-GenFix = Instance.new("Frame", GenTopBar); GenFix.Size = UDim2.new(1, 0, 0, 5); GenFix.Position = UDim2.new(0, 0, 1, -5); GenFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GenFix.BorderSizePixel = 0
-GenTitle = Instance.new("TextLabel", GenTopBar); GenTitle.Size = UDim2.new(1, -70, 1, 0); GenTitle.Position = UDim2.new(0, 15, 0, 0); GenTitle.BackgroundTransparency = 1; GenTitle.Text = "GENERADOR C.D.T"; GenTitle.TextColor3 = tWhite; GenTitle.Font = Enum.Font.GothamBold; GenTitle.TextSize = 13; GenTitle.TextXAlignment = Enum.TextXAlignment.Left
-GenMinBtn = Instance.new("TextButton", GenTopBar); GenMinBtn.Size = UDim2.new(0, 35, 1, 0); GenMinBtn.Position = UDim2.new(1, -70, 0, 0); GenMinBtn.BackgroundTransparency = 1; GenMinBtn.Text = "—"; GenMinBtn.TextColor3 = tGreen; GenMinBtn.Font = Enum.Font.GothamBlack; GenMinBtn.TextSize = 14
-GenCloseBtn = Instance.new("TextButton", GenTopBar); GenCloseBtn.Size = UDim2.new(0, 35, 1, 0); GenCloseBtn.Position = UDim2.new(1, -35, 0, 0); GenCloseBtn.BackgroundTransparency = 1; GenCloseBtn.Text = "X"; GenCloseBtn.TextColor3 = tRed; GenCloseBtn.Font = Enum.Font.GothamBlack; GenCloseBtn.TextSize = 12
-
-local GenInput = Instance.new("TextBox", GenMain)
-GenInput.Size = UDim2.new(1, -20, 0, 30); GenInput.Position = UDim2.new(0, 10, 0, 45); GenInput.BackgroundColor3 = Color3.fromRGB(20, 20, 20); GenInput.TextColor3 = tWhite; GenInput.Text = ""; GenInput.PlaceholderText = "Nombre del objeto..."; GenInput.Font = Enum.Font.Gotham; GenInput.TextSize = 12; GenInput.ClearTextOnFocus = false; Instance.new("UICorner", GenInput).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", GenInput).Color = Color3.fromRGB(50, 50, 50); Instance.new("UIPadding", GenInput).PaddingLeft = UDim.new(0, 5)
-
-local function CreateCDTSlider(parent, name, yPos, defaultValue)
-    local SliderFrame = Instance.new("Frame", parent)
-    SliderFrame.Size = UDim2.new(1, -20, 0, 40); SliderFrame.Position = UDim2.new(0, 10, 0, yPos); SliderFrame.BackgroundTransparency = 1
-    
-    local Label = Instance.new("TextLabel", SliderFrame)
-    Label.Size = UDim2.new(1, 0, 0, 15); Label.BackgroundTransparency = 1; Label.Text = name .. ": " .. defaultValue; Label.TextColor3 = tWhite; Label.Font = Enum.Font.GothamMedium; Label.TextSize = 12; Label.TextXAlignment = Enum.TextXAlignment.Left
-    
-    local Bar = Instance.new("Frame", SliderFrame)
-    Bar.Size = UDim2.new(1, 0, 0, 6); Bar.Position = UDim2.new(0, 0, 0, 22); Bar.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
-    
-    local Fill = Instance.new("Frame", Bar)
-    Fill.Size = UDim2.new(defaultValue/200, 0, 1, 0); Fill.BackgroundColor3 = tCyan; Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
-    
-    local SliderBtn = Instance.new("TextButton", Bar)
-    SliderBtn.Size = UDim2.new(0, 12, 0, 18); SliderBtn.Position = UDim2.new(defaultValue/200, -6, 0.5, -9); SliderBtn.Text = ""; SliderBtn.BackgroundColor3 = tWhite; Instance.new("UICorner", SliderBtn).CornerRadius = UDim.new(1, 0)
-    
-    local value = defaultValue
-    local dragging = false
-
-    local function update(input)
-        local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-        value = math.floor(1 + (pos * 199))
-        Fill.Size = UDim2.new(pos, 0, 1, 0)
-        SliderBtn.Position = UDim2.new(pos, -6, 0.5, -9)
-        Label.Text = name .. ": " .. value
-    end
-
-    SliderBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true end end)
-    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
-    UserInputService.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then update(input) end end)
-
-    return function() return value end
-end
-
-local getX = CreateCDTSlider(GenMain, "Ancho (X)", 85, 2)
-local getY = CreateCDTSlider(GenMain, "Alto (Y)", 135, 2)
-local getZ = CreateCDTSlider(GenMain, "Largo (Z)", 185, 2)
-
-local GenFireBtn = Instance.new("TextButton", GenMain)
-GenFireBtn.Size = UDim2.new(1, -20, 0, 40); GenFireBtn.Position = UDim2.new(0, 10, 0, 250); GenFireBtn.BackgroundColor3 = tGreen; GenFireBtn.TextColor3 = Color3.fromRGB(10, 10, 10); GenFireBtn.Text = "GENERAR OBJETO"; GenFireBtn.Font = Enum.Font.GothamBold; GenFireBtn.TextSize = 13; Instance.new("UICorner", GenFireBtn).CornerRadius = UDim.new(0, 6)
-
-ApplyResponsiveScale(GenMain); MakeDraggable(GenTopBar, GenMain)
-
-local genMinimized = false
-GenMinBtn.MouseButton1Click:Connect(function()
-    genMinimized = not genMinimized; GenMain:TweenSize(genMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 310), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true); GenMinBtn.Text = genMinimized and "+" or "—"; GenFix.Visible = not genMinimized
-end)
-GenCloseBtn.MouseButton1Click:Connect(function() GenMain.Visible = false end)
-
-GenFireBtn.MouseButton1Click:Connect(function()
-    local Event = ReplicatedStorage:FindFirstChild("event_generation")
-    if Event then
-        local valX, valY, valZ = getX(), getY(), getZ()
-        Event:FireServer(GenInput.Text, Vector3.new(valX, valY, valZ))
-        -- Feedback visual en el botón
-        local oldText = GenFireBtn.Text; GenFireBtn.Text = "¡ENVIADO!"; task.wait(1); GenFireBtn.Text = oldText
+ToggleESP = function()
+    isESPActive = not isESPActive
+    if isESPActive then
+        ESPToggleBtn.BackgroundColor3 = tCyan; ESPToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ESPToggleBtn.Text = "ESP: ON"; UpdateESP()
     else
-        -- Feedback de error
-        local oldText = GenFireBtn.Text; GenFireBtn.BackgroundColor3 = tRed; GenFireBtn.TextColor3 = tWhite; GenFireBtn.Text = "ERROR: EVENTO NO ENCONTRADO"; task.wait(2); GenFireBtn.BackgroundColor3 = tGreen; GenFireBtn.TextColor3 = Color3.fromRGB(10, 10, 10); GenFireBtn.Text = oldText
+        ESPToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ESPToggleBtn.TextColor3 = tWhite; ESPToggleBtn.Text = "ESP: OFF"; ClearESP()
     end
+end
+ESPToggleBtn.MouseButton1Click:Connect(ToggleESP)
+
+ESPTeamBtn.MouseButton1Click:Connect(function()
+    useTeamCheck = not useTeamCheck
+    if useTeamCheck then ESPTeamBtn.BackgroundColor3 = tGreen; ESPTeamBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ESPTeamBtn.Text = "TEAM CHECK: ON"
+    else ESPTeamBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); ESPTeamBtn.TextColor3 = tWhite; ESPTeamBtn.Text = "TEAM CHECK: OFF" end
+    if isESPActive then UpdateESP() end
+end)
+
+ESPCloseBtn.MouseButton1Click:Connect(function() 
+    ESPMain.Visible = false; espKeybind = nil; isEspBinding = false; ESPKeyBtn.Text = "KEY"; ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isESPActive then ToggleESP() end
+end)
+ESPKeyBtn.MouseButton1Click:Connect(function()
+    if espKeybind ~= nil then espKeybind = nil; ESPKeyBtn.Text = "KEY"; ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isEspBinding = false
+    else isEspBinding = true; ESPKeyBtn.Text = "..."; ESPKeyBtn.BackgroundColor3 = tOrange end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if isEspBinding and input.UserInputType == Enum.UserInputType.Keyboard then
+        espKeybind = input.KeyCode; ESPKeyBtn.Text = input.KeyCode.Name; ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isEspBinding = false; return
+    end
+    if not gp and espKeybind and input.KeyCode == espKeybind and not UserInputService:GetFocusedTextBox() then ToggleESP() end
 end)
 
 
@@ -1509,16 +1422,15 @@ ThemeToggleBtn.MouseButton1Click:Connect(function()
     local isGlass = (currentTheme == "Glass")
     local bgTrans = isGlass and 0.4 or 0
     local tbTrans = isGlass and 0.5 or 0
-    
     local bgColor = isGlass and Color3.fromRGB(5, 5, 5) or Color3.fromRGB(15, 15, 15)
     local tbColor = isGlass and Color3.fromRGB(10, 10, 10) or Color3.fromRGB(22, 22, 22)
     local strokeColor = isGlass and tCyan or borderDark
     local strokeTrans = isGlass and 0.3 or 0
 
-    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain, HideMain, GenMain, ReverseMain}
-    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar, HideTopBar, GenTopBar, ReverseTopBar}
-    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix, HideFix, GenFix, ReverseFix}
-    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke, ReverseMainStroke}
+    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain, HideMain, GenMain, ReverseMain, FreecamMain, ESPMain}
+    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar, HideTopBar, GenTopBar, ReverseTopBar, FreecamTopBar, ESPTopBar}
+    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix, HideFix, GenFix, ReverseFix, FreecamFix, ESPFix}
+    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke, ReverseMainStroke, FreecamMainStroke, ESPMainStroke}
     
     for _, f in ipairs(frames) do if f then f.BackgroundTransparency = bgTrans; f.BackgroundColor3 = bgColor end end
     for _, tb in ipairs(topbars) do if tb then tb.BackgroundTransparency = tbTrans; tb.BackgroundColor3 = tbColor end end
@@ -1527,194 +1439,71 @@ ThemeToggleBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 9. CHAT GLOBAL SMART SCROLL
+-- 12. GENERADOR C.D.T (EVENT GENERATION SLIDERS)
 -- ==================================================================
-local setclipboard = setclipboard or toclipboard or set_clipboard
+GenMain = Instance.new("Frame", ScreenGui); GenMain.Size = UDim2.new(0, 260, 0, 310); GenMain.Position = UDim2.new(0.5, 100, 0.5, -150); GenMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GenMain.BorderSizePixel = 0; GenMain.ClipsDescendants = true; GenMain.Visible = false; Instance.new("UICorner", GenMain).CornerRadius = UDim.new(0, 6); GenMainStroke = Instance.new("UIStroke", GenMain); GenMainStroke.Color = borderDark
+GenTopBar = Instance.new("Frame", GenMain); GenTopBar.Size = UDim2.new(1, 0, 0, 35); GenTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GenTopBar.BorderSizePixel = 0; Instance.new("UICorner", GenTopBar).CornerRadius = UDim.new(0, 6)
+GenFix = Instance.new("Frame", GenTopBar); GenFix.Size = UDim2.new(1, 0, 0, 5); GenFix.Position = UDim2.new(0, 0, 1, -5); GenFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GenFix.BorderSizePixel = 0
+GenTitle = Instance.new("TextLabel", GenTopBar); GenTitle.Size = UDim2.new(1, -70, 1, 0); GenTitle.Position = UDim2.new(0, 15, 0, 0); GenTitle.BackgroundTransparency = 1; GenTitle.Text = "GENERADOR C.D.T"; GenTitle.TextColor3 = tWhite; GenTitle.Font = Enum.Font.GothamBold; GenTitle.TextSize = 13; GenTitle.TextXAlignment = Enum.TextXAlignment.Left
+GenMinBtn = Instance.new("TextButton", GenTopBar); GenMinBtn.Size = UDim2.new(0, 35, 1, 0); GenMinBtn.Position = UDim2.new(1, -70, 0, 0); GenMinBtn.BackgroundTransparency = 1; GenMinBtn.Text = "—"; GenMinBtn.TextColor3 = tGreen; GenMinBtn.Font = Enum.Font.GothamBlack; GenMinBtn.TextSize = 14
+GenCloseBtn = Instance.new("TextButton", GenTopBar); GenCloseBtn.Size = UDim2.new(0, 35, 1, 0); GenCloseBtn.Position = UDim2.new(1, -35, 0, 0); GenCloseBtn.BackgroundTransparency = 1; GenCloseBtn.Text = "X"; GenCloseBtn.TextColor3 = tRed; GenCloseBtn.Font = Enum.Font.GothamBlack; GenCloseBtn.TextSize = 12
 
-ChatMain = Instance.new("Frame", ScreenGui)
-ChatMain.Size = UDim2.new(0, 380, 0, 270); ChatMain.Position = UDim2.new(0.5, -190, 1, -300); ChatMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ChatMain.BorderSizePixel = 0; ChatMain.ClipsDescendants = true; ChatMain.Visible = false
-Instance.new("UICorner", ChatMain).CornerRadius = UDim.new(0, 6); ChatStroke = Instance.new("UIStroke", ChatMain); ChatStroke.Color = borderDark
-ApplyResponsiveScale(ChatMain)
+local GenInput = Instance.new("TextBox", GenMain)
+GenInput.Size = UDim2.new(1, -20, 0, 30); GenInput.Position = UDim2.new(0, 10, 0, 45); GenInput.BackgroundColor3 = Color3.fromRGB(20, 20, 20); GenInput.TextColor3 = tWhite; GenInput.Text = ""; GenInput.PlaceholderText = "Nombre del objeto..."; GenInput.Font = Enum.Font.Gotham; GenInput.TextSize = 12; GenInput.ClearTextOnFocus = false; Instance.new("UICorner", GenInput).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", GenInput).Color = Color3.fromRGB(50, 50, 50); Instance.new("UIPadding", GenInput).PaddingLeft = UDim.new(0, 5)
 
-ChatTopBar = Instance.new("Frame", ChatMain); ChatTopBar.Size = UDim2.new(1, 0, 0, 35); ChatTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ChatTopBar.BorderSizePixel = 0; Instance.new("UICorner", ChatTopBar).CornerRadius = UDim.new(0, 6)
-ChatFix = Instance.new("Frame", ChatTopBar); ChatFix.Size = UDim2.new(1, 0, 0, 5); ChatFix.Position = UDim2.new(0, 0, 1, -5); ChatFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ChatFix.BorderSizePixel = 0
-ChatTitle = Instance.new("TextLabel", ChatTopBar); ChatTitle.Size = UDim2.new(1, -70, 1, 0); ChatTitle.Position = UDim2.new(0, 15, 0, 0); ChatTitle.BackgroundTransparency = 1; ChatTitle.Text = "GLOBAL CHAT"; ChatTitle.TextColor3 = tWhite; ChatTitle.Font = Enum.Font.GothamBold; ChatTitle.TextSize = 13; ChatTitle.TextXAlignment = Enum.TextXAlignment.Left
-ChatMinBtn = Instance.new("TextButton", ChatTopBar); ChatMinBtn.Size = UDim2.new(0, 35, 1, 0); ChatMinBtn.Position = UDim2.new(1, -70, 0, 0); ChatMinBtn.BackgroundTransparency = 1; ChatMinBtn.Text = "—"; ChatMinBtn.TextColor3 = tGreen; ChatMinBtn.Font = Enum.Font.GothamBlack; ChatMinBtn.TextSize = 14
-ChatCloseBtn = Instance.new("TextButton", ChatTopBar); ChatCloseBtn.Size = UDim2.new(0, 35, 1, 0); ChatCloseBtn.Position = UDim2.new(1, -35, 0, 0); ChatCloseBtn.BackgroundTransparency = 1; ChatCloseBtn.Text = "X"; ChatCloseBtn.TextColor3 = tRed; ChatCloseBtn.Font = Enum.Font.GothamBlack; ChatCloseBtn.TextSize = 12
+local function CreateCDTSlider(parent, name, yPos, defaultValue)
+    local SliderFrame = Instance.new("Frame", parent)
+    SliderFrame.Size = UDim2.new(1, -20, 0, 40); SliderFrame.Position = UDim2.new(0, 10, 0, yPos); SliderFrame.BackgroundTransparency = 1
+    local Label = Instance.new("TextLabel", SliderFrame)
+    Label.Size = UDim2.new(1, 0, 0, 15); Label.BackgroundTransparency = 1; Label.Text = name .. ": " .. defaultValue; Label.TextColor3 = tWhite; Label.Font = Enum.Font.GothamMedium; Label.TextSize = 12; Label.TextXAlignment = Enum.TextXAlignment.Left
+    local Bar = Instance.new("Frame", SliderFrame)
+    Bar.Size = UDim2.new(1, 0, 0, 6); Bar.Position = UDim2.new(0, 0, 0, 22); Bar.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
+    local Fill = Instance.new("Frame", Bar)
+    Fill.Size = UDim2.new(defaultValue/200, 0, 1, 0); Fill.BackgroundColor3 = tCyan; Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+    local SliderBtn = Instance.new("TextButton", Bar)
+    SliderBtn.Size = UDim2.new(0, 12, 0, 18); SliderBtn.Position = UDim2.new(defaultValue/200, -6, 0.5, -9); SliderBtn.Text = ""; SliderBtn.BackgroundColor3 = tWhite; Instance.new("UICorner", SliderBtn).CornerRadius = UDim.new(1, 0)
+    local value = defaultValue; local dragging = false
 
-ChatScroll = Instance.new("ScrollingFrame", ChatMain); ChatScroll.Position = UDim2.new(0, 5, 0, 45); ChatScroll.Size = UDim2.new(1, -10, 0, 175); ChatScroll.BackgroundTransparency = 1; ChatScroll.ScrollBarThickness = 2; ChatScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
-ChatLayout = Instance.new("UIListLayout", ChatScroll); ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder; ChatLayout.Padding = UDim.new(0, 4)
+    local function update(input)
+        local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+        value = math.floor(1 + (pos * 199)); Fill.Size = UDim2.new(pos, 0, 1, 0); SliderBtn.Position = UDim2.new(pos, -6, 0.5, -9); Label.Text = name .. ": " .. value
+    end
 
-NewMsgBtn = Instance.new("TextButton", ChatMain); NewMsgBtn.Name = "NewMsgBtn"; NewMsgBtn.Text = "⬇ Nuevos Mensajes"; NewMsgBtn.Size = UDim2.new(0, 150, 0, 25); NewMsgBtn.Position = UDim2.new(0.5, -75, 1, -70); NewMsgBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); NewMsgBtn.TextColor3 = tYellow; NewMsgBtn.Font = Enum.Font.GothamBold; NewMsgBtn.Visible = false; NewMsgBtn.ZIndex = 5; NewMsgBtn.TextSize = 12; Instance.new("UICorner", NewMsgBtn).CornerRadius = UDim.new(1, 0); Instance.new("UIStroke", NewMsgBtn).Color = borderDark
+    SliderBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true end end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
+    UserInputService.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then update(input) end end)
+    return function() return value end
+end
 
-ChatBox = Instance.new("TextBox", ChatMain); ChatBox.Position = UDim2.new(0, 5, 1, -40); ChatBox.Size = UDim2.new(0.68, 0, 0, 35); ChatBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10); ChatBox.TextColor3 = tWhite; ChatBox.Text = ""; ChatBox.PlaceholderText = "Escribe un mensaje..."; ChatBox.Font = Enum.Font.Gotham; ChatBox.TextSize = 13; ChatBox.TextXAlignment = Enum.TextXAlignment.Left; Instance.new("UICorner", ChatBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", ChatBox).Color = Color3.fromRGB(40, 40, 40); Instance.new("UIPadding", ChatBox).PaddingLeft = UDim.new(0, 10)
-ChatSendBtn = Instance.new("TextButton", ChatMain); ChatSendBtn.Position = UDim2.new(0.71, 0, 1, -40); ChatSendBtn.Size = UDim2.new(0.27, 0, 0, 35); ChatSendBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ChatSendBtn.TextColor3 = tGreen; ChatSendBtn.Text = "ENVIAR"; ChatSendBtn.Font = Enum.Font.GothamBold; ChatSendBtn.TextSize = 12; Instance.new("UICorner", ChatSendBtn).CornerRadius = UDim.new(0, 4)
+local getX = CreateCDTSlider(GenMain, "Ancho (X)", 85, 2)
+local getY = CreateCDTSlider(GenMain, "Alto (Y)", 135, 2)
+local getZ = CreateCDTSlider(GenMain, "Largo (Z)", 185, 2)
 
-MakeDraggable(ChatTopBar, ChatMain)
+local GenFireBtn = Instance.new("TextButton", GenMain)
+GenFireBtn.Size = UDim2.new(1, -20, 0, 40); GenFireBtn.Position = UDim2.new(0, 10, 0, 250); GenFireBtn.BackgroundColor3 = tGreen; GenFireBtn.TextColor3 = Color3.fromRGB(10, 10, 10); GenFireBtn.Text = "GENERAR OBJETO"; GenFireBtn.Font = Enum.Font.GothamBold; GenFireBtn.TextSize = 13; Instance.new("UICorner", GenFireBtn).CornerRadius = UDim.new(0, 6)
 
-local chatMinimized = false
-ChatMinBtn.MouseButton1Click:Connect(function()
-    chatMinimized = not chatMinimized
-    TweenService:Create(ChatMain, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {Size = chatMinimized and UDim2.new(0, 380, 0, 35) or UDim2.new(0, 380, 0, 270)}):Play()
-    ChatMinBtn.Text = chatMinimized and "+" or "—"; ChatFix.Visible = not chatMinimized
-    ChatScroll.Visible = not chatMinimized 
-    ChatBox.Visible = not chatMinimized
-    ChatSendBtn.Visible = not chatMinimized
-    if chatMinimized then NewMsgBtn.Visible = false end
+ApplyResponsiveScale(GenMain); MakeDraggable(GenTopBar, GenMain)
+
+local genMinimized = false
+GenMinBtn.MouseButton1Click:Connect(function()
+    genMinimized = not genMinimized; GenMain:TweenSize(genMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 310), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true); GenMinBtn.Text = genMinimized and "+" or "—"; GenFix.Visible = not genMinimized
 end)
-ChatCloseBtn.MouseButton1Click:Connect(function() ChatMain.Visible = false end)
+GenCloseBtn.MouseButton1Click:Connect(function() GenMain.Visible = false end)
 
-local function GetUserColor(username)
-    local hash = 0; for i = 1, #username do hash = hash + string.byte(username, i) end; math.randomseed(hash); local r = math.random(100, 255); local g = math.random(100, 255); local b = math.random(100, 255); math.randomseed(tick())
-    return Color3.fromRGB(r, g, b)
-end
-
-local function OpenProfile(username)
-    pcall(function()
-        local id = Players:GetUserIdFromNameAsync(username)
-        if id and setclipboard then setclipboard("https://www.roblox.com/users/"..id.."/profile"); StarterGui:SetCore("SendNotification", {Title="Perfil", Text="Link copiado.", Duration=2}) end
-    end)
-end
-
-local function CrearFilaMensaje(usuario, mensaje)
-    local Row = Instance.new("Frame", ChatScroll); Row.Size = UDim2.new(1, 0, 0, 0); Row.AutomaticSize = Enum.AutomaticSize.Y; Row.BackgroundTransparency = 1
-    local RowLayout = Instance.new("UIListLayout", Row); RowLayout.FillDirection = Enum.FillDirection.Horizontal; RowLayout.VerticalAlignment = Enum.VerticalAlignment.Center; RowLayout.Padding = UDim.new(0, 6)
-    local pad = Instance.new("Frame", Row); pad.BackgroundTransparency = 1; pad.Size = UDim2.new(0, 2, 0, 20)
-
-    local NameBtn = Instance.new("TextButton", Row); NameBtn.Text = usuario .. ":"; NameBtn.TextColor3 = GetUserColor(usuario); NameBtn.BackgroundTransparency = 1; NameBtn.Font = Enum.Font.GothamBold; NameBtn.TextSize = 13; NameBtn.AutomaticSize = Enum.AutomaticSize.XY
-    NameBtn.MouseButton1Click:Connect(function() pcall(function() local id = Players:GetUserIdFromNameAsync(usuario); if id and setclipboard then setclipboard("https://www.roblox.com/users/"..id.."/profile"); StarterGui:SetCore("SendNotification", {Title="Perfil", Text="Link copiado al portapapeles.", Duration=2}) end end) end)
-
-    local MsgLbl = Instance.new("TextLabel", Row); MsgLbl.Text = mensaje; MsgLbl.TextColor3 = tWhite; MsgLbl.BackgroundTransparency = 1; MsgLbl.Font = Enum.Font.Gotham; MsgLbl.TextSize = 13; MsgLbl.TextXAlignment = Enum.TextXAlignment.Left; MsgLbl.TextWrapped = true; MsgLbl.AutomaticSize = Enum.AutomaticSize.XY; MsgLbl.Size = UDim2.new(0, 0, 0, 0)
-    if mensaje:lower():find("http") or mensaje:lower():find("www") then MsgLbl.TextColor3 = tCyan end
-
-    local CopyBtn = Instance.new("TextButton", Row); CopyBtn.Text = "📋"; CopyBtn.BackgroundTransparency = 1; CopyBtn.Size = UDim2.new(0, 20, 0, 20); CopyBtn.TextSize = 13; CopyBtn.TextColor3 = tYellow
-    CopyBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(mensaje); CopyBtn.Text = "✔️"; CopyBtn.TextColor3 = tGreen; task.wait(1); CopyBtn.Text = "📋"; CopyBtn.TextColor3 = tYellow end end)
-end
-
-local isUpdatingChat = false; local lastMsgCount = 0; local forceScrollBottom = false
-NewMsgBtn.MouseButton1Click:Connect(function() TweenService:Create(ChatScroll, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CanvasPosition = Vector2.new(0, ChatScroll.CanvasSize.Y.Offset)}):Play(); NewMsgBtn.Visible = false end)
-
-ChatScroll.Changed:Connect(function(prop)
-    if prop == "CanvasPosition" or prop == "CanvasSize" then
-        local maxScroll = math.max(0, ChatScroll.CanvasSize.Y.Offset - ChatScroll.AbsoluteWindowSize.Y)
-        if (maxScroll - ChatScroll.CanvasPosition.Y) <= 40 then NewMsgBtn.Visible = false end
+GenFireBtn.MouseButton1Click:Connect(function()
+    local Event = ReplicatedStorage:FindFirstChild("event_generation")
+    if Event then
+        local valX, valY, valZ = getX(), getY(), getZ()
+        Event:FireServer(GenInput.Text, Vector3.new(valX, valY, valZ))
+        local oldText = GenFireBtn.Text; GenFireBtn.Text = "¡ENVIADO!"; task.wait(1); GenFireBtn.Text = oldText
+    else
+        local oldText = GenFireBtn.Text; GenFireBtn.BackgroundColor3 = tRed; GenFireBtn.TextColor3 = tWhite; GenFireBtn.Text = "ERROR: EVENTO NO ENCONTRADO"; task.wait(2); GenFireBtn.BackgroundColor3 = tGreen; GenFireBtn.TextColor3 = Color3.fromRGB(10, 10, 10); GenFireBtn.Text = oldText
     end
 end)
 
-local function ActualizarChat()
-    if isUpdatingChat or not request then return end
-    isUpdatingChat = true
-    local s, r = pcall(function() return request({Url = URL_NGROK .. "/leer", Method = "GET", Headers = {["ngrok-skip-browser-warning"] = "true"}}) end)
-
-    if s and r and r.StatusCode == 200 then
-        local valid, data = pcall(function() return HttpService:JSONDecode(r.Body) end)
-        if valid and data then
-            local hayNuevos = #data > lastMsgCount
-            local maxScroll = math.max(0, ChatScroll.CanvasSize.Y.Offset - ChatScroll.AbsoluteWindowSize.Y); local currentScroll = ChatScroll.CanvasPosition.Y; local wasAtBottom = (maxScroll - currentScroll) <= 40
-            if lastMsgCount == 0 or forceScrollBottom then wasAtBottom = true; forceScrollBottom = false end
-
-            if hayNuevos then
-                for _, v in pairs(ChatScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
-                for _, m in pairs(data) do CrearFilaMensaje(m.u, m.m) end
-                task.defer(function()
-                    ChatScroll.CanvasSize = UDim2.new(0, 0, 0, ChatLayout.AbsoluteContentSize.Y)
-                    if wasAtBottom then ChatScroll.CanvasPosition = Vector2.new(0, ChatScroll.CanvasSize.Y.Offset); NewMsgBtn.Visible = false
-                    else 
-                        if not chatMinimized then NewMsgBtn.Visible = true end
-                    end
-                end)
-            end
-            lastMsgCount = #data
-        end
-    end
-    isUpdatingChat = false
-end
-
-local sending = false
-local function SendMessage()
-    if sending or ChatBox.Text == "" or not request then return end
-    sending = true; local txt = ChatBox.Text; ChatBox.Text = "" 
-    local payload = HttpService:JSONEncode({usuario = LocalPlayer.Name, texto = txt})
-    task.spawn(function()
-        local s, r = pcall(function() request({Url = URL_NGROK .. "/enviar", Method = "POST", Headers = {["Content-Type"]="application/json", ["ngrok-skip-browser-warning"]="true"}, Body = payload}) end)
-        sending = false; if s then forceScrollBottom = true; ActualizarChat() else ChatBox.Text = txt end
-    end)
-end
-
-ChatSendBtn.MouseButton1Click:Connect(SendMessage); ChatBox.FocusLost:Connect(function(enter) if enter then SendMessage() end end)
-task.spawn(function() while task.wait(2) do if ChatMain.Visible and not chatMinimized then ActualizarChat() end end end)
-
-local charAddedConn
-local inputBeganConn
-local inputEndedConn
-
-charAddedConn = LocalPlayer.CharacterAdded:Connect(function(character) 
-    if isGhostActive then ToggleGhost() end
-    if isFlying then ToggleFly() end
-    if isNoclipActive then ToggleNoclipWalk() end
-    if isReverseActive then frames = {} end
-    isTripped = false
-
-    if posicionGuardadaRE then
-        task.spawn(function()
-            local hrp = character:WaitForChild("HumanoidRootPart", 5)
-            if hrp then
-                task.wait(0.1) 
-                hrp.CFrame = posicionGuardadaRE
-                posicionGuardadaRE = nil 
-            end
-        end)
-    end
-end)
-
-inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
-    if isInvBinding and input.UserInputType == Enum.UserInputType.Keyboard then invKeybind = input.KeyCode; InvKeyBtn.Text = input.KeyCode.Name; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false; return end
-    if isFlyBinding and input.UserInputType == Enum.UserInputType.Keyboard then flyKeybind = input.KeyCode; FlyKeyBtn.Text = input.KeyCode.Name; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFlyBinding = false; return end
-    if isVFlyBinding and input.UserInputType == Enum.UserInputType.Keyboard then vFlyKeybind = input.KeyCode; VFlyKeyBtn.Text = input.KeyCode.Name; VFlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isVFlyBinding = false; return end
-    if isNoclipBinding and input.UserInputType == Enum.UserInputType.Keyboard then noclipKeybind = input.KeyCode; NoclipKeyBtn.Text = input.KeyCode.Name; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isNoclipBinding = false; return end
-    if isTripBinding and input.UserInputType == Enum.UserInputType.Keyboard then tripKeybind = input.KeyCode; TripKeyBtn.Text = input.KeyCode.Name; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false; return end
-    if isReverseBinding and input.UserInputType == Enum.UserInputType.Keyboard then reverseKeybind = input.KeyCode; ReverseKeyBtn.Text = input.KeyCode.Name; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isReverseBinding = false; return end
-    
-    
-    if not gp then
-        if input.KeyCode == Enum.KeyCode.Insert then 
-            if Main.Visible then
-                Main.Visible = false; MPMain.Visible = false; TPMain.Visible = false; InvMain.Visible = false; FlyMain.Visible = false; VFlyMain.Visible = false; NoclipMain.Visible = false; TripMain.Visible = false; ChatMain.Visible = false; SetMain.Visible = false; HideMain.Visible = false; GenMain.Visible = false; ReverseMain.Visible = false
-            else
-                Main.Visible = true
-            end
-        end
-        if invKeybind and input.KeyCode == invKeybind then ToggleGhost() end
-        if flyKeybind and input.KeyCode == flyKeybind then ToggleFly() end
-        if vFlyKeybind and input.KeyCode == vFlyKeybind then ToggleVFly() end
-        if noclipKeybind and input.KeyCode == noclipKeybind then ToggleNoclipWalk() end
-        if tripKeybind and input.KeyCode == tripKeybind then DoTrip() end
-        if isTripped and input.KeyCode == Enum.KeyCode.Space then GetUpFromTrip() end
-        
-        if isFlying then
-            if input.KeyCode == Enum.KeyCode.W then flycontrol.F = 1
-            elseif input.KeyCode == Enum.KeyCode.S then flycontrol.B = 1
-            elseif input.KeyCode == Enum.KeyCode.D then flycontrol.R = 1
-            elseif input.KeyCode == Enum.KeyCode.A then flycontrol.L = 1
-            elseif input.KeyCode == Enum.KeyCode.Space then flycontrol.U = 1
-            elseif input.KeyCode == Enum.KeyCode.Q then flycontrol.D = 1 end
-        end
-    end
-end)
-
-inputEndedConn = UserInputService.InputEnded:Connect(function(input, gp)
-    if not gp then
-        if isFlying then
-            if input.KeyCode == Enum.KeyCode.W then flycontrol.F = 0
-            elseif input.KeyCode == Enum.KeyCode.S then flycontrol.B = 0
-            elseif input.KeyCode == Enum.KeyCode.D then flycontrol.R = 0
-            elseif input.KeyCode == Enum.KeyCode.A then flycontrol.L = 0
-            elseif input.KeyCode == Enum.KeyCode.Space then flycontrol.U = 0
-            elseif input.KeyCode == Enum.KeyCode.Q then flycontrol.D = 0 end
-        end
-    end
-end)
-
+-- ==================================================================
+-- COMANDOS Y CONSOLA DE EVENTOS
+-- ==================================================================
 local function GetPlayer(nameString)
     nameString = string.lower(nameString)
     for _, p in pairs(Players:GetPlayers()) do
@@ -1753,11 +1542,9 @@ AddCmd("reverse", "Abre el panel de Flashback / Rewind", function() ReverseMain.
 AddCmd("chat", "Abre el chat global", function() ChatMain.Visible = true; ActualizarChat(); LogMessage("Chat Global conectado.", tGreen) end)
 AddCmd("settings", "Abre el panel de Ajustes/Temas", function() SetMain.Visible = true; LogMessage("Menú de Ajustes abierto.", tOrange) end)
 AddCmd("freecam", "Abre el panel de Cámara Libre", function() FreecamMain.Visible = true; LogMessage("Menú Freecam abierto.", tCyan) end)
-
--- [ACTUALIZADO] El comando abre el menú actual con muteo de Voice Chat
-AddCmd("hide", "Abre el menú para ocultar avatares, sonidos locales y Voice Chat", function() 
-    HideSearchBox.Text = ""; RefreshHideMenu(); HideMain.Visible = true; LogMessage("Menú Ocultar Jugadores abierto.", tPurple) 
-end)
+AddCmd("esp", "Abre el panel del ESP System", function() ESPMain.Visible = true; LogMessage("Menú ESP abierto.", tPurple) end)
+AddCmd("hide", "Abre el menú para ocultar avatares, sonidos locales y Voice Chat", function() HideSearchBox.Text = ""; RefreshHideMenu(); HideMain.Visible = true; LogMessage("Menú Ocultar Jugadores abierto.", tPurple) end)
+AddCmd("generacion", "Abre el panel del Generador de Objetos", function() GenMain.Visible = true; LogMessage("Generador C.D.T abierto.", tCyan) end)
 
 AddCmd("speed", "Cambia la velocidad", function(args)
     if args[1] and tonumber(args[1]) then LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(args[1]); LogMessage("Velocidad -> " .. args[1], tGreen) end
@@ -1765,82 +1552,68 @@ end)
 
 AddCmd("vtag", "Oculta/Muestra tu propio Name Tag en tu pantalla", function()
     verMiTag = not verMiTag
-    if verMiTag then
-        LogMessage("Tu Name Tag ahora es VISIBLE para ti.", tGreen)
-    else
-        LogMessage("Tu Name Tag ahora está OCULTO para ti.", tOrange)
-    end
+    if verMiTag then LogMessage("Tu Name Tag ahora es VISIBLE para ti.", tGreen) else LogMessage("Tu Name Tag ahora está OCULTO para ti.", tOrange) end
 end)
 
 AddCmd("re", "Fuerza el respawn y te devuelve a tu posición actual", function()
     local char = LocalPlayer.Character
     if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        local hum = char:FindFirstChild("Humanoid")
+        local hrp = char:FindFirstChild("HumanoidRootPart"); local hum = char:FindFirstChild("Humanoid")
         if hrp and hum then
-            posicionGuardadaRE = hrp.CFrame
-            hum.Health = 0
-            LogMessage("Reiniciando, no te muevas...", tYellow)
-        else
-            LogMessage("Error: No se encontró tu personaje.", tRed)
-        end
+            posicionGuardadaRE = hrp.CFrame; hum.Health = 0; LogMessage("Reiniciando, no te muevas...", tYellow)
+        else LogMessage("Error: No se encontró tu personaje.", tRed) end
     end
 end)
 
--- INTEGRACIÓN DE INFINITE BASEPLATE COMO COMANDO
+AddCmd("tptool", "Te da una herramienta para hacer TP donde hagas click", function()
+    local toolName = "TP"
+    if LocalPlayer.Backpack:FindFirstChild(toolName) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(toolName)) then LogMessage("Ya tienes el TP Tool en tu inventario.", tYellow) return end
+
+    local tpTool = Instance.new("Tool")
+    tpTool.Name = toolName; tpTool.RequiresHandle = false; tpTool.CanBeDropped = false
+    local mouse = LocalPlayer:GetMouse()
+
+    tpTool.Activated:Connect(function()
+        local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp and mouse.Hit then
+            hrp.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3.5, 0))
+            pcall(function()
+                local flash = Instance.new("ColorCorrectionEffect", Lighting)
+                flash.Brightness = 1; TweenService:Create(flash, TweenInfo.new(0.3), {Brightness = 0}):Play(); game.Debris:AddItem(flash, 0.4)
+            end)
+        end
+    end)
+    tpTool.Parent = LocalPlayer.Backpack
+    LogMessage("TP Tool creado. Equípalo y toca donde quieras ir.", tGreen)
+end)
+
 local infBaseActivo = false
 AddCmd("infbase", "Genera baseplates infinitas alrededor de los jugadores", function()
-    if infBaseActivo then
-        LogMessage("Baseplate infinita ya está activa.", tYellow)
-        return
-    end
-    
+    if infBaseActivo then LogMessage("Baseplate infinita ya está activa.", tYellow) return end
     local baseplateOriginal = workspace:FindFirstChild("Baseplate")
-    if not baseplateOriginal then
-        LogMessage("Error: No se encontró 'Baseplate' en el mapa.", tRed)
-        return
-    end
+    if not baseplateOriginal then LogMessage("Error: No se encontró 'Baseplate' en el mapa.", tRed) return end
     
-    infBaseActivo = true
-    LogMessage("Iniciando sistema de Baseplate Infinita...", tGreen)
-    
+    infBaseActivo = true; LogMessage("Iniciando sistema de Baseplate Infinita...", tGreen)
     task.spawn(function()
-        local ORIGIN_POS = baseplateOriginal.Position
-        local TILE_SIZE = 648
-        local TILE_HEIGHT = 16
-
-        local RENDER_DISTANCE = 2
-        local DELETE_DISTANCE = 4
-        local UPDATE_TICK = 0.0
-
+        local ORIGIN_POS = baseplateOriginal.Position; local TILE_SIZE = 648; local TILE_HEIGHT = 16
+        local RENDER_DISTANCE = 2; local DELETE_DISTANCE = 4; local UPDATE_TICK = 0.0
         baseplateOriginal.Size = Vector3.new(TILE_SIZE, TILE_HEIGHT, TILE_SIZE)
         local plantilla = baseplateOriginal:Clone()
         baseplateOriginal:Destroy() 
-
         local activeChunks = {}
-        local baseplateFolder = Instance.new("Folder", workspace)
-        baseplateFolder.Name = "BaseplatesInfinitas"
-
-        local function getChunkKey(x, z)
-            return x .. "_" .. z
-        end
+        local baseplateFolder = Instance.new("Folder", workspace); baseplateFolder.Name = "BaseplatesInfinitas"
+        local function getChunkKey(x, z) return x .. "_" .. z end
 
         while scriptActivoTags and infBaseActivo do
             task.wait(UPDATE_TICK)
-            local chunksNecesarios = {}
-            local playerPositions = {}
-
+            local chunksNecesarios = {}; local playerPositions = {}
             for _, player in ipairs(Players:GetPlayers()) do
                 local char = player.Character
-                if char and char:FindFirstChild("HumanoidRootPart") then
-                    table.insert(playerPositions, char.HumanoidRootPart.Position)
-                end
+                if char and char:FindFirstChild("HumanoidRootPart") then table.insert(playerPositions, char.HumanoidRootPart.Position) end
             end
-
             for _, pos in ipairs(playerPositions) do
                 local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
                 local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
-
                 for x = -RENDER_DISTANCE, RENDER_DISTANCE do
                     for z = -RENDER_DISTANCE, RENDER_DISTANCE do
                         local key = getChunkKey(currentX + x, currentZ + z)
@@ -1848,95 +1621,69 @@ AddCmd("infbase", "Genera baseplates infinitas alrededor de los jugadores", func
                     end
                 end
             end
-
             for key, coords in pairs(chunksNecesarios) do
                 if not activeChunks[key] then
                     local nueva = plantilla:Clone()
                     nueva.Name = "Chunk_" .. key
-                    nueva.Position = Vector3.new(
-                        ORIGIN_POS.X + (coords.X * TILE_SIZE),
-                        ORIGIN_POS.Y,
-                        ORIGIN_POS.Z + (coords.Z * TILE_SIZE)
-                    )
+                    nueva.Position = Vector3.new(ORIGIN_POS.X + (coords.X * TILE_SIZE), ORIGIN_POS.Y, ORIGIN_POS.Z + (coords.Z * TILE_SIZE))
                     nueva.Parent = baseplateFolder
                     activeChunks[key] = {Instance = nueva, X = coords.X, Z = coords.Z}
                 end
             end
-
             for key, data in pairs(activeChunks) do
                 local estaCerca = false
                 for _, pos in ipairs(playerPositions) do
                     local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
                     local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
-                    
                     local dist = math.max(math.abs(data.X - currentX), math.abs(data.Z - currentZ))
-                    
-                    if dist <= DELETE_DISTANCE then
-                        estaCerca = true
-                        break
-                    end
+                    if dist <= DELETE_DISTANCE then estaCerca = true; break end
                 end
-
-                if not estaCerca then
-                    data.Instance:Destroy()
-                    activeChunks[key] = nil
-                end
+                if not estaCerca then data.Instance:Destroy(); activeChunks[key] = nil end
             end
         end
     end)
 end)
 
--- INTEGRACIÓN DE COMANDO GENERACION C.D.T
-AddCmd("generacion", "Abre el panel del Generador de Objetos", function()
-    GenMain.Visible = true
-    LogMessage("Generador C.D.T abierto.", tCyan)
+local isAntiAfkActive = false; local afkConnection = nil
+AddCmd("afk", "Activa o desactiva el sistema Anti-AFK", function()
+    isAntiAfkActive = not isAntiAfkActive
+    if isAntiAfkActive then
+        afkConnection = LocalPlayer.Idled:Connect(function()
+            VirtualUser:CaptureController(); VirtualUser:ClickButton2(Vector2.new())
+            LogMessage("Anti-AFK evadió una desconexión por inactividad.", tYellow)
+        end)
+        LogMessage("Anti-AFK Activado. Puedes dejar el juego en segundo plano.", tGreen)
+    else
+        if afkConnection then afkConnection:Disconnect(); afkConnection = nil end
+        LogMessage("Anti-AFK Desactivado.", tOrange)
+    end
 end)
 
--- ==================================================================
--- COMANDO: TP TOOL (CLICK / TOUCH TELEPORT)
--- ==================================================================
-AddCmd("tptool", "Te da una herramienta para hacer TP donde hagas click", function()
-    local toolName = "TP"
-    
-    -- Verificar si ya lo tiene equipado o en la mochila
-    local hasTool = LocalPlayer.Backpack:FindFirstChild(toolName) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild(toolName))
-    
-    if hasTool then
-        LogMessage("Ya tienes el TP Tool en tu inventario.", tYellow)
-        return
-    end
+AddCmd("rejoin", "Te reconecta al mismo servidor al instante", function()
+    LogMessage("Reconectando al servidor actual...", tYellow)
+    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+end)
 
-    -- Crear la herramienta
-    local tpTool = Instance.new("Tool")
-    tpTool.Name = toolName
-    tpTool.RequiresHandle = false -- Permite usarlo sin un Part físico (ideal para móvil y PC)
-    tpTool.CanBeDropped = false
-
-    local mouse = LocalPlayer:GetMouse()
-
-    -- Lógica al hacer Click o tocar la pantalla
-    tpTool.Activated:Connect(function()
-        local char = LocalPlayer.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        
-        if hrp and mouse.Hit then
-            -- Offset de +3.5 en Y para no quedar atrapado en el suelo
-            local targetPos = mouse.Hit.Position + Vector3.new(0, 3.5, 0)
-            hrp.CFrame = CFrame.new(targetPos)
-            
-            -- Efecto visual premium (Flash)
-            pcall(function()
-                local flash = Instance.new("ColorCorrectionEffect", Lighting)
-                flash.Brightness = 1
-                TweenService:Create(flash, TweenInfo.new(0.3), {Brightness = 0}):Play()
-                game.Debris:AddItem(flash, 0.4)
-            end)
+AddCmd("hop", "Busca y te conecta a un servidor con menos gente", function()
+    LogMessage("Buscando un servidor disponible...", tYellow)
+    local Http = game:GetService("HttpService"); local TPS = game:GetService("TeleportService")
+    local ApiUrl = "https://games.roblox.com/v1/games/" .. tostring(game.PlaceId) .. "/servers/Public?sortOrder=Asc&limit=100"
+    task.spawn(function()
+        local s, r = pcall(function() return request({Url = ApiUrl, Method = "GET"}) end)
+        if s and r and r.StatusCode == 200 then
+            local data = Http:JSONDecode(r.Body)
+            if data and data.data then
+                for _, server in ipairs(data.data) do
+                    if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                        LogMessage("¡Servidor encontrado! Saltando...", tGreen)
+                        TPS:TeleportToPlaceInstance(game.PlaceId, server.id, LocalPlayer)
+                        return
+                    end
+                end
+            end
         end
+        LogMessage("No se encontraron servidores. Intenta de nuevo.", tRed)
     end)
-
-    -- Entregar al jugador
-    tpTool.Parent = LocalPlayer.Backpack
-    LogMessage("TP Tool creado. Equípalo y toca donde quieras ir.", tGreen)
 end)
 
 -- ==================================================================
@@ -1948,52 +1695,36 @@ DestruirScriptCompleto = function()
     if isVFlying then ToggleVFly() end
     if isNoclipActive then ToggleNoclipWalk() end
     if isReverseActive then ToggleReverse() end
-    if isTripped then GetUpFromTrip() end
+    if isTripped then GetUpFromTrip(false) end
+    if isFreecamActive then ToggleFreecam() end
+    if isESPActive then ToggleESP() end
     
     if inputBeganConn then inputBeganConn:Disconnect() end
     if inputEndedConn then inputEndedConn:Disconnect() end
     if charAddedConn then charAddedConn:Disconnect() end
+    if espFolder then espFolder:Destroy() end
 
-    task.spawn(function()
-        pcall(function() 
-            request({
-                Url = BASE_URL .. "/api/offline/" .. tostring(LocalPlayer.UserId), 
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = "{}"
-            }) 
-        end)
-    end)
+    task.spawn(function() pcall(function() request({Url = BASE_URL .. "/api/offline/" .. tostring(LocalPlayer.UserId), Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = "{}"}) end) end)
     
-    scriptActivoTags = false 
-    infBaseActivo = false 
+    scriptActivoTags = false; infBaseActivo = false 
     for _, v in pairs(UIsActivos) do if v.UI then v.UI:Destroy() end end
     UIsActivos = {}
     
-    -- [ACTUALIZADO] Restaurar Avatares y Voice Chat al destruir
     for idStr, isHidden in pairs(hiddenTags) do
         local p = Players:GetPlayerByUserId(tonumber(idStr))
         if p then
             if p.Character then OcultarAvatar(p.Character, false) end
-            MutearVoiceChat(p, false) -- Asegurar desmuteo del Voice Chat
+            MutearVoiceChat(p, false)
         end
     end
     hiddenTags = {}
 
     if targetGuiParent then
-        for _, obj in ipairs(targetGuiParent:GetChildren()) do
-            if string.sub(obj.Name, 1, 9) == "SafeHTML_" then 
-                obj:Destroy() 
-            end
-        end
+        for _, obj in ipairs(targetGuiParent:GetChildren()) do if string.sub(obj.Name, 1, 9) == "SafeHTML_" then obj:Destroy() end end
     end
-    
     for _, p in ipairs(Players:GetPlayers()) do
-        if p.Character and p.Character:FindFirstChildOfClass("Humanoid") then
-            p.Character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
-        end
+        if p.Character and p.Character:FindFirstChildOfClass("Humanoid") then p.Character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer end
     end
-    
     if ScreenGui then ScreenGui:Destroy() end
     if KeyScreen then KeyScreen:Destroy() end
 end
@@ -2003,6 +1734,9 @@ AddCmd("destroy", "Cierra y elimina el panel completo", function()
     if DestruirScriptCompleto then DestruirScriptCompleto() end
 end)
 
+-- ==================================================================
+-- AUTOCOMPLETADO Y DETECCIÓN DEL CHAT/CONSOLA
+-- ==================================================================
 SuggestFrame = Instance.new("ScrollingFrame", FullUI); SuggestFrame.Size = UDim2.new(1, -20, 0, 0); SuggestFrame.Position = UDim2.new(0, 10, 1, -45); SuggestFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); SuggestFrame.BorderSizePixel = 0; SuggestFrame.Visible = false; SuggestFrame.ScrollBarThickness = 2; SuggestFrame.ZIndex = 10; Instance.new("UICorner", SuggestFrame).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", SuggestFrame).Color = Color3.fromRGB(50, 50, 50)
 SuggestList = Instance.new("UIListLayout", SuggestFrame); SuggestList.Padding = UDim.new(0, 2)
 
@@ -2050,6 +1784,85 @@ CmdBox.FocusLost:Connect(function(enterPressed)
     end
 end)
 
+charAddedConn = LocalPlayer.CharacterAdded:Connect(function(character) 
+    if isGhostActive then ToggleGhost() end
+    if isFlying then ToggleFly() end
+    if isNoclipActive then ToggleNoclipWalk() end
+    if isReverseActive then frames = {} end
+    if isTripped then GetUpFromTrip(false) end
+    if isFreecamActive then ToggleFreecam() end
+
+    if posicionGuardadaRE then
+        task.spawn(function()
+            local hrp = character:WaitForChild("HumanoidRootPart", 5)
+            if hrp then task.wait(0.1); hrp.CFrame = posicionGuardadaRE; posicionGuardadaRE = nil end
+        end)
+    end
+end)
+
+-- ==================================================================
+-- MANEJADOR GLOBAL DE TECLAS (DEBE IR AL FINAL DEL SCRIPT)
+-- ==================================================================
+local inputBeganConn
+local inputEndedConn
+
+if inputBeganConn then inputBeganConn:Disconnect() end
+if inputEndedConn then inputEndedConn:Disconnect() end
+
+inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
+    -- Asignación de teclas clásicas
+    if isInvBinding and input.UserInputType == Enum.UserInputType.Keyboard then invKeybind = input.KeyCode; InvKeyBtn.Text = input.KeyCode.Name; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false; return end
+    if isFlyBinding and input.UserInputType == Enum.UserInputType.Keyboard then flyKeybind = input.KeyCode; FlyKeyBtn.Text = input.KeyCode.Name; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFlyBinding = false; return end
+    if isVFlyBinding and input.UserInputType == Enum.UserInputType.Keyboard then vFlyKeybind = input.KeyCode; VFlyKeyBtn.Text = input.KeyCode.Name; VFlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isVFlyBinding = false; return end
+    if isNoclipBinding and input.UserInputType == Enum.UserInputType.Keyboard then noclipKeybind = input.KeyCode; NoclipKeyBtn.Text = input.KeyCode.Name; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isNoclipBinding = false; return end
+    if isTripBinding and input.UserInputType == Enum.UserInputType.Keyboard then tripKeybind = input.KeyCode; TripKeyBtn.Text = input.KeyCode.Name; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false; return end
+    
+    if not gp then
+        -- Ocultar/Mostrar Menú Completo (Botón Insert)
+        if input.KeyCode == Enum.KeyCode.Insert then 
+            if Main.Visible then
+                Main.Visible = false; MPMain.Visible = false; TPMain.Visible = false; InvMain.Visible = false; FlyMain.Visible = false; VFlyMain.Visible = false; NoclipMain.Visible = false; TripMain.Visible = false; ChatMain.Visible = false; SetMain.Visible = false; HideMain.Visible = false; GenMain.Visible = false
+                if ReverseMain then ReverseMain.Visible = false end
+                if FreecamMain then FreecamMain.Visible = false end
+                if ESPMain then ESPMain.Visible = false end
+            else
+                Main.Visible = true
+            end
+        end
+        
+        -- Ejecución de Paneles Segura
+        if invKeybind and input.KeyCode == invKeybind and type(ToggleGhost) == "function" then ToggleGhost() end
+        if flyKeybind and input.KeyCode == flyKeybind and type(ToggleFly) == "function" then ToggleFly() end
+        if vFlyKeybind and input.KeyCode == vFlyKeybind and type(ToggleVFly) == "function" then ToggleVFly() end
+        if noclipKeybind and input.KeyCode == noclipKeybind and type(ToggleNoclipWalk) == "function" then ToggleNoclipWalk() end
+        if tripKeybind and input.KeyCode == tripKeybind and type(DoTrip) == "function" then DoTrip() end
+        if isTripped and input.KeyCode == Enum.KeyCode.Space and type(GetUpFromTrip) == "function" then GetUpFromTrip(false) end
+        
+        -- Controles direccionales del vuelo aéreo clásico
+        if isFlying and type(flycontrol) == "table" then
+            if input.KeyCode == Enum.KeyCode.W then flycontrol.F = 1
+            elseif input.KeyCode == Enum.KeyCode.S then flycontrol.B = 1
+            elseif input.KeyCode == Enum.KeyCode.D then flycontrol.R = 1
+            elseif input.KeyCode == Enum.KeyCode.A then flycontrol.L = 1
+            elseif input.KeyCode == Enum.KeyCode.Space then flycontrol.U = 1
+            elseif input.KeyCode == Enum.KeyCode.Q then flycontrol.D = 1 end
+        end
+    end
+end)
+
+inputEndedConn = UserInputService.InputEnded:Connect(function(input, gp)
+    if not gp then
+        if isFlying and type(flycontrol) == "table" then
+            if input.KeyCode == Enum.KeyCode.W then flycontrol.F = 0
+            elseif input.KeyCode == Enum.KeyCode.S then flycontrol.B = 0
+            elseif input.KeyCode == Enum.KeyCode.D then flycontrol.R = 0
+            elseif input.KeyCode == Enum.KeyCode.A then flycontrol.L = 0
+            elseif input.KeyCode == Enum.KeyCode.Space then flycontrol.U = 0
+            elseif input.KeyCode == Enum.KeyCode.Q then flycontrol.D = 0 end
+        end
+    end
+end)
+
 -- ==================================================================
 -- SISTEMA DE KEY, RECORDATORIO (30 DÍAS) Y VERIFICACIÓN HWID
 -- ==================================================================
@@ -2061,170 +1874,66 @@ KeyScreen.IgnoreGuiInset = true
 KeyScreen.ResetOnSpawn = false 
 
 local Background = Instance.new("Frame", KeyScreen)
-Background.Size = UDim2.new(1, 0, 1, 0)
-Background.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Background.BackgroundTransparency = 0.2
+Background.Size = UDim2.new(1, 0, 1, 0); Background.BackgroundColor3 = Color3.fromRGB(10, 10, 10); Background.BackgroundTransparency = 0.2
 
 local KeyBox = Instance.new("Frame", Background)
-KeyBox.Size = UDim2.new(0, 320, 0, 260)
-KeyBox.Position = UDim2.new(0.5, -160, 0.5, -130)
-KeyBox.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-KeyBox.ClipsDescendants = true
+KeyBox.Size = UDim2.new(0, 320, 0, 260); KeyBox.Position = UDim2.new(0.5, -160, 0.5, -130); KeyBox.BackgroundColor3 = Color3.fromRGB(15, 15, 15); KeyBox.ClipsDescendants = true
 Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 6)
-local KeyStroke = Instance.new("UIStroke", KeyBox)
-KeyStroke.Color = borderDark
-KeyStroke.Thickness = 1.2
+local KeyStroke = Instance.new("UIStroke", KeyBox); KeyStroke.Color = borderDark; KeyStroke.Thickness = 1.2
 
 local TopKeyBar = Instance.new("Frame", KeyBox)
-TopKeyBar.Size = UDim2.new(1, 0, 0, 35)
-TopKeyBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-Instance.new("UICorner", TopKeyBar).CornerRadius = UDim.new(0, 6)
-local KeyFix = Instance.new("Frame", TopKeyBar)
-KeyFix.Size = UDim2.new(1, 0, 0, 5)
-KeyFix.Position = UDim2.new(0, 0, 1, -5)
-KeyFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-local KeyTopTitle = Instance.new("TextLabel", TopKeyBar)
-KeyTopTitle.Size = UDim2.new(1, -30, 1, 0)
-KeyTopTitle.Position = UDim2.new(0, 15, 0, 0)
-KeyTopTitle.BackgroundTransparency = 1
-KeyTopTitle.Text = "C.D.T OPTIFINE // AUTHENTICATION"
-KeyTopTitle.TextColor3 = tWhite
-KeyTopTitle.Font = Enum.Font.GothamBold
-KeyTopTitle.TextSize = 12
-KeyTopTitle.TextXAlignment = Enum.TextXAlignment.Left
+TopKeyBar.Size = UDim2.new(1, 0, 0, 35); TopKeyBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Instance.new("UICorner", TopKeyBar).CornerRadius = UDim.new(0, 6)
+local KeyFix = Instance.new("Frame", TopKeyBar); KeyFix.Size = UDim2.new(1, 0, 0, 5); KeyFix.Position = UDim2.new(0, 0, 1, -5); KeyFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+local KeyTopTitle = Instance.new("TextLabel", TopKeyBar); KeyTopTitle.Size = UDim2.new(1, -30, 1, 0); KeyTopTitle.Position = UDim2.new(0, 15, 0, 0); KeyTopTitle.BackgroundTransparency = 1; KeyTopTitle.Text = "C.D.T OPTIFINE // AUTHENTICATION"; KeyTopTitle.TextColor3 = tWhite; KeyTopTitle.Font = Enum.Font.GothamBold; KeyTopTitle.TextSize = 12; KeyTopTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-local WelcomeTitle = Instance.new("TextLabel", KeyBox)
-WelcomeTitle.Size = UDim2.new(1, 0, 0, 40)
-WelcomeTitle.Position = UDim2.new(0, 0, 0, 45)
-WelcomeTitle.BackgroundTransparency = 1
-WelcomeTitle.Text = "BIENVENIDO, " .. string.upper(LocalPlayer.Name)
-WelcomeTitle.TextColor3 = tWhite
-WelcomeTitle.Font = Enum.Font.GothamBold
-WelcomeTitle.TextSize = 16
+local WelcomeTitle = Instance.new("TextLabel", KeyBox); WelcomeTitle.Size = UDim2.new(1, 0, 0, 40); WelcomeTitle.Position = UDim2.new(0, 0, 0, 45); WelcomeTitle.BackgroundTransparency = 1; WelcomeTitle.Text = "BIENVENIDO, " .. string.upper(LocalPlayer.Name); WelcomeTitle.TextColor3 = tWhite; WelcomeTitle.Font = Enum.Font.GothamBold; WelcomeTitle.TextSize = 16
+local SubTitle = Instance.new("TextLabel", KeyBox); SubTitle.Size = UDim2.new(1, 0, 0, 20); SubTitle.Position = UDim2.new(0, 0, 0, 75); SubTitle.BackgroundTransparency = 1; SubTitle.Text = "Verificando conexión segura..."; SubTitle.TextColor3 = Color3.fromRGB(150, 150, 150); SubTitle.Font = Enum.Font.GothamMedium; SubTitle.TextSize = 12
 
-local SubTitle = Instance.new("TextLabel", KeyBox)
-SubTitle.Size = UDim2.new(1, 0, 0, 20)
-SubTitle.Position = UDim2.new(0, 0, 0, 75)
-SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "Verificando conexión segura..."
-SubTitle.TextColor3 = Color3.fromRGB(150, 150, 150)
-SubTitle.Font = Enum.Font.GothamMedium
-SubTitle.TextSize = 12
+local KeyInputBox = Instance.new("TextBox", KeyBox); KeyInputBox.Size = UDim2.new(1, -40, 0, 40); KeyInputBox.Position = UDim2.new(0, 20, 0, 110); KeyInputBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10); KeyInputBox.TextColor3 = tWhite; KeyInputBox.PlaceholderText = "> Ingresa tu key aquí..."; KeyInputBox.Font = Enum.Font.Gotham; KeyInputBox.TextSize = 13; KeyInputBox.Text = ""; KeyInputBox.Visible = false; Instance.new("UICorner", KeyInputBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", KeyInputBox).Color = Color3.fromRGB(40, 40, 40)
 
-local KeyInputBox = Instance.new("TextBox", KeyBox)
-KeyInputBox.Size = UDim2.new(1, -40, 0, 40)
-KeyInputBox.Position = UDim2.new(0, 20, 0, 110)
-KeyInputBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-KeyInputBox.TextColor3 = tWhite
-KeyInputBox.PlaceholderText = "> Ingresa tu key aquí..."
-KeyInputBox.Font = Enum.Font.Gotham
-KeyInputBox.TextSize = 13
-KeyInputBox.Text = ""
-KeyInputBox.Visible = false
-Instance.new("UICorner", KeyInputBox).CornerRadius = UDim.new(0, 4)
-Instance.new("UIStroke", KeyInputBox).Color = Color3.fromRGB(40, 40, 40)
-
-local RememberCheck = Instance.new("TextButton", KeyBox)
-RememberCheck.Size = UDim2.new(1, -40, 0, 20)
-RememberCheck.Position = UDim2.new(0, 20, 0, 160)
-RememberCheck.BackgroundTransparency = 1
-RememberCheck.Text = "☐ Recordar Key (30 días)"
-RememberCheck.TextColor3 = tWhite
-RememberCheck.Font = Enum.Font.Gotham
-RememberCheck.TextSize = 12
-RememberCheck.TextXAlignment = Enum.TextXAlignment.Left
-RememberCheck.Visible = false
+local RememberCheck = Instance.new("TextButton", KeyBox); RememberCheck.Size = UDim2.new(1, -40, 0, 20); RememberCheck.Position = UDim2.new(0, 20, 0, 160); RememberCheck.BackgroundTransparency = 1; RememberCheck.Text = "☐ Recordar Key (30 días)"; RememberCheck.TextColor3 = tWhite; RememberCheck.Font = Enum.Font.Gotham; RememberCheck.TextSize = 12; RememberCheck.TextXAlignment = Enum.TextXAlignment.Left; RememberCheck.Visible = false
 local isRemembered = false
+RememberCheck.MouseButton1Click:Connect(function() isRemembered = not isRemembered; RememberCheck.Text = isRemembered and "☑ Recordar Key (30 días)" or "☐ Recordar Key (30 días)"; RememberCheck.TextColor3 = isRemembered and tGreen or tWhite end)
 
-RememberCheck.MouseButton1Click:Connect(function()
-    isRemembered = not isRemembered
-    RememberCheck.Text = isRemembered and "☑ Recordar Key (30 días)" or "☐ Recordar Key (30 días)"
-    RememberCheck.TextColor3 = isRemembered and tGreen or tWhite
-end)
-
-local VerifyBtn = Instance.new("TextButton", KeyBox)
-VerifyBtn.Size = UDim2.new(0.45, 0, 0, 35)
-VerifyBtn.Position = UDim2.new(0, 20, 0, 195)
-VerifyBtn.BackgroundColor3 = tGreen
-VerifyBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
-VerifyBtn.Text = "VERIFICAR"
-VerifyBtn.Font = Enum.Font.GothamBold
-VerifyBtn.TextSize = 12
-VerifyBtn.Visible = false
-Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 4)
-
-local GetKeyBtn = Instance.new("TextButton", KeyBox)
-GetKeyBtn.Size = UDim2.new(0.45, 0, 0, 35)
-GetKeyBtn.Position = UDim2.new(0.55, -20, 0, 195)
-GetKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-GetKeyBtn.TextColor3 = tWhite
-GetKeyBtn.Text = "OBTENER KEY"
-GetKeyBtn.Font = Enum.Font.GothamBold
-GetKeyBtn.TextSize = 12
-GetKeyBtn.Visible = false
-Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 4)
+local VerifyBtn = Instance.new("TextButton", KeyBox); VerifyBtn.Size = UDim2.new(0.45, 0, 0, 35); VerifyBtn.Position = UDim2.new(0, 20, 0, 195); VerifyBtn.BackgroundColor3 = tGreen; VerifyBtn.TextColor3 = Color3.fromRGB(10, 10, 10); VerifyBtn.Text = "VERIFICAR"; VerifyBtn.Font = Enum.Font.GothamBold; VerifyBtn.TextSize = 12; VerifyBtn.Visible = false; Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 4)
+local GetKeyBtn = Instance.new("TextButton", KeyBox); GetKeyBtn.Size = UDim2.new(0.45, 0, 0, 35); GetKeyBtn.Position = UDim2.new(0.55, -20, 0, 195); GetKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GetKeyBtn.TextColor3 = tWhite; GetKeyBtn.Text = "OBTENER KEY"; GetKeyBtn.Font = Enum.Font.GothamBold; GetKeyBtn.TextSize = 12; GetKeyBtn.Visible = false; Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 4)
 
 MakeDraggable(TopKeyBar, KeyBox)
 
 local function SaveKeyLocal(key)
-    if writefile then
-        local data = HttpService:JSONEncode({savedKey = key, timestamp = tick()})
-        pcall(function() writefile(AuthFileName, data) end)
-    end
+    if writefile then local data = HttpService:JSONEncode({savedKey = key, timestamp = tick()}); pcall(function() writefile(AuthFileName, data) end) end
 end
 
 local function ProcessKey(inputKey, isAutoLogin)
-    SubTitle.Text = isAutoLogin and "Comprobando llave recordada..." or "Comprobando..."
-    SubTitle.TextColor3 = tYellow
-    
+    SubTitle.Text = isAutoLogin and "Comprobando llave recordada..." or "Comprobando..."; SubTitle.TextColor3 = tYellow
     local hwid = RbxAnalytics:GetClientId()
     local reqAPI = BASE_URL .. "/api/verify"
 
     task.spawn(function()
-        local success, res = pcall(function()
-            return request({
-                Url = reqAPI,
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode({key = inputKey, hwid = hwid})
-            })
-        end)
+        local success, res = pcall(function() return request({Url = reqAPI, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode({key = inputKey, hwid = hwid})}) end)
 
         if success and res and res.StatusCode == 200 then
             local decoded = HttpService:JSONDecode(res.Body)
             if decoded.success then
                 if isRemembered and not isAutoLogin then SaveKeyLocal(inputKey) end
-                SubTitle.Text = "¡Acceso Autorizado!"
-                SubTitle.TextColor3 = tGreen
-                
-                CurrentExpirationText = decoded.expiresText or "Desconocido"
-                ExpLabel.Text = CurrentExpirationText
+                SubTitle.Text = "¡Acceso Autorizado!"; SubTitle.TextColor3 = tGreen
+                CurrentExpirationText = decoded.expiresText or "Desconocido"; ExpLabel.Text = CurrentExpirationText
                 if string.find(CurrentExpirationText, "Expira") then ExpLabel.TextColor3 = tOrange else ExpLabel.TextColor3 = tCyan end
                 
-                task.wait(1)
-                if KeyScreen then KeyScreen:Destroy() end
-                Main.Visible = true
-                LogMessage("Sistema desbloqueado correctamente.", tGreen)
+                task.wait(1); if KeyScreen then KeyScreen:Destroy() end
+                Main.Visible = true; LogMessage("Sistema desbloqueado correctamente.", tGreen)
             else
                 if isAutoLogin then
                     if isfile and isfile(AuthFileName) then pcall(function() delfile(AuthFileName) end) end
-                    SubTitle.Text = "La llave guardada expiró o fue baneada."
-                    SubTitle.TextColor3 = tRed
-                    task.wait(1.5)
-                    SubTitle.Text = "Por favor, introduce tu Key de acceso."
-                    KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true
+                    SubTitle.Text = "La llave guardada expiró o fue baneada."; SubTitle.TextColor3 = tRed
+                    task.wait(1.5); SubTitle.Text = "Por favor, introduce tu Key de acceso."; KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true
                 else
-                    SubTitle.Text = decoded.msg or "Key Inválida o Baneada."
-                    SubTitle.TextColor3 = tRed
+                    SubTitle.Text = decoded.msg or "Key Inválida o Baneada."; SubTitle.TextColor3 = tRed
                 end
             end
         else
-            SubTitle.Text = "Error al conectar con el servidor."
-            SubTitle.TextColor3 = tRed
-            if isAutoLogin then
-                task.wait(2)
-                KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true
-            end
+            SubTitle.Text = "Error al conectar con el servidor."; SubTitle.TextColor3 = tRed
+            if isAutoLogin then task.wait(2); KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true end
         end
     end)
 end
@@ -2233,42 +1942,21 @@ task.spawn(function()
     local autoKey = nil
     if readfile and isfile and isfile(AuthFileName) then
         local success, dat = pcall(function() return HttpService:JSONDecode(readfile(AuthFileName)) end)
-        if success and dat and dat.savedKey then
-            autoKey = dat.savedKey
-        end
+        if success and dat and dat.savedKey then autoKey = dat.savedKey end
     end
-
-    if autoKey then
-        task.wait(1)
-        ProcessKey(autoKey, true)
-    else
-        task.wait(1.5)
-        SubTitle.Text = "Por favor, introduce tu Key de acceso."
-        KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true
-    end
+    if autoKey then task.wait(1); ProcessKey(autoKey, true)
+    else task.wait(1.5); SubTitle.Text = "Por favor, introduce tu Key de acceso."; KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true end
 end)
 
-VerifyBtn.MouseButton1Click:Connect(function()
-    if KeyInputBox.Text == "" then SubTitle.Text = "No puedes dejar el campo vacío."; SubTitle.TextColor3 = tRed return end
-    ProcessKey(KeyInputBox.Text, false)
-end)
+VerifyBtn.MouseButton1Click:Connect(function() if KeyInputBox.Text == "" then SubTitle.Text = "No puedes dejar el campo vacío."; SubTitle.TextColor3 = tRed return end; ProcessKey(KeyInputBox.Text, false) end)
 
 GetKeyBtn.MouseButton1Click:Connect(function()
     local link = "https://discord.gg/6qG75JtTsX"
     if isMobile then
-        if setclipboard then
-            setclipboard(link)
-            SubTitle.Text = "¡Link copiado al portapapeles!"
-            SubTitle.TextColor3 = tYellow
-        end
+        if setclipboard then setclipboard(link); SubTitle.Text = "¡Link copiado al portapapeles!"; SubTitle.TextColor3 = tYellow end
     else
         local success = pcall(function() if open_url then open_url(link) else setclipboard(link) end end)
-        if success then
-            SubTitle.Text = "Link abierto / copiado. Entra al Discord."
-            SubTitle.TextColor3 = tYellow
-        else
-            SubTitle.Text = "Error al copiar el link. Únete manual."
-            SubTitle.TextColor3 = tRed
-        end
+        if success then SubTitle.Text = "Link abierto / copiado. Entra al Discord."; SubTitle.TextColor3 = tYellow
+        else SubTitle.Text = "Error al copiar el link. Únete manual."; SubTitle.TextColor3 = tRed end
     end
 end)
