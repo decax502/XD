@@ -719,10 +719,14 @@ local function showNotice(txt)
 end
 
 local isGhostActive = false; local invKeybind = nil; local isInvBinding = false; local ghostDebounce = false
+local currentInvisSeat = nil -- FIX: Variable para no perder el asiento
 
+-- FIX: Modificado para afectar también caras y texturas
 local function setCharacterTransparency(char, val)
     for _, p in ipairs(char:GetDescendants()) do
         if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then
+            p.Transparency = val
+        elseif p:IsA("Decal") or p:IsA("Texture") then
             p.Transparency = val
         end
     end
@@ -742,26 +746,39 @@ local function ToggleGhost()
             pcall(function() char:MoveTo(Vector3.new(-25.95, 84, 3537.55)) end)
             task.wait(0.15)
             
-            if Workspace:FindFirstChild("invischair") then Workspace.invischair:Destroy() end
+            if currentInvisSeat and currentInvisSeat.Parent then currentInvisSeat:Destroy() end
 
-            local Seat = Instance.new("Seat", Workspace)
-            Seat.Anchored = false; Seat.CanCollide = false; Seat.Name = "invischair"; Seat.Transparency = 1; Seat.Position = Vector3.new(-25.95, 84, 3537.55)
+            currentInvisSeat = Instance.new("Seat", Workspace)
+            currentInvisSeat.Anchored = false; currentInvisSeat.CanCollide = false; currentInvisSeat.Name = "invischair"; currentInvisSeat.Transparency = 1; currentInvisSeat.Position = Vector3.new(-25.95, 84, 3537.55)
             
-            local Weld = Instance.new("Weld", Seat)
-            Weld.Part0 = Seat
+            local Weld = Instance.new("Weld", currentInvisSeat)
+            Weld.Part0 = currentInvisSeat
             local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+            
             if torso then 
-                Weld.Part1 = torso; Seat.CFrame = savedpos 
+                Weld.Part1 = torso; currentInvisSeat.CFrame = savedpos 
                 InvToggleBtn.BackgroundColor3 = tGreen; InvToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); InvToggleBtn.Text = "INVISIBILIDAD: ON"
                 showNotice("Invisibility Enabled")
             else 
-                Seat:Destroy(); isGhostActive = false; setCharacterTransparency(char, 0) 
+                -- FIX: Limpieza correcta si no encuentra el torso y reset de UI
+                if currentInvisSeat then currentInvisSeat:Destroy(); currentInvisSeat = nil end
+                isGhostActive = false; setCharacterTransparency(char, 0) 
+                InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
             end
         end
     else
         if char then setCharacterTransparency(char, 0) end
+        
+        -- FIX: Eliminación exacta del asiento
+        if currentInvisSeat and currentInvisSeat.Parent then 
+            pcall(function() currentInvisSeat:Destroy() end) 
+        end
+        currentInvisSeat = nil
+        
+        -- Fallback de seguridad por si otro script creó uno
         local inv = Workspace:FindFirstChild("invischair")
         if inv then pcall(function() inv:Destroy() end) end
+        
         InvToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); InvToggleBtn.TextColor3 = tWhite; InvToggleBtn.Text = "INVISIBILIDAD: OFF"
         showNotice("Invisibility Disabled")
     end
