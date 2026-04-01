@@ -1075,27 +1075,28 @@ DoTrip = function()
 
     humanoid.PlatformStand = true
     humanoid.AutoRotate = false
-    humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 
-    -- Aplicar fuerza a TODAS las extremidades para un efecto Ragdoll/Trip real
+    -- Aplicamos propiedades de "hielo" a todo el cuerpo para que caiga como peso muerto y resbale
     for _, part in pairs(char:GetDescendants()) do
         if part:IsA("BasePart") then 
-            part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.3, 1, 1)
-            local speed = part.AssemblyLinearVelocity.Magnitude
-            local impulso = (speed > 5) and (part.AssemblyLinearVelocity * 1.5) or (root.CFrame.LookVector * 15)
-            part.AssemblyLinearVelocity = impulso + Vector3.new(math.random(-5, 5), math.random(5, 15), math.random(-5, 5))
-            
-            local spin = speed > 5 and 30 or 15
-            part.AssemblyAngularVelocity = Vector3.new(math.random(-spin, spin), math.random(-spin, spin), math.random(-spin, spin))
+            part.CustomPhysicalProperties = PhysicalProperties.new(0.5, 0.1, 0.1, 1, 1)
         end
     end
+
+    -- El empuje y el giro se aplican SOLAMENTE al HRP para no romper el motor de físicas
+    local speed = root.AssemblyLinearVelocity.Magnitude
+    local impulso = (speed > 5) and (root.AssemblyLinearVelocity * 1.5) or (root.CFrame.LookVector * 15)
+    root.AssemblyLinearVelocity = impulso + Vector3.new(0, -5, 0)
+    
+    local spin = speed > 5 and 20 or 15
+    root.AssemblyAngularVelocity = root.CFrame.RightVector * spin + Vector3.new(math.random(-5, 5), 0, math.random(-5, 5))
 end
 
 TripToggleBtn.MouseButton1Click:Connect(function()
     if isTripped then GetUpFromTrip(false) else DoTrip() end
 end)
 
--- Aquí se apaga el script automáticamente si eliminas/cierras la ventana
+-- Apagado seguro de ventana
 TripCloseBtn.MouseButton1Click:Connect(function() 
     TripMain.Visible = false; tripKeybind = nil; isTripBinding = false; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
     if isTripped then GetUpFromTrip(false) end
