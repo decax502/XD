@@ -1005,6 +1005,9 @@ end)
 -- ==================================================================
 -- 8. TRIP MODE MENU (CAÍDA TOTAL DE EXTREMIDADES)
 -- ==================================================================
+-- ==================================================================
+-- 8. TRIP MODE MENU (HUMANOID STATE METHOD - ANTI BUG)
+-- ==================================================================
 TripMain = Instance.new("Frame", ScreenGui); TripMain.Size = UDim2.new(0, 260, 0, 100); TripMain.Position = UDim2.new(0, 20, 0, 540); TripMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); TripMain.BorderSizePixel = 0; TripMain.ClipsDescendants = true; TripMain.Visible = false; Instance.new("UICorner", TripMain).CornerRadius = UDim.new(0, 6); TripMainStroke = Instance.new("UIStroke", TripMain); TripMainStroke.Color = borderDark
 TripTopBar = Instance.new("Frame", TripMain); TripTopBar.Size = UDim2.new(1, 0, 0, 35); TripTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripTopBar.BorderSizePixel = 0; Instance.new("UICorner", TripTopBar).CornerRadius = UDim.new(0, 6)
 TripFix = Instance.new("Frame", TripTopBar); TripFix.Size = UDim2.new(1, 0, 0, 5); TripFix.Position = UDim2.new(0, 0, 1, -5); TripFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripFix.BorderSizePixel = 0
@@ -1030,6 +1033,10 @@ local function CleanTripConnections()
     if tripStateConn then tripStateConn:Disconnect(); tripStateConn = nil end
 end
 
+local function GetTorso(char)
+    return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+end
+
 GetUpFromTrip = function(autoClean)
     if not isTripped then return end
     isTripped = false
@@ -1038,27 +1045,18 @@ GetUpFromTrip = function(autoClean)
     TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "TRIP: OFF"
 
     local char = LocalPlayer.Character; if not char then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not root then return end
-
-    humanoid.PlatformStand = false
-    humanoid.AutoRotate = true
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
 
     if not autoClean then
-        root.AssemblyLinearVelocity = root.AssemblyLinearVelocity + Vector3.new(0, 10, 0)
-        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
         humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-    end
-    
-    for _, part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then part.CustomPhysicalProperties = nil end
     end
 end
 
 DoTrip = function()
     if isTripped then return end
     local char = LocalPlayer.Character; if not char then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
+    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = GetTorso(char)
     if not humanoid or not root then return end
 
     isTripped = true 
@@ -1066,6 +1064,7 @@ DoTrip = function()
     
     tripStateConn = humanoid.StateChanged:Connect(function(oldState, newState)
         if not isTripped then return end
+        -- Si el estado cambia a Running, Jumping, etc., el jugador se levantó solo
         if newState == Enum.HumanoidStateType.Running or newState == Enum.HumanoidStateType.Jumping or newState == Enum.HumanoidStateType.Walking or newState == Enum.HumanoidStateType.Dead then
             GetUpFromTrip(true)
         end
@@ -1073,23 +1072,9 @@ DoTrip = function()
     
     TripToggleBtn.BackgroundColor3 = tRed; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "LEVANTARSE"
 
-    humanoid.PlatformStand = true
-    humanoid.AutoRotate = false
-
-    -- Aplicamos propiedades de "hielo" a todo el cuerpo para que caiga como peso muerto y resbale
-    for _, part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then 
-            part.CustomPhysicalProperties = PhysicalProperties.new(0.5, 0.1, 0.1, 1, 1)
-        end
-    end
-
-    -- El empuje y el giro se aplican SOLAMENTE al HRP para no romper el motor de físicas
-    local speed = root.AssemblyLinearVelocity.Magnitude
-    local impulso = (speed > 5) and (root.AssemblyLinearVelocity * 1.5) or (root.CFrame.LookVector * 15)
-    root.AssemblyLinearVelocity = impulso + Vector3.new(0, -5, 0)
-    
-    local spin = speed > 5 and 20 or 15
-    root.AssemblyAngularVelocity = root.CFrame.RightVector * spin + Vector3.new(math.random(-5, 5), 0, math.random(-5, 5))
+    -- Método ScriptBlox: Forzar estado FallingDown (0) y empujar
+    humanoid:ChangeState(0)
+    root.AssemblyLinearVelocity = root.CFrame.LookVector * 30
 end
 
 TripToggleBtn.MouseButton1Click:Connect(function()
