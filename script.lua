@@ -419,7 +419,7 @@ end)
 SpinMain = Instance.new("Frame", ScreenGui); SpinMain.Size = UDim2.new(0, 260, 0, 145); SpinMain.Position = UDim2.new(0, 20, 0, 140); SpinMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); SpinMain.BorderSizePixel = 0; SpinMain.ClipsDescendants = true; SpinMain.Visible = false; Instance.new("UICorner", SpinMain).CornerRadius = UDim.new(0, 6); SpinMainStroke = Instance.new("UIStroke", SpinMain); SpinMainStroke.Color = borderDark
 SpinTopBar = Instance.new("Frame", SpinMain); SpinTopBar.Size = UDim2.new(1, 0, 0, 35); SpinTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinTopBar.BorderSizePixel = 0; Instance.new("UICorner", SpinTopBar).CornerRadius = UDim.new(0, 6)
 SpinFix = Instance.new("Frame", SpinTopBar); SpinFix.Size = UDim2.new(1, 0, 0, 5); SpinFix.Position = UDim2.new(0, 0, 1, -5); SpinFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinFix.BorderSizePixel = 0
-SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT (C-FRAME)"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
+SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT (CF ANGLES)"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
 SpinMinBtn = Instance.new("TextButton", SpinTopBar); SpinMinBtn.Size = UDim2.new(0, 35, 1, 0); SpinMinBtn.Position = UDim2.new(1, -70, 0, 0); SpinMinBtn.BackgroundTransparency = 1; SpinMinBtn.Text = "—"; SpinMinBtn.TextColor3 = tGreen; SpinMinBtn.Font = Enum.Font.GothamBlack; SpinMinBtn.TextSize = 14
 SpinCloseBtn = Instance.new("TextButton", SpinTopBar); SpinCloseBtn.Size = UDim2.new(0, 35, 1, 0); SpinCloseBtn.Position = UDim2.new(1, -35, 0, 0); SpinCloseBtn.BackgroundTransparency = 1; SpinCloseBtn.Text = "X"; SpinCloseBtn.TextColor3 = tRed; SpinCloseBtn.Font = Enum.Font.GothamBlack; SpinCloseBtn.TextSize = 12
 
@@ -438,40 +438,33 @@ SpinMinBtn.MouseButton1Click:Connect(function()
     SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
 end)
 
-local isSpinning = false; local spinSpeedNum = 50; local spinKeybind = nil; local isSpinBinding = false; local spinLoop = nil; local currentYaw = 0
+local isSpinning = false; local spinSpeedNum = 50; local spinKeybind = nil; local isSpinBinding = false; local spinLoop = nil
 
-SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(10, spinSpeedNum - 10); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 10); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 10; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 
 ToggleSpin = function()
     local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if not hrp or not char:FindFirstChild("Humanoid") then return end
+    if not hrp then return end
     
     isSpinning = not isSpinning
     if isSpinning then
         SpinToggleBtn.BackgroundColor3 = tCyan; SpinToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); SpinToggleBtn.Text = "SPIN: ON"
         
-        char.Humanoid.AutoRotate = false -- Previene que el cliente intente corregir la orientación
         if spinLoop then spinLoop:Disconnect() end
         
-        local x, _, z = hrp.CFrame:ToOrientation()
-        currentYaw = hrp.Orientation.Y
-        
-        spinLoop = RunService.RenderStepped:Connect(function(dt)
+        spinLoop = RunService.RenderStepped:Connect(function()
             local currentHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             if currentHrp then
-                currentYaw = currentYaw + math.rad(spinSpeedNum * dt * 15)
-                local curX, _, curZ = currentHrp.CFrame:ToOrientation()
-                -- Spinbot C-Frame absoluto en el eje Y (Evita problemas y bypassea anticheats de físicas)
-                currentHrp.CFrame = CFrame.new(currentHrp.Position) * CFrame.fromOrientation(curX, currentYaw, curZ)
+                -- Lógica adaptada del script proporcionado usando CFrame.Angles
+                currentHrp.CFrame = currentHrp.CFrame * CFrame.Angles(0, math.rad(spinSpeedNum), 0)
             end
         end)
     else
         SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Text = "SPIN: OFF"
         
         if spinLoop then spinLoop:Disconnect(); spinLoop = nil end
-        if char:FindFirstChild("Humanoid") then char.Humanoid.AutoRotate = true end
     end
 end
 SpinToggleBtn.MouseButton1Click:Connect(ToggleSpin)
