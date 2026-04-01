@@ -1003,7 +1003,7 @@ VFlyKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 8. TRIP MODE MENU (CAÍDA INFINITA + LEVANTARSE)
+-- 8. TRIP MODE MENU (CAÍDA TOTAL DE EXTREMIDADES)
 -- ==================================================================
 TripMain = Instance.new("Frame", ScreenGui); TripMain.Size = UDim2.new(0, 260, 0, 100); TripMain.Position = UDim2.new(0, 20, 0, 540); TripMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); TripMain.BorderSizePixel = 0; TripMain.ClipsDescendants = true; TripMain.Visible = false; Instance.new("UICorner", TripMain).CornerRadius = UDim.new(0, 6); TripMainStroke = Instance.new("UIStroke", TripMain); TripMainStroke.Color = borderDark
 TripTopBar = Instance.new("Frame", TripMain); TripTopBar.Size = UDim2.new(1, 0, 0, 35); TripTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripTopBar.BorderSizePixel = 0; Instance.new("UICorner", TripTopBar).CornerRadius = UDim.new(0, 6)
@@ -1012,7 +1012,7 @@ TripTitle = Instance.new("TextLabel", TripTopBar); TripTitle.Size = UDim2.new(1,
 TripMinBtn = Instance.new("TextButton", TripTopBar); TripMinBtn.Size = UDim2.new(0, 35, 1, 0); TripMinBtn.Position = UDim2.new(1, -70, 0, 0); TripMinBtn.BackgroundTransparency = 1; TripMinBtn.Text = "—"; TripMinBtn.TextColor3 = tGreen; TripMinBtn.Font = Enum.Font.GothamBlack; TripMinBtn.TextSize = 14
 TripCloseBtn = Instance.new("TextButton", TripTopBar); TripCloseBtn.Size = UDim2.new(0, 35, 1, 0); TripCloseBtn.Position = UDim2.new(1, -35, 0, 0); TripCloseBtn.BackgroundTransparency = 1; TripCloseBtn.Text = "X"; TripCloseBtn.TextColor3 = tRed; TripCloseBtn.Font = Enum.Font.GothamBlack; TripCloseBtn.TextSize = 12
 
-TripToggleBtn = Instance.new("TextButton", TripMain); TripToggleBtn.Size = UDim2.new(1, -75, 0, 45); TripToggleBtn.Position = UDim2.new(0, 10, 0, 45); TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TripToggleBtn.Text = "TRIP (CLICK)"; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Font = Enum.Font.GothamBold; TripToggleBtn.TextSize = 12; Instance.new("UICorner", TripToggleBtn).CornerRadius = UDim.new(0, 6)
+TripToggleBtn = Instance.new("TextButton", TripMain); TripToggleBtn.Size = UDim2.new(1, -75, 0, 45); TripToggleBtn.Position = UDim2.new(0, 10, 0, 45); TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TripToggleBtn.Text = "TRIP: OFF"; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Font = Enum.Font.GothamBold; TripToggleBtn.TextSize = 12; Instance.new("UICorner", TripToggleBtn).CornerRadius = UDim.new(0, 6)
 TripKeyBtn = Instance.new("TextButton", TripMain); TripKeyBtn.Size = UDim2.new(0, 50, 0, 45); TripKeyBtn.Position = UDim2.new(1, -60, 0, 45); TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); TripKeyBtn.Text = "KEY"; TripKeyBtn.TextColor3 = tWhite; TripKeyBtn.Font = Enum.Font.GothamBold; TripKeyBtn.TextSize = 11; Instance.new("UICorner", TripKeyBtn).CornerRadius = UDim.new(0, 6)
 
 ApplyResponsiveScale(TripMain); MakeDraggable(TripTopBar, TripMain)
@@ -1035,7 +1035,7 @@ GetUpFromTrip = function(autoClean)
     isTripped = false
     CleanTripConnections()
     
-    TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "TRIP (CLICK)"
+    TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "TRIP: OFF"
 
     local char = LocalPlayer.Character; if not char then return end
     local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
@@ -1071,31 +1071,36 @@ DoTrip = function()
         end
     end)
     
-    TripToggleBtn.BackgroundColor3 = tRed; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "LEVANTARSE (CLICK)"
-
-    local currentVelocity = root.AssemblyLinearVelocity
-    local speed = currentVelocity.Magnitude
+    TripToggleBtn.BackgroundColor3 = tRed; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "LEVANTARSE"
 
     humanoid.PlatformStand = true
     humanoid.AutoRotate = false
+    humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 
-    local impulso = (speed > 5) and (currentVelocity * 1.3) or (root.CFrame.LookVector * 10)
-    root.AssemblyLinearVelocity = impulso + Vector3.new(0, 8, 0)
-    local spin = speed > 5 and 20 or 10
-    root.AssemblyAngularVelocity = Vector3.new(math.random(-spin, spin), math.random(-spin, spin), math.random(-spin, spin))
-
+    -- Aplicar fuerza a TODAS las extremidades para un efecto Ragdoll/Trip real
     for _, part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.1, 1, 1) end
+        if part:IsA("BasePart") then 
+            part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.3, 0.3, 1, 1)
+            local speed = part.AssemblyLinearVelocity.Magnitude
+            local impulso = (speed > 5) and (part.AssemblyLinearVelocity * 1.5) or (root.CFrame.LookVector * 15)
+            part.AssemblyLinearVelocity = impulso + Vector3.new(math.random(-5, 5), math.random(5, 15), math.random(-5, 5))
+            
+            local spin = speed > 5 and 30 or 15
+            part.AssemblyAngularVelocity = Vector3.new(math.random(-spin, spin), math.random(-spin, spin), math.random(-spin, spin))
+        end
     end
 end
 
 TripToggleBtn.MouseButton1Click:Connect(function()
     if isTripped then GetUpFromTrip(false) else DoTrip() end
 end)
+
+-- Aquí se apaga el script automáticamente si eliminas/cierras la ventana
 TripCloseBtn.MouseButton1Click:Connect(function() 
     TripMain.Visible = false; tripKeybind = nil; isTripBinding = false; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
     if isTripped then GetUpFromTrip(false) end
 end)
+
 TripKeyBtn.MouseButton1Click:Connect(function()
     if tripKeybind ~= nil then tripKeybind = nil; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false
     else isTripBinding = true; TripKeyBtn.Text = "..."; TripKeyBtn.BackgroundColor3 = tOrange end
@@ -1549,12 +1554,12 @@ GenFireBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 18. SPINBOT MENU (ROTACIÓN CON VELOCIDAD AJUSTABLE)
+-- 18. SPINBOT MENU (C-FRAME ACCUMULATOR FIX)
 -- ==================================================================
 SpinMain = Instance.new("Frame", ScreenGui); SpinMain.Size = UDim2.new(0, 260, 0, 145); SpinMain.Position = UDim2.new(0, 20, 0, 140); SpinMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); SpinMain.BorderSizePixel = 0; SpinMain.ClipsDescendants = true; SpinMain.Visible = false; Instance.new("UICorner", SpinMain).CornerRadius = UDim.new(0, 6); SpinMainStroke = Instance.new("UIStroke", SpinMain); SpinMainStroke.Color = borderDark
 SpinTopBar = Instance.new("Frame", SpinMain); SpinTopBar.Size = UDim2.new(1, 0, 0, 35); SpinTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinTopBar.BorderSizePixel = 0; Instance.new("UICorner", SpinTopBar).CornerRadius = UDim.new(0, 6)
 SpinFix = Instance.new("Frame", SpinTopBar); SpinFix.Size = UDim2.new(1, 0, 0, 5); SpinFix.Position = UDim2.new(0, 0, 1, -5); SpinFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinFix.BorderSizePixel = 0
-SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
+SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT (SMOOTH)"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
 SpinMinBtn = Instance.new("TextButton", SpinTopBar); SpinMinBtn.Size = UDim2.new(0, 35, 1, 0); SpinMinBtn.Position = UDim2.new(1, -70, 0, 0); SpinMinBtn.BackgroundTransparency = 1; SpinMinBtn.Text = "—"; SpinMinBtn.TextColor3 = tGreen; SpinMinBtn.Font = Enum.Font.GothamBlack; SpinMinBtn.TextSize = 14
 SpinCloseBtn = Instance.new("TextButton", SpinTopBar); SpinCloseBtn.Size = UDim2.new(0, 35, 1, 0); SpinCloseBtn.Position = UDim2.new(1, -35, 0, 0); SpinCloseBtn.BackgroundTransparency = 1; SpinCloseBtn.Text = "X"; SpinCloseBtn.TextColor3 = tRed; SpinCloseBtn.Font = Enum.Font.GothamBlack; SpinCloseBtn.TextSize = 12
 
@@ -1562,7 +1567,7 @@ SpinToggleBtn = Instance.new("TextButton", SpinMain); SpinToggleBtn.Size = UDim2
 SpinKeyBtn = Instance.new("TextButton", SpinMain); SpinKeyBtn.Size = UDim2.new(0, 50, 0, 45); SpinKeyBtn.Position = UDim2.new(1, -60, 0, 45); SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinKeyBtn.Text = "KEY"; SpinKeyBtn.TextColor3 = tWhite; SpinKeyBtn.Font = Enum.Font.GothamBold; SpinKeyBtn.TextSize = 11; Instance.new("UICorner", SpinKeyBtn).CornerRadius = UDim.new(0, 6)
 
 SpinSpeedMinus = Instance.new("TextButton", SpinMain); SpinSpeedMinus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedMinus.Position = UDim2.new(0, 10, 0, 100); SpinSpeedMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedMinus.Text = "-"; SpinSpeedMinus.TextColor3 = tWhite; SpinSpeedMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedMinus)
-SpinSpeedDisplay = Instance.new("TextBox", SpinMain); SpinSpeedDisplay.Size = UDim2.new(1, -110, 0, 35); SpinSpeedDisplay.Position = UDim2.new(0, 55, 0, 100); SpinSpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); SpinSpeedDisplay.Text = ""; SpinSpeedDisplay.PlaceholderText = "SPEED: 50"; SpinSpeedDisplay.TextColor3 = tWhite; SpinSpeedDisplay.Font = Enum.Font.GothamSemibold; SpinSpeedDisplay.TextSize = 14; SpinSpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", SpinSpeedDisplay); Instance.new("UIStroke", SpinSpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
+SpinSpeedDisplay = Instance.new("TextBox", SpinMain); SpinSpeedDisplay.Size = UDim2.new(1, -110, 0, 35); SpinSpeedDisplay.Position = UDim2.new(0, 55, 0, 100); SpinSpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); SpinSpeedDisplay.Text = ""; SpinSpeedDisplay.PlaceholderText = "SPEED: 30"; SpinSpeedDisplay.TextColor3 = tWhite; SpinSpeedDisplay.Font = Enum.Font.GothamSemibold; SpinSpeedDisplay.TextSize = 14; SpinSpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", SpinSpeedDisplay); Instance.new("UIStroke", SpinSpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
 SpinSpeedPlus = Instance.new("TextButton", SpinMain); SpinSpeedPlus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedPlus.Position = UDim2.new(1, -50, 0, 100); SpinSpeedPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedPlus.Text = "+"; SpinSpeedPlus.TextColor3 = tWhite; SpinSpeedPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedPlus)
 
 ApplyResponsiveScale(SpinMain); MakeDraggable(SpinTopBar, SpinMain)
@@ -1573,35 +1578,45 @@ SpinMinBtn.MouseButton1Click:Connect(function()
     SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
 end)
 
-local isSpinning = false; local spinSpeedNum = 50; local spinKeybind = nil; local isSpinBinding = false; local spinBav = nil
+local isSpinning = false; local spinSpeedNum = 30; local spinKeybind = nil; local isSpinBinding = false; local spinLoop = nil; local currentYaw = 0
 
-local function UpdateSpinSpeed()
-    if spinBav then spinBav.AngularVelocity = Vector3.new(0, spinSpeedNum, 0) end
-end
-
-SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(10, spinSpeedNum - 10); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum; UpdateSpinSpeed() end)
-SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 10; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum; UpdateSpinSpeed() end)
-SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum; UpdateSpinSpeed() end)
+SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 5); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 5; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 
 ToggleSpin = function()
     local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
+    if not hrp or not char:FindFirstChild("Humanoid") then return end
     
     isSpinning = not isSpinning
     if isSpinning then
         SpinToggleBtn.BackgroundColor3 = tCyan; SpinToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); SpinToggleBtn.Text = "SPIN: ON"
-        if hrp:FindFirstChild("CDT_Spin") then hrp.CDT_Spin:Destroy() end
-        spinBav = Instance.new("BodyAngularVelocity")
-        spinBav.Name = "CDT_Spin"; spinBav.MaxTorque = Vector3.new(0, math.huge, 0)
-        spinBav.AngularVelocity = Vector3.new(0, spinSpeedNum, 0); spinBav.Parent = hrp
+        
+        char.Humanoid.AutoRotate = false -- Previene que las animaciones base peleen con el giro
+        if spinLoop then spinLoop:Disconnect() end
+        
+        local x, _, z = hrp.CFrame:ToOrientation()
+        currentYaw = hrp.Orientation.Y
+        
+        spinLoop = RunService.RenderStepped:Connect(function(dt)
+            local currentHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if currentHrp then
+                currentYaw = currentYaw + math.rad(spinSpeedNum * 60 * dt)
+                local curX, _, curZ = currentHrp.CFrame:ToOrientation()
+                -- Evita el glitch visual forzando el eje Y directamente a la rotación acumulada
+                currentHrp.CFrame = CFrame.new(currentHrp.Position) * CFrame.fromOrientation(curX, currentYaw, curZ)
+            end
+        end)
     else
         SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Text = "SPIN: OFF"
-        if spinBav then spinBav:Destroy(); spinBav = nil end
-        if hrp:FindFirstChild("CDT_Spin") then hrp.CDT_Spin:Destroy() end
+        
+        if spinLoop then spinLoop:Disconnect(); spinLoop = nil end
+        if char:FindFirstChild("Humanoid") then char.Humanoid.AutoRotate = true end
     end
 end
 SpinToggleBtn.MouseButton1Click:Connect(ToggleSpin)
 
+-- Apaga automáticamente al cerrar la UI
 SpinCloseBtn.MouseButton1Click:Connect(function() 
     SpinMain.Visible = false; spinKeybind = nil; isSpinBinding = false; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     if isSpinning then ToggleSpin() end
@@ -1844,26 +1859,32 @@ AddCmd("hop", "Busca y te conecta a un servidor con menos gente", function()
 end)
 
 -- ==================================================================
--- DEFINICIÓN DE DESTRUCCIÓN TOTAL PARA EL COMANDO /DESTROY
+-- DEFINICIÓN DE DESTRUCCIÓN TOTAL PARA EL COMANDO !destroy
 -- ==================================================================
 DestruirScriptCompleto = function()
-    if isGhostActive then ToggleGhost() end
-    if isFlying then ToggleFly() end
-    if isVFlying then ToggleVFly() end
-    if isNoclipActive then ToggleNoclipWalk() end
-    if isReverseActive then ToggleReverse() end
-    if isTripped then GetUpFromTrip(false) end
-    if isFreecamActive then ToggleFreecam() end
-    if isESPActive then ToggleESP() end
-    if isSpinning then ToggleSpin() end
+    -- APAGAR TODOS LOS MÓDULOS ACTIVOS PRIMERO
+    if isGhostActive and type(ToggleGhost) == "function" then ToggleGhost() end
+    if isFlying and type(ToggleFly) == "function" then ToggleFly() end
+    if isVFlying and type(ToggleVFly) == "function" then ToggleVFly() end
+    if isNoclipActive and type(ToggleNoclipWalk) == "function" then ToggleNoclipWalk() end
+    if isReverseActive and type(ToggleReverse) == "function" then ToggleReverse() end
+    if isTripped and type(GetUpFromTrip) == "function" then GetUpFromTrip(false) end
+    if isFreecamActive and type(ToggleFreecam) == "function" then ToggleFreecam() end
+    if isESPActive and type(ToggleESP) == "function" then ToggleESP() end
+    if isSpinning and type(ToggleSpin) == "function" then ToggleSpin() end
+    if isClearModeActive then pcall(function() Comandos["clear"].Accion({}) end) end
+    if isAntiAfkActive then pcall(function() Comandos["afk"].Accion({}) end) end
     
+    -- DESCONECTAR EVENTOS
     if inputBeganConn then inputBeganConn:Disconnect() end
     if inputEndedConn then inputEndedConn:Disconnect() end
     if charAddedConn then charAddedConn:Disconnect() end
     if espFolder then espFolder:Destroy() end
 
+    -- NOTIFICAR A LA API (SI APLICA)
     task.spawn(function() pcall(function() request({Url = BASE_URL .. "/api/offline/" .. tostring(LocalPlayer.UserId), Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = "{}"}) end) end)
     
+    -- LIMPIAR VARIABLES Y TAGS
     scriptActivoTags = false; infBaseActivo = false 
     for _, v in pairs(UIsActivos) do if v.UI then v.UI:Destroy() end end
     UIsActivos = {}
@@ -1877,6 +1898,7 @@ DestruirScriptCompleto = function()
     end
     hiddenTags = {}
 
+    -- DESTRUIR UI
     if targetGuiParent then
         for _, obj in ipairs(targetGuiParent:GetChildren()) do if string.sub(obj.Name, 1, 9) == "SafeHTML_" then obj:Destroy() end end
     end
@@ -1887,8 +1909,8 @@ DestruirScriptCompleto = function()
     if KeyScreen then KeyScreen:Destroy() end
 end
 
-AddCmd("destroy", "Cierra y elimina el panel completo", function()
-    LogMessage("Cerrando C.D.T Optifine...", tPurple)
+AddCmd("destroy", "Cierra y elimina el panel completo apagando todo", function()
+    LogMessage("Cerrando y apagando scripts de C.D.T Optifine...", tPurple)
     if DestruirScriptCompleto then DestruirScriptCompleto() end
 end)
 
