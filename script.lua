@@ -1005,9 +1005,6 @@ end)
 -- ==================================================================
 -- 8. TRIP MODE MENU (CAÍDA TOTAL DE EXTREMIDADES)
 -- ==================================================================
--- ==================================================================
--- 8. TRIP MODE MENU (HUMANOID STATE METHOD - ANTI BUG)
--- ==================================================================
 TripMain = Instance.new("Frame", ScreenGui); TripMain.Size = UDim2.new(0, 260, 0, 100); TripMain.Position = UDim2.new(0, 20, 0, 540); TripMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); TripMain.BorderSizePixel = 0; TripMain.ClipsDescendants = true; TripMain.Visible = false; Instance.new("UICorner", TripMain).CornerRadius = UDim.new(0, 6); TripMainStroke = Instance.new("UIStroke", TripMain); TripMainStroke.Color = borderDark
 TripTopBar = Instance.new("Frame", TripMain); TripTopBar.Size = UDim2.new(1, 0, 0, 35); TripTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripTopBar.BorderSizePixel = 0; Instance.new("UICorner", TripTopBar).CornerRadius = UDim.new(0, 6)
 TripFix = Instance.new("Frame", TripTopBar); TripFix.Size = UDim2.new(1, 0, 0, 5); TripFix.Position = UDim2.new(0, 0, 1, -5); TripFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripFix.BorderSizePixel = 0
@@ -1015,7 +1012,7 @@ TripTitle = Instance.new("TextLabel", TripTopBar); TripTitle.Size = UDim2.new(1,
 TripMinBtn = Instance.new("TextButton", TripTopBar); TripMinBtn.Size = UDim2.new(0, 35, 1, 0); TripMinBtn.Position = UDim2.new(1, -70, 0, 0); TripMinBtn.BackgroundTransparency = 1; TripMinBtn.Text = "—"; TripMinBtn.TextColor3 = tGreen; TripMinBtn.Font = Enum.Font.GothamBlack; TripMinBtn.TextSize = 14
 TripCloseBtn = Instance.new("TextButton", TripTopBar); TripCloseBtn.Size = UDim2.new(0, 35, 1, 0); TripCloseBtn.Position = UDim2.new(1, -35, 0, 0); TripCloseBtn.BackgroundTransparency = 1; TripCloseBtn.Text = "X"; TripCloseBtn.TextColor3 = tRed; TripCloseBtn.Font = Enum.Font.GothamBlack; TripCloseBtn.TextSize = 12
 
-TripToggleBtn = Instance.new("TextButton", TripMain); TripToggleBtn.Size = UDim2.new(1, -75, 0, 45); TripToggleBtn.Position = UDim2.new(0, 10, 0, 45); TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TripToggleBtn.Text = "TRIP: OFF"; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Font = Enum.Font.GothamBold; TripToggleBtn.TextSize = 12; Instance.new("UICorner", TripToggleBtn).CornerRadius = UDim.new(0, 6)
+TripToggleBtn = Instance.new("TextButton", TripMain); TripToggleBtn.Size = UDim2.new(1, -75, 0, 45); TripToggleBtn.Position = UDim2.new(0, 10, 0, 45); TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TripToggleBtn.Text = "TRIP (CLICK)"; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Font = Enum.Font.GothamBold; TripToggleBtn.TextSize = 12; Instance.new("UICorner", TripToggleBtn).CornerRadius = UDim.new(0, 6)
 TripKeyBtn = Instance.new("TextButton", TripMain); TripKeyBtn.Size = UDim2.new(0, 50, 0, 45); TripKeyBtn.Position = UDim2.new(1, -60, 0, 45); TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); TripKeyBtn.Text = "KEY"; TripKeyBtn.TextColor3 = tWhite; TripKeyBtn.Font = Enum.Font.GothamBold; TripKeyBtn.TextSize = 11; Instance.new("UICorner", TripKeyBtn).CornerRadius = UDim.new(0, 6)
 
 ApplyResponsiveScale(TripMain); MakeDraggable(TripTopBar, TripMain)
@@ -1026,65 +1023,74 @@ TripMinBtn.MouseButton1Click:Connect(function()
     TripMinBtn.Text = tripMinimized and "+" or "—"; TripFix.Visible = not tripMinimized
 end)
 
-local tripKeybind = nil; local isTripBinding = false; local tripStateConn = nil 
-isTripped = false
+local isTripped = false
+local tripKeybind = nil
+local isTripBinding = false
 
-local function CleanTripConnections()
-    if tripStateConn then tripStateConn:Disconnect(); tripStateConn = nil end
-end
-
-local function GetTorso(char)
-    return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-end
-
-GetUpFromTrip = function(autoClean)
-    if not isTripped then return end
-    isTripped = false
-    CleanTripConnections()
-    
-    TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "TRIP: OFF"
-
-    local char = LocalPlayer.Character; if not char then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return end
-
-    if not autoClean then
-        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-    end
-end
-
-DoTrip = function()
+local function DoTrip()
     if isTripped then return end
     local char = LocalPlayer.Character; if not char then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = GetTorso(char)
+    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
     if not humanoid or not root then return end
 
     isTripped = true 
-    CleanTripConnections()
     
-    tripStateConn = humanoid.StateChanged:Connect(function(oldState, newState)
-        if not isTripped then return end
-        -- Si el estado cambia a Running, Jumping, etc., el jugador se levantó solo
-        if newState == Enum.HumanoidStateType.Running or newState == Enum.HumanoidStateType.Jumping or newState == Enum.HumanoidStateType.Walking or newState == Enum.HumanoidStateType.Dead then
-            GetUpFromTrip(true)
+    TripToggleBtn.BackgroundColor3 = tRed
+    TripToggleBtn.TextColor3 = tWhite
+    TripToggleBtn.Text = "TRIPPED!"
+    
+    task.delay(0.5, function()
+        if TripToggleBtn then
+            TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            TripToggleBtn.Text = "TRIP (CLICK)"
         end
     end)
-    
-    TripToggleBtn.BackgroundColor3 = tRed; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "LEVANTARSE"
 
-    -- Método ScriptBlox: Forzar estado FallingDown (0) y empujar
-    humanoid:ChangeState(0)
-    root.AssemblyLinearVelocity = root.CFrame.LookVector * 30
+    local currentVelocity = root.AssemblyLinearVelocity
+    local speed = currentVelocity.Magnitude
+
+    humanoid.PlatformStand = true
+    humanoid.AutoRotate = false
+
+    local impulso = (speed > 5) and (currentVelocity * 1.3) or (root.CFrame.LookVector * 10)
+    root.AssemblyLinearVelocity = impulso + Vector3.new(0, 8, 0)
+    
+    local spin = speed > 5 and 20 or 10
+    root.AssemblyAngularVelocity = Vector3.new(math.random(-spin, spin), math.random(-spin, spin), math.random(-spin, spin))
+
+    for _, part in pairs(char:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.1, 1, 1)
+        end
+    end
 end
 
-TripToggleBtn.MouseButton1Click:Connect(function()
-    if isTripped then GetUpFromTrip(false) else DoTrip() end
-end)
+local function GetUpFromTrip()
+    if not isTripped then return end
+    isTripped = false
+    
+    local char = LocalPlayer.Character; if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not root then return end
 
--- Apagado seguro de ventana
+    humanoid.PlatformStand = false
+    humanoid.AutoRotate = true
+    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+    
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    
+    for _, part in pairs(char:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CustomPhysicalProperties = nil 
+        end
+    end
+end
+
+TripToggleBtn.MouseButton1Click:Connect(DoTrip)
+
 TripCloseBtn.MouseButton1Click:Connect(function() 
     TripMain.Visible = false; tripKeybind = nil; isTripBinding = false; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
-    if isTripped then GetUpFromTrip(false) end
+    if isTripped then GetUpFromTrip() end
 end)
 
 TripKeyBtn.MouseButton1Click:Connect(function()
