@@ -1003,12 +1003,12 @@ VFlyKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 8. TRIP MODE MENU (CRAWL / FAKE PRONE - ANIMACIONES ACTIVAS)
+-- 8. TRIP MODE MENU (TRIP ORIGINAL + MOVIMIENTO ACOSTADO)
 -- ==================================================================
 TripMain = Instance.new("Frame", ScreenGui); TripMain.Size = UDim2.new(0, 260, 0, 100); TripMain.Position = UDim2.new(0, 20, 0, 540); TripMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); TripMain.BorderSizePixel = 0; TripMain.ClipsDescendants = true; TripMain.Visible = false; Instance.new("UICorner", TripMain).CornerRadius = UDim.new(0, 6); TripMainStroke = Instance.new("UIStroke", TripMain); TripMainStroke.Color = borderDark
 TripTopBar = Instance.new("Frame", TripMain); TripTopBar.Size = UDim2.new(1, 0, 0, 35); TripTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripTopBar.BorderSizePixel = 0; Instance.new("UICorner", TripTopBar).CornerRadius = UDim.new(0, 6)
 TripFix = Instance.new("Frame", TripTopBar); TripFix.Size = UDim2.new(1, 0, 0, 5); TripFix.Position = UDim2.new(0, 0, 1, -5); TripFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripFix.BorderSizePixel = 0
-TripTitle = Instance.new("TextLabel", TripTopBar); TripTitle.Size = UDim2.new(1, -70, 1, 0); TripTitle.Position = UDim2.new(0, 15, 0, 0); TripTitle.BackgroundTransparency = 1; TripTitle.Text = "TRIP (PRONE MODE)"; TripTitle.TextColor3 = tWhite; TripTitle.Font = Enum.Font.GothamBold; TripTitle.TextSize = 13; TripTitle.TextXAlignment = Enum.TextXAlignment.Left
+TripTitle = Instance.new("TextLabel", TripTopBar); TripTitle.Size = UDim2.new(1, -70, 1, 0); TripTitle.Position = UDim2.new(0, 15, 0, 0); TripTitle.BackgroundTransparency = 1; TripTitle.Text = "TRIP MODE"; TripTitle.TextColor3 = tWhite; TripTitle.Font = Enum.Font.GothamBold; TripTitle.TextSize = 13; TripTitle.TextXAlignment = Enum.TextXAlignment.Left
 TripMinBtn = Instance.new("TextButton", TripTopBar); TripMinBtn.Size = UDim2.new(0, 35, 1, 0); TripMinBtn.Position = UDim2.new(1, -70, 0, 0); TripMinBtn.BackgroundTransparency = 1; TripMinBtn.Text = "—"; TripMinBtn.TextColor3 = tGreen; TripMinBtn.Font = Enum.Font.GothamBlack; TripMinBtn.TextSize = 14
 TripCloseBtn = Instance.new("TextButton", TripTopBar); TripCloseBtn.Size = UDim2.new(0, 35, 1, 0); TripCloseBtn.Position = UDim2.new(1, -35, 0, 0); TripCloseBtn.BackgroundTransparency = 1; TripCloseBtn.Text = "X"; TripCloseBtn.TextColor3 = tRed; TripCloseBtn.Font = Enum.Font.GothamBlack; TripCloseBtn.TextSize = 12
 
@@ -1023,12 +1023,16 @@ TripMinBtn.MouseButton1Click:Connect(function()
     TripMinBtn.Text = tripMinimized and "+" or "—"; TripFix.Visible = not tripMinimized
 end)
 
-local tripKeybind = nil; local isTripBinding = false
+local tripKeybind = nil; local isTripBinding = false; local tripStateConn = nil 
 isTripped = false
 local originalRootC0 = nil
 local currentRootJoint = nil
 
--- Función para encontrar el Joint principal (Compatible con R6 y R15)
+local function CleanTripConnections()
+    if tripStateConn then tripStateConn:Disconnect(); tripStateConn = nil end
+end
+
+-- Función para encontrar el Joint principal del jugador
 local function getRootJoint(char)
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
@@ -1044,18 +1048,36 @@ local function getRootJoint(char)
     return nil
 end
 
-GetUpFromTrip = function()
+GetUpFromTrip = function(autoClean)
     if not isTripped then return end
     isTripped = false
+    CleanTripConnections()
     
     TripToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "TRIP (CLICK)"
 
-    -- Restaurar la orientación original del cuerpo
-    if currentRootJoint and currentRootJoint.Parent and originalRootC0 then
+    local char = LocalPlayer.Character; if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not root then return end
+
+    -- Restaurar la orientación del cuerpo
+    if currentRootJoint and originalRootC0 then
         currentRootJoint.C0 = originalRootC0
     end
     currentRootJoint = nil
     originalRootC0 = nil
+
+    humanoid.PlatformStand = false
+    humanoid.AutoRotate = true
+
+    if not autoClean then
+        root.AssemblyLinearVelocity = root.AssemblyLinearVelocity + Vector3.new(0, 10, 0)
+        root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+    end
+    
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then part.CustomPhysicalProperties = nil end
+    end
 end
 
 DoTrip = function()
@@ -1068,27 +1090,53 @@ DoTrip = function()
     if not rJoint then return end
 
     isTripped = true 
+    CleanTripConnections()
+    
     currentRootJoint = rJoint
     originalRootC0 = rJoint.C0
+
+    tripStateConn = humanoid.StateChanged:Connect(function(oldState, newState)
+        if not isTripped then return end
+        -- Previene que se levante solo al cambiar estados
+    end)
     
     TripToggleBtn.BackgroundColor3 = tRed; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "LEVANTARSE (CLICK)"
 
-    -- Magia: Inclinamos el modelo del cuerpo 90 grados hacia adelante y lo bajamos.
-    -- La caja de colisión sigue de pie, así que caminarás y las animaciones correrán normalmente,
-    -- pero el avatar se arrastrará por el suelo.
-    rJoint.C0 = rJoint.C0 * CFrame.Angles(math.rad(-90), 0, 0) * CFrame.new(0, -1, 0)
+    -- 1. TU TRIP NORMAL (Te empuja y te hace girar)
+    local currentVelocity = root.AssemblyLinearVelocity
+    local speed = currentVelocity.Magnitude
+
+    humanoid.PlatformStand = true
+    humanoid.AutoRotate = false
+
+    local impulso = (speed > 5) and (currentVelocity * 1.3) or (root.CFrame.LookVector * 10)
+    root.AssemblyLinearVelocity = impulso + Vector3.new(0, 8, 0)
+    local spin = speed > 5 and 20 or 10
+    root.AssemblyAngularVelocity = Vector3.new(math.random(-spin, spin), math.random(-spin, spin), math.random(-spin, spin))
+
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.1, 1, 1) end
+    end
+
+    -- 2. TRANSICIÓN A MODO ACOSTADO (Para no quedar tieso)
+    task.spawn(function()
+        task.wait(0.5) -- Esperamos medio segundo a que el personaje termine de volar/caer
+        if isTripped and currentRootJoint then
+            humanoid.PlatformStand = false -- Te quita lo tieso para que camines
+            humanoid.AutoRotate = true
+            -- Rotamos el torso para que camines acostado en el piso
+            currentRootJoint.C0 = originalRootC0 * CFrame.Angles(math.rad(-90), 0, 0) * CFrame.new(0, -1.2, 0)
+        end
+    end)
 end
 
 TripToggleBtn.MouseButton1Click:Connect(function()
-    if isTripped then GetUpFromTrip() else DoTrip() end
+    if isTripped then GetUpFromTrip(false) else DoTrip() end
 end)
-
--- Apagado seguro al cerrar la ventana
 TripCloseBtn.MouseButton1Click:Connect(function() 
     TripMain.Visible = false; tripKeybind = nil; isTripBinding = false; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
-    if isTripped then GetUpFromTrip() end
+    if isTripped then GetUpFromTrip(false) end
 end)
-
 TripKeyBtn.MouseButton1Click:Connect(function()
     if tripKeybind ~= nil then tripKeybind = nil; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false
     else isTripBinding = true; TripKeyBtn.Text = "..."; TripKeyBtn.BackgroundColor3 = tOrange end
