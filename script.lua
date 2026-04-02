@@ -1003,7 +1003,7 @@ VFlyKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 8. TRIP MODE MENU (TRIP ORIGINAL + MOVIMIENTO ACOSTADO)
+-- 8. TRIP MODE MENU (CAÍDA INFINITA + LEVANTARSE)
 -- ==================================================================
 TripMain = Instance.new("Frame", ScreenGui); TripMain.Size = UDim2.new(0, 260, 0, 100); TripMain.Position = UDim2.new(0, 20, 0, 540); TripMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); TripMain.BorderSizePixel = 0; TripMain.ClipsDescendants = true; TripMain.Visible = false; Instance.new("UICorner", TripMain).CornerRadius = UDim.new(0, 6); TripMainStroke = Instance.new("UIStroke", TripMain); TripMainStroke.Color = borderDark
 TripTopBar = Instance.new("Frame", TripMain); TripTopBar.Size = UDim2.new(1, 0, 0, 35); TripTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TripTopBar.BorderSizePixel = 0; Instance.new("UICorner", TripTopBar).CornerRadius = UDim.new(0, 6)
@@ -1025,27 +1025,9 @@ end)
 
 local tripKeybind = nil; local isTripBinding = false; local tripStateConn = nil 
 isTripped = false
-local originalRootC0 = nil
-local currentRootJoint = nil
 
 local function CleanTripConnections()
     if tripStateConn then tripStateConn:Disconnect(); tripStateConn = nil end
-end
-
--- Función para encontrar el Joint principal del jugador
-local function getRootJoint(char)
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return nil end
-    for _, obj in pairs(hrp:GetChildren()) do
-        if obj:IsA("Motor6D") and obj.Name:match("Root") then return obj end
-    end
-    local torso = char:FindFirstChild("LowerTorso") or char:FindFirstChild("Torso")
-    if torso then
-        for _, obj in pairs(torso:GetChildren()) do
-            if obj:IsA("Motor6D") and (obj.Part0 == hrp or obj.Part1 == hrp) then return obj end
-        end
-    end
-    return nil
 end
 
 GetUpFromTrip = function(autoClean)
@@ -1058,13 +1040,6 @@ GetUpFromTrip = function(autoClean)
     local char = LocalPlayer.Character; if not char then return end
     local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
     if not humanoid or not root then return end
-
-    -- Restaurar la orientación del cuerpo
-    if currentRootJoint and originalRootC0 then
-        currentRootJoint.C0 = originalRootC0
-    end
-    currentRootJoint = nil
-    originalRootC0 = nil
 
     humanoid.PlatformStand = false
     humanoid.AutoRotate = true
@@ -1086,23 +1061,18 @@ DoTrip = function()
     local humanoid = char:FindFirstChildOfClass("Humanoid"); local root = char:FindFirstChild("HumanoidRootPart")
     if not humanoid or not root then return end
 
-    local rJoint = getRootJoint(char)
-    if not rJoint then return end
-
     isTripped = true 
     CleanTripConnections()
     
-    currentRootJoint = rJoint
-    originalRootC0 = rJoint.C0
-
     tripStateConn = humanoid.StateChanged:Connect(function(oldState, newState)
         if not isTripped then return end
-        -- Previene que se levante solo al cambiar estados
+        if newState == Enum.HumanoidStateType.Running or newState == Enum.HumanoidStateType.Jumping or newState == Enum.HumanoidStateType.Walking or newState == Enum.HumanoidStateType.Dead then
+            GetUpFromTrip(true)
+        end
     end)
     
     TripToggleBtn.BackgroundColor3 = tRed; TripToggleBtn.TextColor3 = tWhite; TripToggleBtn.Text = "LEVANTARSE (CLICK)"
 
-    -- 1. TU TRIP NORMAL (Te empuja y te hace girar)
     local currentVelocity = root.AssemblyLinearVelocity
     local speed = currentVelocity.Magnitude
 
@@ -1117,17 +1087,6 @@ DoTrip = function()
     for _, part in pairs(char:GetDescendants()) do
         if part:IsA("BasePart") then part.CustomPhysicalProperties = PhysicalProperties.new(0.7, 0.1, 0.1, 1, 1) end
     end
-
-    -- 2. TRANSICIÓN A MODO ACOSTADO (Para no quedar tieso)
-    task.spawn(function()
-        task.wait(0.5) -- Esperamos medio segundo a que el personaje termine de volar/caer
-        if isTripped and currentRootJoint then
-            humanoid.PlatformStand = false -- Te quita lo tieso para que camines
-            humanoid.AutoRotate = true
-            -- Rotamos el torso para que camines acostado en el piso
-            currentRootJoint.C0 = originalRootC0 * CFrame.Angles(math.rad(-90), 0, 0) * CFrame.new(0, -1.2, 0)
-        end
-    end)
 end
 
 TripToggleBtn.MouseButton1Click:Connect(function()
