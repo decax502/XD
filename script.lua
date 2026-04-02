@@ -1623,6 +1623,226 @@ SpinKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
+-- WALK ON AIR (STANDALONE UI) + KEYBIND SYSTEM
+-- EXTRAÍDO Y MODIFICADO PARA PROJECT SAFE
+-- ==================================================================
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ==================================================================
+-- VARIABLES DE CONTROL
+-- ==================================================================
+local walkOnAirActivo = false
+local walkKeybind = nil
+local isBinding = false
+local baseplateFolder = nil
+
+-- Configuración del motor físico
+local TILE_SIZE = 100 
+local TILE_HEIGHT = 2
+local RENDER_DISTANCE = 1
+local DELETE_DISTANCE = 2
+local Y_OFFSET = -3.5 
+
+-- ==================================================================
+-- CREACIÓN DE LA INTERFAZ
+-- ==================================================================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "WalkOnAir_SafeDev"
+ScreenGui.ResetOnSpawn = false
+local targetGuiParent = pcall(function() return gethui() end) and gethui() or game:GetService("CoreGui")
+if not targetGuiParent then targetGuiParent = LocalPlayer:WaitForChild("PlayerGui") end
+ScreenGui.Parent = targetGuiParent
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 260, 0, 100)
+Main.Position = UDim2.new(0.5, -130, 0.5, -50)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Main.BorderSizePixel = 0
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
+local MainStroke = Instance.new("UIStroke", Main)
+MainStroke.Color = Color3.fromRGB(45, 45, 45)
+
+local TopBar = Instance.new("Frame", Main)
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 6)
+
+local Fix = Instance.new("Frame", TopBar)
+Fix.Size = UDim2.new(1, 0, 0, 5)
+Fix.Position = UDim2.new(0, 0, 1, -5)
+Fix.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+Fix.BorderSizePixel = 0
+
+local Title = Instance.new("TextLabel", TopBar)
+Title.Size = UDim2.new(1, -80, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "WALK ON AIR"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 12
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local CloseBtn = Instance.new("TextButton", TopBar)
+CloseBtn.Size = UDim2.new(0, 35, 1, 0)
+CloseBtn.Position = UDim2.new(1, -35, 0, 0)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
+CloseBtn.Font = Enum.Font.GothamBlack
+CloseBtn.TextSize = 12
+
+-- BOTONES DE CONTROL
+local ToggleBtn = Instance.new("TextButton", Main)
+ToggleBtn.Size = UDim2.new(1, -75, 0, 45)
+ToggleBtn.Position = UDim2.new(0, 10, 0, 45)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleBtn.Text = "WALK ON AIR: OFF"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 11
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 6)
+
+local KeyBtn = Instance.new("TextButton", Main)
+KeyBtn.Size = UDim2.new(0, 50, 0, 45)
+KeyBtn.Position = UDim2.new(1, -60, 0, 45)
+KeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+KeyBtn.Text = "KEY"
+KeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBtn.Font = Enum.Font.GothamBold
+KeyBtn.TextSize = 10
+Instance.new("UICorner", KeyBtn).CornerRadius = UDim.new(0, 6)
+
+-- ==================================================================
+-- FUNCIONALIDAD WALK ON AIR
+-- ==================================================================
+local plantilla = Instance.new("Part")
+plantilla.Size = Vector3.new(TILE_SIZE, TILE_HEIGHT, TILE_SIZE)
+plantilla.Anchored = true
+plantilla.CanCollide = true
+plantilla.Transparency = 1 -- Totalmente invisible
+plantilla.Material = Enum.Material.SmoothPlastic
+
+local function getChunkKey(x, z) return x .. "_" .. z end
+
+local function ToggleWalkOnAir()
+    walkOnAirActivo = not walkOnAirActivo
+    
+    if walkOnAirActivo then
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+        ToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
+        ToggleBtn.Text = "WALK ON AIR: ON"
+        
+        baseplateFolder = Instance.new("Folder", workspace)
+        baseplateFolder.Name = "WalkOnAir_Safe"
+        
+        local activeChunks = {}
+        task.spawn(function()
+            while walkOnAirActivo and baseplateFolder and baseplateFolder.Parent do
+                task.wait(0.05)
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    local pos = hrp.Position
+                    local targetY = pos.Y + Y_OFFSET
+                    local currentX = math.floor(pos.X / TILE_SIZE)
+                    local currentZ = math.floor(pos.Z / TILE_SIZE)
+                    
+                    local chunksNecesarios = {}
+                    for x = -RENDER_DISTANCE, RENDER_DISTANCE do
+                        for z = -RENDER_DISTANCE, RENDER_DISTANCE do
+                            local key = getChunkKey(currentX + x, currentZ + z)
+                            chunksNecesarios[key] = {X = currentX + x, Z = currentZ + z}
+                        end
+                    end
+
+                    for key, coords in pairs(chunksNecesarios) do
+                        if not activeChunks[key] then
+                            local nueva = plantilla:Clone()
+                            nueva.Position = Vector3.new((coords.X * TILE_SIZE) + (TILE_SIZE/2), targetY, (coords.Z * TILE_SIZE) + (TILE_SIZE/2))
+                            nueva.Parent = baseplateFolder
+                            activeChunks[key] = {Instance = nueva, X = coords.X, Z = coords.Z}
+                        else
+                            activeChunks[key].Instance.Position = Vector3.new(activeChunks[key].Instance.Position.X, targetY, activeChunks[key].Instance.Position.Z)
+                        end
+                    end
+
+                    for key, data in pairs(activeChunks) do
+                        local dist = math.max(math.abs(data.X - currentX), math.abs(data.Z - currentZ))
+                        if dist > DELETE_DISTANCE then
+                            data.Instance:Destroy()
+                            activeChunks[key] = nil
+                        end
+                    end
+                end
+            end
+        end)
+    else
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        ToggleBtn.Text = "WALK ON AIR: OFF"
+        if baseplateFolder then baseplateFolder:Destroy(); baseplateFolder = nil end
+    end
+end
+
+-- ==================================================================
+-- SISTEMA DE KEYBIND Y EVENTOS
+-- ==================================================================
+ToggleBtn.MouseButton1Click:Connect(ToggleWalkOnAir)
+
+KeyBtn.MouseButton1Click:Connect(function()
+    if walkKeybind ~= nil then
+        walkKeybind = nil
+        KeyBtn.Text = "KEY"
+        KeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        isBinding = false
+    else
+        isBinding = true
+        KeyBtn.Text = "..."
+        KeyBtn.BackgroundColor3 = Color3.fromRGB(255, 150, 0) -- Naranja mientras espera
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if isBinding and input.UserInputType == Enum.UserInputType.Keyboard then
+        walkKeybind = input.KeyCode
+        KeyBtn.Text = input.KeyCode.Name
+        KeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        isBinding = false
+        return
+    end
+
+    if not gp and walkKeybind and input.KeyCode == walkKeybind then
+        ToggleWalkOnAir()
+    end
+end)
+
+-- Arrastrar ventana
+local dragging, dragInput, dragStart, startPos
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true; dragStart = input.Position; startPos = Main.Position
+    end
+end)
+TopBar.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
+UserInputService.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    walkOnAirActivo = false
+    if baseplateFolder then baseplateFolder:Destroy() end
+    ScreenGui:Destroy()
+end)
+
+-- ==================================================================
 -- COMANDOS Y CONSOLA DE EVENTOS
 -- ==================================================================
 local function GetPlayer(nameString)
