@@ -508,7 +508,7 @@ AirMinBtn.MouseButton1Click:Connect(function()
 end)
 
 local isAirWalkActive = false; local airKeybind = nil; local isAirBinding = false; local airBaseplateFolder = nil
-local airPlantilla = Instance.new("Part"); airPlantilla.Size = Vector3.new(100, 2, 100); airPlantilla.Anchored = true; airPlantilla.CanCollide = true; airPlantilla.Transparency = 1; airPlantilla.Material = Enum.Material.SmoothPlastic
+local airPlantilla = Instance.new("Part"); airPlantilla.Size = Vector3.new(648, 16, 648); airPlantilla.Anchored = true; airPlantilla.CanCollide = true; airPlantilla.Transparency = 1; airPlantilla.Material = Enum.Material.SmoothPlastic
 
 local function getAirChunkKey(x, z) return x .. "_" .. z end
 
@@ -517,33 +517,50 @@ ToggleAirWalk = function()
     if isAirWalkActive then
         AirToggleBtn.BackgroundColor3 = tCyan; AirToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); AirToggleBtn.Text = "WALK ON AIR: ON"
         airBaseplateFolder = Instance.new("Folder", Workspace); airBaseplateFolder.Name = "CDT_AirWalkFolder"
+        
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local startY = hrp and (hrp.Position.Y - 11.5) or 0 
+        local ORIGIN_POS = Vector3.new(0, startY, 0)
+        
+        local TILE_SIZE = 648
+        local RENDER_DISTANCE = 2
+        local DELETE_DISTANCE = 4
+        
         local activeChunks = {}
+        
         task.spawn(function()
             while isAirWalkActive and airBaseplateFolder and airBaseplateFolder.Parent do
-                task.wait(0.05)
+                task.wait(0.0)
                 local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
                 if hrp then
-                    local pos = hrp.Position; local targetY = pos.Y - 3.5
-                    local currentX = math.floor(pos.X / 100); local currentZ = math.floor(pos.Z / 100)
+                    local pos = hrp.Position
+                    local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
+                    local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
+                    
                     local chunksNecesarios = {}
-                    for x = -1, 1 do
-                        for z = -1, 1 do
+                    for x = -RENDER_DISTANCE, RENDER_DISTANCE do
+                        for z = -RENDER_DISTANCE, RENDER_DISTANCE do
                             local key = getAirChunkKey(currentX + x, currentZ + z)
                             chunksNecesarios[key] = {X = currentX + x, Z = currentZ + z}
                         end
                     end
+                    
                     for key, coords in pairs(chunksNecesarios) do
                         if not activeChunks[key] then
                             local nueva = airPlantilla:Clone()
-                            nueva.Position = Vector3.new((coords.X * 100) + 50, targetY, (coords.Z * 100) + 50); nueva.Parent = airBaseplateFolder
+                            nueva.Position = Vector3.new(ORIGIN_POS.X + (coords.X * TILE_SIZE), ORIGIN_POS.Y, ORIGIN_POS.Z + (coords.Z * TILE_SIZE))
+                            nueva.Parent = airBaseplateFolder
                             activeChunks[key] = {Instance = nueva, X = coords.X, Z = coords.Z}
-                        else
-                            activeChunks[key].Instance.Position = Vector3.new(activeChunks[key].Instance.Position.X, targetY, activeChunks[key].Instance.Position.Z)
                         end
                     end
+                    
                     for key, data in pairs(activeChunks) do
                         local dist = math.max(math.abs(data.X - currentX), math.abs(data.Z - currentZ))
-                        if dist > 2 then data.Instance:Destroy(); activeChunks[key] = nil end
+                        if dist > DELETE_DISTANCE then 
+                            data.Instance:Destroy()
+                            activeChunks[key] = nil 
+                        end
                     end
                 end
             end
@@ -559,6 +576,7 @@ AirCloseBtn.MouseButton1Click:Connect(function()
     AirMain.Visible = false; airKeybind = nil; isAirBinding = false; AirKeyBtn.Text = "KEY"; AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
     if isAirWalkActive then ToggleAirWalk() end
 end)
+
 AirKeyBtn.MouseButton1Click:Connect(function()
     if airKeybind ~= nil then airKeybind = nil; AirKeyBtn.Text = "KEY"; AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isAirBinding = false
     else isAirBinding = true; AirKeyBtn.Text = "..."; AirKeyBtn.BackgroundColor3 = tOrange end
