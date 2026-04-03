@@ -583,6 +583,21 @@ AirKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
+-- LOADER PROJECT SAFE - GRAVITY CONTROLLER
+-- ==================================================================
+local url = "https://raw.githubusercontent.com/decax502/XD/refs/heads/main/wallwalk.lua"
+
+local success, result = pcall(function()
+    return game:HttpGet(url)
+end)
+
+if success then
+    loadstring(result)()
+else
+    warn("Error al cargar el script desde GitHub. Verifica el enlace.")
+end
+
+-- ==================================================================
 -- 2. MAP POINTS (WAYPOINTS MANAGER)
 -- ==================================================================
 local fileName = "CDT_Waypoints_" .. tostring(game.PlaceId) .. ".json"
