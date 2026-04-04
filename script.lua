@@ -585,17 +585,27 @@ end)
 -- ==================================================================
 -- LOADER PROJECT SAFE - GRAVITY CONTROLLER
 -- ==================================================================
-local url = "https://raw.githubusercontent.com/decax502/XD/refs/heads/main/wallwalk.lua"
-
-local success, result = pcall(function()
-    return game:HttpGet(url)
+AddCmd("gravity", "Descarga y abre el panel de Gravity Controller", function()
+    LogMessage("Descargando Gravity Controller desde GitHub...", tYellow)
+    
+    -- Usamos task.spawn para que no se congele el juego mientras descarga
+    task.spawn(function()
+        local url = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/gravity.lua"
+        local success, result = pcall(function() return game:HttpGet(url) end)
+        
+        if success then
+            local func, err = loadstring(result)
+            if func then
+                func()
+                LogMessage("Gravity Controller cargado con éxito.", tGreen)
+            else
+                LogMessage("Error al compilar Gravity: " .. tostring(err), tRed)
+            end
+        else
+            LogMessage("Error al conectar con GitHub. Verifica el link.", tRed)
+        end
+    end)
 end)
-
-if success then
-    loadstring(result)()
-else
-    warn("Error al cargar el script desde GitHub. Verifica el enlace.")
-end
 
 -- ==================================================================
 -- 2. MAP POINTS (WAYPOINTS MANAGER)
