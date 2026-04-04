@@ -11,7 +11,7 @@
     - SPINBOT (Velocidad Ajustable + Keybind).
     - WALK ON AIR (Generación dinámica + Keybind).
     - GLOBAL CHAT SMART (Auto-Scroll).
-    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion, air.
+    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion, air, gravity.
     - Panel de Ajustes (⚙) con Temas Consistentes.
     - SISTEMA DE KEY, HWID Y AUTO-ACTUALIZACIÓN.
 ]]
@@ -420,7 +420,7 @@ end)
 SpinMain = Instance.new("Frame", ScreenGui); SpinMain.Size = UDim2.new(0, 260, 0, 145); SpinMain.Position = UDim2.new(0, 20, 0, 140); SpinMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); SpinMain.BorderSizePixel = 0; SpinMain.ClipsDescendants = true; SpinMain.Visible = false; Instance.new("UICorner", SpinMain).CornerRadius = UDim.new(0, 6); SpinMainStroke = Instance.new("UIStroke", SpinMain); SpinMainStroke.Color = borderDark
 SpinTopBar = Instance.new("Frame", SpinMain); SpinTopBar.Size = UDim2.new(1, 0, 0, 35); SpinTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinTopBar.BorderSizePixel = 0; Instance.new("UICorner", SpinTopBar).CornerRadius = UDim.new(0, 6)
 SpinFix = Instance.new("Frame", SpinTopBar); SpinFix.Size = UDim2.new(1, 0, 0, 5); SpinFix.Position = UDim2.new(0, 0, 1, -5); SpinFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinFix.BorderSizePixel = 0
-SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT (SMOOTH)"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
+SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT (CF ANGLES)"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
 SpinMinBtn = Instance.new("TextButton", SpinTopBar); SpinMinBtn.Size = UDim2.new(0, 35, 1, 0); SpinMinBtn.Position = UDim2.new(1, -70, 0, 0); SpinMinBtn.BackgroundTransparency = 1; SpinMinBtn.Text = "—"; SpinMinBtn.TextColor3 = tGreen; SpinMinBtn.Font = Enum.Font.GothamBlack; SpinMinBtn.TextSize = 14
 SpinCloseBtn = Instance.new("TextButton", SpinTopBar); SpinCloseBtn.Size = UDim2.new(0, 35, 1, 0); SpinCloseBtn.Position = UDim2.new(1, -35, 0, 0); SpinCloseBtn.BackgroundTransparency = 1; SpinCloseBtn.Text = "X"; SpinCloseBtn.TextColor3 = tRed; SpinCloseBtn.Font = Enum.Font.GothamBlack; SpinCloseBtn.TextSize = 12
 
@@ -428,7 +428,7 @@ SpinToggleBtn = Instance.new("TextButton", SpinMain); SpinToggleBtn.Size = UDim2
 SpinKeyBtn = Instance.new("TextButton", SpinMain); SpinKeyBtn.Size = UDim2.new(0, 50, 0, 45); SpinKeyBtn.Position = UDim2.new(1, -60, 0, 45); SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinKeyBtn.Text = "KEY"; SpinKeyBtn.TextColor3 = tWhite; SpinKeyBtn.Font = Enum.Font.GothamBold; SpinKeyBtn.TextSize = 11; Instance.new("UICorner", SpinKeyBtn).CornerRadius = UDim.new(0, 6)
 
 SpinSpeedMinus = Instance.new("TextButton", SpinMain); SpinSpeedMinus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedMinus.Position = UDim2.new(0, 10, 0, 100); SpinSpeedMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedMinus.Text = "-"; SpinSpeedMinus.TextColor3 = tWhite; SpinSpeedMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedMinus)
-SpinSpeedDisplay = Instance.new("TextBox", SpinMain); SpinSpeedDisplay.Size = UDim2.new(1, -110, 0, 35); SpinSpeedDisplay.Position = UDim2.new(0, 55, 0, 100); SpinSpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); SpinSpeedDisplay.Text = ""; SpinSpeedDisplay.PlaceholderText = "SPEED: 30"; SpinSpeedDisplay.TextColor3 = tWhite; SpinSpeedDisplay.Font = Enum.Font.GothamSemibold; SpinSpeedDisplay.TextSize = 14; SpinSpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", SpinSpeedDisplay); Instance.new("UIStroke", SpinSpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
+SpinSpeedDisplay = Instance.new("TextBox", SpinMain); SpinSpeedDisplay.Size = UDim2.new(1, -110, 0, 35); SpinSpeedDisplay.Position = UDim2.new(0, 55, 0, 100); SpinSpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); SpinSpeedDisplay.Text = ""; SpinSpeedDisplay.PlaceholderText = "SPEED: 50"; SpinSpeedDisplay.TextColor3 = tWhite; SpinSpeedDisplay.Font = Enum.Font.GothamSemibold; SpinSpeedDisplay.TextSize = 14; SpinSpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", SpinSpeedDisplay); Instance.new("UIStroke", SpinSpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
 SpinSpeedPlus = Instance.new("TextButton", SpinMain); SpinSpeedPlus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedPlus.Position = UDim2.new(1, -50, 0, 100); SpinSpeedPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedPlus.Text = "+"; SpinSpeedPlus.TextColor3 = tWhite; SpinSpeedPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedPlus)
 
 ApplyResponsiveScale(SpinMain); MakeDraggable(SpinTopBar, SpinMain)
@@ -439,39 +439,33 @@ SpinMinBtn.MouseButton1Click:Connect(function()
     SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
 end)
 
-local isSpinning = false; local spinSpeedNum = 30; local spinKeybind = nil; local isSpinBinding = false; local spinLoop = nil; local currentYaw = 0
+local isSpinning = false; local spinSpeedNum = 50; local spinKeybind = nil; local isSpinBinding = false; local spinLoop = nil
 
-SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 5); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
-SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 5; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 10); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 10; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 
 ToggleSpin = function()
     local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if not hrp or not char:FindFirstChild("Humanoid") then return end
+    if not hrp then return end
     
     isSpinning = not isSpinning
     if isSpinning then
         SpinToggleBtn.BackgroundColor3 = tCyan; SpinToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); SpinToggleBtn.Text = "SPIN: ON"
         
-        char.Humanoid.AutoRotate = false
         if spinLoop then spinLoop:Disconnect() end
         
-        local x, _, z = hrp.CFrame:ToOrientation()
-        currentYaw = hrp.Orientation.Y
-        
-        spinLoop = RunService.RenderStepped:Connect(function(dt)
+        spinLoop = RunService.RenderStepped:Connect(function()
             local currentHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             if currentHrp then
-                currentYaw = currentYaw + math.rad(spinSpeedNum * 60 * dt)
-                local curX, _, curZ = currentHrp.CFrame:ToOrientation()
-                currentHrp.CFrame = CFrame.new(currentHrp.Position) * CFrame.fromOrientation(curX, currentYaw, curZ)
+                -- Lógica adaptada del script proporcionado usando CFrame.Angles
+                currentHrp.CFrame = currentHrp.CFrame * CFrame.Angles(0, math.rad(spinSpeedNum), 0)
             end
         end)
     else
         SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Text = "SPIN: OFF"
         
         if spinLoop then spinLoop:Disconnect(); spinLoop = nil end
-        if char:FindFirstChild("Humanoid") then char.Humanoid.AutoRotate = true end
     end
 end
 SpinToggleBtn.MouseButton1Click:Connect(ToggleSpin)
@@ -486,101 +480,6 @@ SpinKeyBtn.MouseButton1Click:Connect(function()
     else isSpinBinding = true; SpinKeyBtn.Text = "..."; SpinKeyBtn.BackgroundColor3 = tOrange end
 end)
 
--- ==================================================================
--- 19. WALK ON AIR MENU (INVISIBLE DYNAMIC BASE)
--- ==================================================================
-AirMain = Instance.new("Frame", ScreenGui); AirMain.Size = UDim2.new(0, 260, 0, 100); AirMain.Position = UDim2.new(0, 20, 0, 920); AirMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); AirMain.BorderSizePixel = 0; AirMain.ClipsDescendants = true; AirMain.Visible = false; Instance.new("UICorner", AirMain).CornerRadius = UDim.new(0, 6); AirMainStroke = Instance.new("UIStroke", AirMain); AirMainStroke.Color = borderDark
-AirTopBar = Instance.new("Frame", AirMain); AirTopBar.Size = UDim2.new(1, 0, 0, 35); AirTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); AirTopBar.BorderSizePixel = 0; Instance.new("UICorner", AirTopBar).CornerRadius = UDim.new(0, 6)
-AirFix = Instance.new("Frame", AirTopBar); AirFix.Size = UDim2.new(1, 0, 0, 5); AirFix.Position = UDim2.new(0, 0, 1, -5); AirFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); AirFix.BorderSizePixel = 0
-AirTitle = Instance.new("TextLabel", AirTopBar); AirTitle.Size = UDim2.new(1, -70, 1, 0); AirTitle.Position = UDim2.new(0, 15, 0, 0); AirTitle.BackgroundTransparency = 1; AirTitle.Text = "WALK ON AIR"; AirTitle.TextColor3 = tWhite; AirTitle.Font = Enum.Font.GothamBold; AirTitle.TextSize = 13; AirTitle.TextXAlignment = Enum.TextXAlignment.Left
-AirMinBtn = Instance.new("TextButton", AirTopBar); AirMinBtn.Size = UDim2.new(0, 35, 1, 0); AirMinBtn.Position = UDim2.new(1, -70, 0, 0); AirMinBtn.BackgroundTransparency = 1; AirMinBtn.Text = "—"; AirMinBtn.TextColor3 = tGreen; AirMinBtn.Font = Enum.Font.GothamBlack; AirMinBtn.TextSize = 14
-AirCloseBtn = Instance.new("TextButton", AirTopBar); AirCloseBtn.Size = UDim2.new(0, 35, 1, 0); AirCloseBtn.Position = UDim2.new(1, -35, 0, 0); AirCloseBtn.BackgroundTransparency = 1; AirCloseBtn.Text = "X"; AirCloseBtn.TextColor3 = tRed; AirCloseBtn.Font = Enum.Font.GothamBlack; AirCloseBtn.TextSize = 12
-
-AirToggleBtn = Instance.new("TextButton", AirMain); AirToggleBtn.Size = UDim2.new(1, -75, 0, 45); AirToggleBtn.Position = UDim2.new(0, 10, 0, 45); AirToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); AirToggleBtn.Text = "WALK ON AIR: OFF"; AirToggleBtn.TextColor3 = tWhite; AirToggleBtn.Font = Enum.Font.GothamBold; AirToggleBtn.TextSize = 12; Instance.new("UICorner", AirToggleBtn).CornerRadius = UDim.new(0, 6)
-AirKeyBtn = Instance.new("TextButton", AirMain); AirKeyBtn.Size = UDim2.new(0, 50, 0, 45); AirKeyBtn.Position = UDim2.new(1, -60, 0, 45); AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); AirKeyBtn.Text = "KEY"; AirKeyBtn.TextColor3 = tWhite; AirKeyBtn.Font = Enum.Font.GothamBold; AirKeyBtn.TextSize = 11; Instance.new("UICorner", AirKeyBtn).CornerRadius = UDim.new(0, 6)
-
-ApplyResponsiveScale(AirMain); MakeDraggable(AirTopBar, AirMain)
-
-local airMinimized = false
-AirMinBtn.MouseButton1Click:Connect(function()
-    airMinimized = not airMinimized; AirMain:TweenSize(airMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
-    AirMinBtn.Text = airMinimized and "+" or "—"; AirFix.Visible = not airMinimized
-end)
-
-local isAirWalkActive = false; local airKeybind = nil; local isAirBinding = false; local airBaseplateFolder = nil
-local airPlantilla = Instance.new("Part"); airPlantilla.Size = Vector3.new(648, 16, 648); airPlantilla.Anchored = true; airPlantilla.CanCollide = true; airPlantilla.Transparency = 1; airPlantilla.Material = Enum.Material.SmoothPlastic
-
-local function getAirChunkKey(x, z) return x .. "_" .. z end
-
-ToggleAirWalk = function()
-    isAirWalkActive = not isAirWalkActive
-    if isAirWalkActive then
-        AirToggleBtn.BackgroundColor3 = tCyan; AirToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); AirToggleBtn.Text = "WALK ON AIR: ON"
-        airBaseplateFolder = Instance.new("Folder", Workspace); airBaseplateFolder.Name = "CDT_AirWalkFolder"
-        
-        local char = LocalPlayer.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        local startY = hrp and (hrp.Position.Y - 11.5) or 0 
-        local ORIGIN_POS = Vector3.new(0, startY, 0)
-        
-        local TILE_SIZE = 648
-        local RENDER_DISTANCE = 2
-        local DELETE_DISTANCE = 4
-        
-        local activeChunks = {}
-        
-        task.spawn(function()
-            while isAirWalkActive and airBaseplateFolder and airBaseplateFolder.Parent do
-                task.wait(0.0)
-                local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    local pos = hrp.Position
-                    local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
-                    local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
-                    
-                    local chunksNecesarios = {}
-                    for x = -RENDER_DISTANCE, RENDER_DISTANCE do
-                        for z = -RENDER_DISTANCE, RENDER_DISTANCE do
-                            local key = getAirChunkKey(currentX + x, currentZ + z)
-                            chunksNecesarios[key] = {X = currentX + x, Z = currentZ + z}
-                        end
-                    end
-                    
-                    for key, coords in pairs(chunksNecesarios) do
-                        if not activeChunks[key] then
-                            local nueva = airPlantilla:Clone()
-                            nueva.Position = Vector3.new(ORIGIN_POS.X + (coords.X * TILE_SIZE), ORIGIN_POS.Y, ORIGIN_POS.Z + (coords.Z * TILE_SIZE))
-                            nueva.Parent = airBaseplateFolder
-                            activeChunks[key] = {Instance = nueva, X = coords.X, Z = coords.Z}
-                        end
-                    end
-                    
-                    for key, data in pairs(activeChunks) do
-                        local dist = math.max(math.abs(data.X - currentX), math.abs(data.Z - currentZ))
-                        if dist > DELETE_DISTANCE then 
-                            data.Instance:Destroy()
-                            activeChunks[key] = nil 
-                        end
-                    end
-                end
-            end
-        end)
-    else
-        AirToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); AirToggleBtn.TextColor3 = tWhite; AirToggleBtn.Text = "WALK ON AIR: OFF"
-        if airBaseplateFolder then airBaseplateFolder:Destroy(); airBaseplateFolder = nil end
-    end
-end
-AirToggleBtn.MouseButton1Click:Connect(ToggleAirWalk)
-
-AirCloseBtn.MouseButton1Click:Connect(function() 
-    AirMain.Visible = false; airKeybind = nil; isAirBinding = false; AirKeyBtn.Text = "KEY"; AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
-    if isAirWalkActive then ToggleAirWalk() end
-end)
-
-AirKeyBtn.MouseButton1Click:Connect(function()
-    if airKeybind ~= nil then airKeybind = nil; AirKeyBtn.Text = "KEY"; AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isAirBinding = false
-    else isAirBinding = true; AirKeyBtn.Text = "..."; AirKeyBtn.BackgroundColor3 = tOrange end
-end)
 
 -- ==================================================================
 -- 2. MAP POINTS (WAYPOINTS MANAGER)
@@ -1650,6 +1549,174 @@ GenFireBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
+-- 18. SPINBOT MENU (C-FRAME ACCUMULATOR FIX)
+-- ==================================================================
+SpinMain = Instance.new("Frame", ScreenGui); SpinMain.Size = UDim2.new(0, 260, 0, 145); SpinMain.Position = UDim2.new(0, 20, 0, 140); SpinMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); SpinMain.BorderSizePixel = 0; SpinMain.ClipsDescendants = true; SpinMain.Visible = false; Instance.new("UICorner", SpinMain).CornerRadius = UDim.new(0, 6); SpinMainStroke = Instance.new("UIStroke", SpinMain); SpinMainStroke.Color = borderDark
+SpinTopBar = Instance.new("Frame", SpinMain); SpinTopBar.Size = UDim2.new(1, 0, 0, 35); SpinTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinTopBar.BorderSizePixel = 0; Instance.new("UICorner", SpinTopBar).CornerRadius = UDim.new(0, 6)
+SpinFix = Instance.new("Frame", SpinTopBar); SpinFix.Size = UDim2.new(1, 0, 0, 5); SpinFix.Position = UDim2.new(0, 0, 1, -5); SpinFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinFix.BorderSizePixel = 0
+SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT (SMOOTH)"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
+SpinMinBtn = Instance.new("TextButton", SpinTopBar); SpinMinBtn.Size = UDim2.new(0, 35, 1, 0); SpinMinBtn.Position = UDim2.new(1, -70, 0, 0); SpinMinBtn.BackgroundTransparency = 1; SpinMinBtn.Text = "—"; SpinMinBtn.TextColor3 = tGreen; SpinMinBtn.Font = Enum.Font.GothamBlack; SpinMinBtn.TextSize = 14
+SpinCloseBtn = Instance.new("TextButton", SpinTopBar); SpinCloseBtn.Size = UDim2.new(0, 35, 1, 0); SpinCloseBtn.Position = UDim2.new(1, -35, 0, 0); SpinCloseBtn.BackgroundTransparency = 1; SpinCloseBtn.Text = "X"; SpinCloseBtn.TextColor3 = tRed; SpinCloseBtn.Font = Enum.Font.GothamBlack; SpinCloseBtn.TextSize = 12
+
+SpinToggleBtn = Instance.new("TextButton", SpinMain); SpinToggleBtn.Size = UDim2.new(1, -75, 0, 45); SpinToggleBtn.Position = UDim2.new(0, 10, 0, 45); SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.Text = "SPIN: OFF"; SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Font = Enum.Font.GothamBold; SpinToggleBtn.TextSize = 12; Instance.new("UICorner", SpinToggleBtn).CornerRadius = UDim.new(0, 6)
+SpinKeyBtn = Instance.new("TextButton", SpinMain); SpinKeyBtn.Size = UDim2.new(0, 50, 0, 45); SpinKeyBtn.Position = UDim2.new(1, -60, 0, 45); SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinKeyBtn.Text = "KEY"; SpinKeyBtn.TextColor3 = tWhite; SpinKeyBtn.Font = Enum.Font.GothamBold; SpinKeyBtn.TextSize = 11; Instance.new("UICorner", SpinKeyBtn).CornerRadius = UDim.new(0, 6)
+
+SpinSpeedMinus = Instance.new("TextButton", SpinMain); SpinSpeedMinus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedMinus.Position = UDim2.new(0, 10, 0, 100); SpinSpeedMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedMinus.Text = "-"; SpinSpeedMinus.TextColor3 = tWhite; SpinSpeedMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedMinus)
+SpinSpeedDisplay = Instance.new("TextBox", SpinMain); SpinSpeedDisplay.Size = UDim2.new(1, -110, 0, 35); SpinSpeedDisplay.Position = UDim2.new(0, 55, 0, 100); SpinSpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); SpinSpeedDisplay.Text = ""; SpinSpeedDisplay.PlaceholderText = "SPEED: 30"; SpinSpeedDisplay.TextColor3 = tWhite; SpinSpeedDisplay.Font = Enum.Font.GothamSemibold; SpinSpeedDisplay.TextSize = 14; SpinSpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", SpinSpeedDisplay); Instance.new("UIStroke", SpinSpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
+SpinSpeedPlus = Instance.new("TextButton", SpinMain); SpinSpeedPlus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedPlus.Position = UDim2.new(1, -50, 0, 100); SpinSpeedPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedPlus.Text = "+"; SpinSpeedPlus.TextColor3 = tWhite; SpinSpeedPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedPlus)
+
+ApplyResponsiveScale(SpinMain); MakeDraggable(SpinTopBar, SpinMain)
+
+local spinMinimized = false
+SpinMinBtn.MouseButton1Click:Connect(function()
+    spinMinimized = not spinMinimized; SpinMain:TweenSize(spinMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
+end)
+
+local isSpinning = false; local spinSpeedNum = 30; local spinKeybind = nil; local isSpinBinding = false; local spinLoop = nil; local currentYaw = 0
+
+SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 5); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 5; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+
+ToggleSpin = function()
+    local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp or not char:FindFirstChild("Humanoid") then return end
+    
+    isSpinning = not isSpinning
+    if isSpinning then
+        SpinToggleBtn.BackgroundColor3 = tCyan; SpinToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); SpinToggleBtn.Text = "SPIN: ON"
+        
+        char.Humanoid.AutoRotate = false
+        if spinLoop then spinLoop:Disconnect() end
+        
+        local x, _, z = hrp.CFrame:ToOrientation()
+        currentYaw = hrp.Orientation.Y
+        
+        spinLoop = RunService.RenderStepped:Connect(function(dt)
+            local currentHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if currentHrp then
+                currentYaw = currentYaw + math.rad(spinSpeedNum * 60 * dt)
+                local curX, _, curZ = currentHrp.CFrame:ToOrientation()
+                currentHrp.CFrame = CFrame.new(currentHrp.Position) * CFrame.fromOrientation(curX, currentYaw, curZ)
+            end
+        end)
+    else
+        SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Text = "SPIN: OFF"
+        
+        if spinLoop then spinLoop:Disconnect(); spinLoop = nil end
+        if char:FindFirstChild("Humanoid") then char.Humanoid.AutoRotate = true end
+    end
+end
+SpinToggleBtn.MouseButton1Click:Connect(ToggleSpin)
+
+SpinCloseBtn.MouseButton1Click:Connect(function() 
+    SpinMain.Visible = false; spinKeybind = nil; isSpinBinding = false; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isSpinning then ToggleSpin() end
+end)
+
+SpinKeyBtn.MouseButton1Click:Connect(function()
+    if spinKeybind ~= nil then spinKeybind = nil; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isSpinBinding = false
+    else isSpinBinding = true; SpinKeyBtn.Text = "..."; SpinKeyBtn.BackgroundColor3 = tOrange end
+end)
+
+-- ==================================================================
+-- 19. WALK ON AIR MENU (INVISIBLE DYNAMIC BASE)
+-- ==================================================================
+AirMain = Instance.new("Frame", ScreenGui); AirMain.Size = UDim2.new(0, 260, 0, 100); AirMain.Position = UDim2.new(0, 20, 0, 920); AirMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); AirMain.BorderSizePixel = 0; AirMain.ClipsDescendants = true; AirMain.Visible = false; Instance.new("UICorner", AirMain).CornerRadius = UDim.new(0, 6); AirMainStroke = Instance.new("UIStroke", AirMain); AirMainStroke.Color = borderDark
+AirTopBar = Instance.new("Frame", AirMain); AirTopBar.Size = UDim2.new(1, 0, 0, 35); AirTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); AirTopBar.BorderSizePixel = 0; Instance.new("UICorner", AirTopBar).CornerRadius = UDim.new(0, 6)
+AirFix = Instance.new("Frame", AirTopBar); AirFix.Size = UDim2.new(1, 0, 0, 5); AirFix.Position = UDim2.new(0, 0, 1, -5); AirFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); AirFix.BorderSizePixel = 0
+AirTitle = Instance.new("TextLabel", AirTopBar); AirTitle.Size = UDim2.new(1, -70, 1, 0); AirTitle.Position = UDim2.new(0, 15, 0, 0); AirTitle.BackgroundTransparency = 1; AirTitle.Text = "WALK ON AIR"; AirTitle.TextColor3 = tWhite; AirTitle.Font = Enum.Font.GothamBold; AirTitle.TextSize = 13; AirTitle.TextXAlignment = Enum.TextXAlignment.Left
+AirMinBtn = Instance.new("TextButton", AirTopBar); AirMinBtn.Size = UDim2.new(0, 35, 1, 0); AirMinBtn.Position = UDim2.new(1, -70, 0, 0); AirMinBtn.BackgroundTransparency = 1; AirMinBtn.Text = "—"; AirMinBtn.TextColor3 = tGreen; AirMinBtn.Font = Enum.Font.GothamBlack; AirMinBtn.TextSize = 14
+AirCloseBtn = Instance.new("TextButton", AirTopBar); AirCloseBtn.Size = UDim2.new(0, 35, 1, 0); AirCloseBtn.Position = UDim2.new(1, -35, 0, 0); AirCloseBtn.BackgroundTransparency = 1; AirCloseBtn.Text = "X"; AirCloseBtn.TextColor3 = tRed; AirCloseBtn.Font = Enum.Font.GothamBlack; AirCloseBtn.TextSize = 12
+
+AirToggleBtn = Instance.new("TextButton", AirMain); AirToggleBtn.Size = UDim2.new(1, -75, 0, 45); AirToggleBtn.Position = UDim2.new(0, 10, 0, 45); AirToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); AirToggleBtn.Text = "WALK ON AIR: OFF"; AirToggleBtn.TextColor3 = tWhite; AirToggleBtn.Font = Enum.Font.GothamBold; AirToggleBtn.TextSize = 12; Instance.new("UICorner", AirToggleBtn).CornerRadius = UDim.new(0, 6)
+AirKeyBtn = Instance.new("TextButton", AirMain); AirKeyBtn.Size = UDim2.new(0, 50, 0, 45); AirKeyBtn.Position = UDim2.new(1, -60, 0, 45); AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); AirKeyBtn.Text = "KEY"; AirKeyBtn.TextColor3 = tWhite; AirKeyBtn.Font = Enum.Font.GothamBold; AirKeyBtn.TextSize = 11; Instance.new("UICorner", AirKeyBtn).CornerRadius = UDim.new(0, 6)
+
+ApplyResponsiveScale(AirMain); MakeDraggable(AirTopBar, AirMain)
+
+local airMinimized = false
+AirMinBtn.MouseButton1Click:Connect(function()
+    airMinimized = not airMinimized; AirMain:TweenSize(airMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    AirMinBtn.Text = airMinimized and "+" or "—"; AirFix.Visible = not airMinimized
+end)
+
+local isAirWalkActive = false; local airKeybind = nil; local isAirBinding = false; local airBaseplateFolder = nil
+local airPlantilla = Instance.new("Part"); airPlantilla.Size = Vector3.new(648, 16, 648); airPlantilla.Anchored = true; airPlantilla.CanCollide = true; airPlantilla.Transparency = 1; airPlantilla.Material = Enum.Material.SmoothPlastic
+
+local function getAirChunkKey(x, z) return x .. "_" .. z end
+
+ToggleAirWalk = function()
+    isAirWalkActive = not isAirWalkActive
+    if isAirWalkActive then
+        AirToggleBtn.BackgroundColor3 = tCyan; AirToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); AirToggleBtn.Text = "WALK ON AIR: ON"
+        airBaseplateFolder = Instance.new("Folder", Workspace); airBaseplateFolder.Name = "CDT_AirWalkFolder"
+        
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local startY = hrp and (hrp.Position.Y - 11.5) or 0 
+        local ORIGIN_POS = Vector3.new(0, startY, 0)
+        
+        local TILE_SIZE = 648
+        local RENDER_DISTANCE = 2
+        local DELETE_DISTANCE = 4
+        
+        local activeChunks = {}
+        
+        task.spawn(function()
+            while isAirWalkActive and airBaseplateFolder and airBaseplateFolder.Parent do
+                task.wait(0.0)
+                local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    local pos = hrp.Position
+                    local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
+                    local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
+                    
+                    local chunksNecesarios = {}
+                    for x = -RENDER_DISTANCE, RENDER_DISTANCE do
+                        for z = -RENDER_DISTANCE, RENDER_DISTANCE do
+                            local key = getAirChunkKey(currentX + x, currentZ + z)
+                            chunksNecesarios[key] = {X = currentX + x, Z = currentZ + z}
+                        end
+                    end
+                    
+                    for key, coords in pairs(chunksNecesarios) do
+                        if not activeChunks[key] then
+                            local nueva = airPlantilla:Clone()
+                            nueva.Position = Vector3.new(ORIGIN_POS.X + (coords.X * TILE_SIZE), ORIGIN_POS.Y, ORIGIN_POS.Z + (coords.Z * TILE_SIZE))
+                            nueva.Parent = airBaseplateFolder
+                            activeChunks[key] = {Instance = nueva, X = coords.X, Z = coords.Z}
+                        end
+                    end
+                    
+                    for key, data in pairs(activeChunks) do
+                        local dist = math.max(math.abs(data.X - currentX), math.abs(data.Z - currentZ))
+                        if dist > DELETE_DISTANCE then 
+                            data.Instance:Destroy()
+                            activeChunks[key] = nil 
+                        end
+                    end
+                end
+            end
+        end)
+    else
+        AirToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); AirToggleBtn.TextColor3 = tWhite; AirToggleBtn.Text = "WALK ON AIR: OFF"
+        if airBaseplateFolder then airBaseplateFolder:Destroy(); airBaseplateFolder = nil end
+    end
+end
+AirToggleBtn.MouseButton1Click:Connect(ToggleAirWalk)
+
+AirCloseBtn.MouseButton1Click:Connect(function() 
+    AirMain.Visible = false; airKeybind = nil; isAirBinding = false; AirKeyBtn.Text = "KEY"; AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
+    if isAirWalkActive then ToggleAirWalk() end
+end)
+
+AirKeyBtn.MouseButton1Click:Connect(function()
+    if airKeybind ~= nil then airKeybind = nil; AirKeyBtn.Text = "KEY"; AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isAirBinding = false
+    else isAirBinding = true; AirKeyBtn.Text = "..."; AirKeyBtn.BackgroundColor3 = tOrange end
+end)
+
+-- ==================================================================
 -- COMANDOS Y CONSOLA DE EVENTOS
 -- ==================================================================
 local function GetPlayer(nameString)
@@ -1695,6 +1762,28 @@ AddCmd("hide", "Abre el menú para ocultar avatares, sonidos locales y Voice Cha
 AddCmd("generacion", "Abre el panel del Generador de Objetos", function() GenMain.Visible = true; LogMessage("Generador C.D.T abierto.", tCyan) end)
 AddCmd("spin", "Abre el panel del Spinbot (dar vueltas)", function() SpinMain.Visible = true; LogMessage("Menú Spinbot abierto.", tCyan) end)
 AddCmd("air", "Abre el panel de Walk on Air", function() AirMain.Visible = true; LogMessage("Menú Walk on Air abierto.", tCyan) end)
+
+AddCmd("gravity", "Descarga y abre el panel de Gravity Controller", function()
+    LogMessage("Descargando Gravity Controller desde GitHub...", tYellow)
+    
+    -- Usamos task.spawn para que no se congele el juego mientras descarga
+    task.spawn(function()
+        local url = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/gravity.lua"
+        local success, result = pcall(function() return game:HttpGet(url) end)
+        
+        if success then
+            local func, err = loadstring(result)
+            if func then
+                func()
+                LogMessage("Gravity Controller cargado con éxito.", tGreen)
+            else
+                LogMessage("Error al compilar Gravity: " .. tostring(err), tRed)
+            end
+        else
+            LogMessage("Error al conectar con GitHub. Verifica el link.", tRed)
+        end
+    end)
+end)
 
 AddCmd("speed", "Cambia la velocidad", function(args)
     if args[1] and tonumber(args[1]) then LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(args[1]); LogMessage("Velocidad -> " .. args[1], tGreen) end
