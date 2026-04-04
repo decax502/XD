@@ -11572,22 +11572,202 @@ KeyBtn.TextSize = 10
 Instance.new("UICorner", KeyBtn).CornerRadius = UDim.new(0, 6)
 
 -- ==================================================================
--- FUNCIONALIDAD Y EVENTOS
+-- LÓGICA DE GRAVEDAD Y MENÚ PROJECT SAFE (FIXED ZOOM & EMOTES)
+-- ==================================================================
+local PLAYERS = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = PLAYERS.LocalPlayer
+
+local GravityController = _GravityController()
+local DrawClass = _DrawClass()
+
+local PI2 = math.pi*2
+local ZERO = Vector3.new(0, 0, 0)
+local LOWER_RADIUS_OFFSET = 3 
+local NUM_DOWN_RAYS = 24
+local ODD_DOWN_RAY_START_RADIUS = 3	
+local EVEN_DOWN_RAY_START_RADIUS = 2
+local ODD_DOWN_RAY_END_RADIUS = 1.66666
+local EVEN_DOWN_RAY_END_RADIUS = 1
+local NUM_FEELER_RAYS = 9
+local FEELER_LENGTH = 2
+local FEELER_START_OFFSET = 2
+local FEELER_RADIUS = 3.5
+local FEELER_APEX_OFFSET = 1
+local FEELER_WEIGHTING = 8
+
+local function GetGravityUp(self, oldGravityUp)
+	local ignoreList = {}
+	for i, player in next, PLAYERS:GetPlayers() do
+		ignoreList[i] = player.Character
+	end
+
+	local hrpCF = self.HRP.CFrame
+	local isR15 = (self.Humanoid.RigType == Enum.HumanoidRigType.R15)
+	local origin = isR15 and hrpCF.p or hrpCF.p + 0.35*oldGravityUp
+	local radialVector = math.abs(hrpCF.LookVector:Dot(oldGravityUp)) < 0.999 and hrpCF.LookVector:Cross(oldGravityUp) or hrpCF.RightVector:Cross(oldGravityUp)
+	local centerRayLength = 25
+	local centerRay = Ray.new(origin, -centerRayLength * oldGravityUp)
+	local centerHit, centerHitPoint, centerHitNormal = workspace:FindPartOnRayWithIgnoreList(centerRay, ignoreList)
+
+	local downHitCount = 0
+	local centerRayHitCount = 0
+
+	local mainDownNormal = ZERO
+	if (centerHit) then
+		mainDownNormal = centerHitNormal
+		centerRayHitCount = 0
+	end
+
+	local downRaySum = ZERO
+	for i = 1, NUM_DOWN_RAYS do
+		local dtheta = PI2 * ((i-1)/NUM_DOWN_RAYS)
+		local angleWeight = 0.25 + 0.75 * math.abs(math.cos(dtheta))
+		local isEvenRay = (i%2 == 0)
+		local startRadius = isEvenRay and EVEN_DOWN_RAY_START_RADIUS or ODD_DOWN_RAY_START_RADIUS	
+		local endRadius = isEvenRay and EVEN_DOWN_RAY_END_RADIUS or ODD_DOWN_RAY_END_RADIUS
+		local offset = CFrame.fromAxisAngle(oldGravityUp, dtheta) * radialVector
+		local dir = (LOWER_RADIUS_OFFSET * -oldGravityUp + (endRadius - startRadius) * offset)
+		local ray = Ray.new(origin + startRadius * offset, centerRayLength * dir.unit)
+		local hit, hitPoint, hitNormal = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
+		if (hit) then
+			downRaySum = downRaySum + angleWeight * hitNormal
+			downHitCount = downHitCount + 1
+		end
+	end
+
+	local feelerHitCount = 0	
+	local feelerNormalSum = ZERO
+	for i = 1, NUM_FEELER_RAYS do
+		local dtheta = 2 * math.pi * ((i-1)/NUM_FEELER_RAYS)
+		local angleWeight =  0.25 + 0.75 * math.abs(math.cos(dtheta))	
+		local offset = CFrame.fromAxisAngle(oldGravityUp, dtheta) * radialVector
+		local dir = (FEELER_RADIUS * offset + LOWER_RADIUS_OFFSET * -oldGravityUp).unit
+		local feelerOrigin = origin - FEELER_APEX_OFFSET * -oldGravityUp + FEELER_START_OFFSET * dir
+		local ray = Ray.new(feelerOrigin, FEELER_LENGTH * dir)
+		local hit, hitPoint, hitNormal = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
+		if (hit) then
+			feelerNormalSum = feelerNormalSum + FEELER_WEIGHTING * angleWeight * hitNormal 
+			feelerHitCount = feelerHitCount + 1
+		end
+	end
+
+	if (centerRayHitCount + downHitCount + feelerHitCount > 0) then
+		local normalSum = mainDownNormal + downRaySum + feelerNormalSum
+		if (normalSum ~= ZERO) then return normalSum.unit end
+	end
+	return oldGravityUp
+end
+
+-- ==================================================================
+-- INTERFAZ GRÁFICA (UI) 
+-- ==================================================================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "GravityControl_SafeDev"
+ScreenGui.ResetOnSpawn = false
+local targetGuiParent = pcall(function() return gethui() end) and gethui() or game:GetService("CoreGui")
+if not targetGuiParent then targetGuiParent = LocalPlayer:WaitForChild("PlayerGui") end
+ScreenGui.Parent = targetGuiParent
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 260, 0, 100)
+Main.Position = UDim2.new(0.5, -130, 0.5, -50)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Main.BorderSizePixel = 0
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
+local MainStroke = Instance.new("UIStroke", Main)
+MainStroke.Color = Color3.fromRGB(45, 45, 45)
+
+local TopBar = Instance.new("Frame", Main)
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 6)
+
+local Fix = Instance.new("Frame", TopBar)
+Fix.Size = UDim2.new(1, 0, 0, 5)
+Fix.Position = UDim2.new(0, 0, 1, -5)
+Fix.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+Fix.BorderSizePixel = 0
+
+local Title = Instance.new("TextLabel", TopBar)
+Title.Size = UDim2.new(1, -80, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "GRAVITY CONTROL"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 12
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local CloseBtn = Instance.new("TextButton", TopBar)
+CloseBtn.Size = UDim2.new(0, 35, 1, 0)
+CloseBtn.Position = UDim2.new(1, -35, 0, 0)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 60, 60)
+CloseBtn.Font = Enum.Font.GothamBlack
+CloseBtn.TextSize = 12
+
+local ToggleBtn = Instance.new("TextButton", Main)
+ToggleBtn.Size = UDim2.new(1, -75, 0, 45)
+ToggleBtn.Position = UDim2.new(0, 10, 0, 45)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleBtn.Text = "GRAVITY: OFF"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 11
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 6)
+
+local KeyBtn = Instance.new("TextButton", Main)
+KeyBtn.Size = UDim2.new(0, 50, 0, 45)
+KeyBtn.Position = UDim2.new(1, -60, 0, 45)
+KeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+KeyBtn.Text = "KEY"
+KeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBtn.Font = Enum.Font.GothamBold
+KeyBtn.TextSize = 10
+Instance.new("UICorner", KeyBtn).CornerRadius = UDim.new(0, 6)
+
+-- ==================================================================
+-- FUNCIONALIDAD Y EVENTOS (BUG FIXES)
 -- ==================================================================
 local Controller = nil
 local isGravityActive = false
 local gravKeybind = nil
 local isBinding = false
+local originalPlayerScripts = nil
+
+local function EnableNativeControls(enable)
+    -- Habilita o deshabilita los PlayerScripts originales para devolver el control a Roblox
+    if originalPlayerScripts then
+        originalPlayerScripts.Disabled = not enable
+    end
+    
+    if enable then
+        -- Restaurar cámara y tipo de controlador por defecto al apagar
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+        workspace.CurrentCamera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+        LocalPlayer.CameraMode = Enum.CameraMode.Classic
+    end
+end
 
 local function ToggleGravity()
     isGravityActive = not isGravityActive
     
     if isGravityActive then
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(170, 85, 255) -- Morado SafeDev
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(170, 85, 255) 
         ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         ToggleBtn.Text = "GRAVITY: ON"
         
-        -- Inicia el controlador de gravedad
+        -- Guardar estado y apagar scripts nativos
+        local pScripts = LocalPlayer:FindFirstChild("PlayerScripts")
+        if pScripts then
+            originalPlayerScripts = pScripts:FindFirstChild("PlayerScriptsLoader")
+        end
+        EnableNativeControls(false)
+        
+        -- Iniciar Gravedad
         Controller = GravityController.new(LocalPlayer)
         Controller.GetGravityUp = GetGravityUp
     else
@@ -11595,11 +11775,34 @@ local function ToggleGravity()
         ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         ToggleBtn.Text = "GRAVITY: OFF"
         
-        -- Destruye y restaura a la normalidad
         if Controller then
             Controller:Destroy()
             Controller = nil
         end
+        
+        -- Forzar limpieza y restaurar físicas
+        local char = LocalPlayer.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                -- Forzar gravedad hacia abajo y limpiar rotación residual
+                hrp.CFrame = CFrame.new(hrp.Position)
+                local gyro = hrp:FindFirstChildOfClass("BodyGyro")
+                local vForce = hrp:FindFirstChildOfClass("VectorForce")
+                if gyro then gyro:Destroy() end
+                if vForce then vForce:Destroy() end
+            end
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.PlatformStand = false
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end
+        end
+
+        -- Restaurar Scripts Nativos de Roblox (Soluciona el Zoom y el Chat de Emotes)
+        task.delay(0.1, function()
+            EnableNativeControls(true)
+        end)
     end
 end
 
@@ -11627,12 +11830,13 @@ UserInputService.InputBegan:Connect(function(input, gp)
         return
     end
 
-    if not gp and gravKeybind and input.KeyCode == gravKeybind then
+    -- No activar si se está escribiendo en el chat
+    if not gp and gravKeybind and input.KeyCode == gravKeybind and not UserInputService:GetFocusedTextBox() then
         ToggleGravity()
     end
 end)
 
--- Drag UI
+-- Arrastre de Ventana
 local dragging, dragInput, dragStart, startPos
 TopBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
