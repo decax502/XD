@@ -1763,12 +1763,12 @@ AddCmd("generacion", "Abre el panel del Generador de Objetos", function() GenMai
 AddCmd("spin", "Abre el panel del Spinbot (dar vueltas)", function() SpinMain.Visible = true; LogMessage("Menú Spinbot abierto.", tCyan) end)
 AddCmd("air", "Abre el panel de Walk on Air", function() AirMain.Visible = true; LogMessage("Menú Walk on Air abierto.", tCyan) end)
 
-AddCmd("gravity", "Gravity Controller", function()
-    LogMessage("Gravity Controller...", tYellow)
+AddCmd("gravity", "Descarga y abre el panel de Gravity Controller", function()
+    LogMessage("Descargando Gravity Controller desde GitHub...", tYellow)
     
     -- Usamos task.spawn para que no se congele el juego mientras descarga
     task.spawn(function()
-        local url = "https://raw.githubusercontent.com/decax502/XD/refs/heads/main/wallwalk.lua"
+        local url = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/gravity.lua"
         local success, result = pcall(function() return game:HttpGet(url) end)
         
         if success then
