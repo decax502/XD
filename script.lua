@@ -70,7 +70,11 @@ local function ApplyResponsiveScale(frame)
     local scaleObj = Instance.new("UIScale", frame)
     local function UpdateScale()
         local vs = Workspace.CurrentCamera.ViewportSize
-        if vs.X < 850 then scaleObj.Scale = 1.15 else scaleObj.Scale = 1.05 end
+        if vs.X < 768 then -- Mobile
+            scaleObj.Scale = math.clamp(vs.X / 850, 0.6, 0.9)
+        else -- PC
+            scaleObj.Scale = 1
+        end
     end
     Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
     UpdateScale()
@@ -370,48 +374,151 @@ end)
 
 
 -- ==================================================================
--- 1. CONSOLA PRINCIPAL OPTIFINE
+-- 1. MAIN UI: MAC-STYLE PILL BAR & COMMAND DROPDOWN
 -- ==================================================================
 Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 320, 0, 350); Main.Position = UDim2.new(1, -340, 0, 20); Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Main.BorderSizePixel = 0; Main.ClipsDescendants = true
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6); MainStroke = Instance.new("UIStroke", Main); MainStroke.Color = borderDark
+Main.Size = UDim2.new(0, 500, 0, 40) -- Diseño alargado tipo píldora
+Main.Position = UDim2.new(0.5, -250, 0, 20) -- Centrado arriba
+Main.BackgroundColor3 = Color3.fromRGB(20, 22, 26) -- Fondo oscuro elegante
+Main.BorderSizePixel = 0
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0.5, 0) -- Bordes totalmente redondeados
+MainStroke = Instance.new("UIStroke", Main)
+MainStroke.Color = Color3.fromRGB(45, 48, 54)
+MainStroke.Thickness = 1.5
+
 ApplyResponsiveScale(Main)
+MakeDraggable(Main, Main) -- Toda la píldora es arrastrable
 
-FullUI = Instance.new("Frame", Main); FullUI.Size = UDim2.new(1, 0, 1, 0); FullUI.BackgroundTransparency = 1; FullUI.BorderSizePixel = 0
-TopBar = Instance.new("Frame", FullUI); TopBar.Size = UDim2.new(1, 0, 0, 35); TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); TopBar.BorderSizePixel = 0; Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 6)
-Fix = Instance.new("Frame", TopBar); Fix.Size = UDim2.new(1, 0, 0, 5); Fix.Position = UDim2.new(0, 0, 1, -5); Fix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); Fix.BorderSizePixel = 0
-Title = Instance.new("TextLabel", TopBar); Title.Size = UDim2.new(1, -150, 1, 0); Title.Position = UDim2.new(0, 15, 0, 0); Title.BackgroundTransparency = 1; Title.Text = "C.D.T OPTIFINE // SYSTEM"; Title.TextColor3 = tWhite; Title.Font = Enum.Font.GothamBold; Title.TextSize = 12; Title.TextXAlignment = Enum.TextXAlignment.Left
+-- Contenedor interior para ordenar elementos (Layout)
+local PillLayout = Instance.new("UIListLayout", Main)
+PillLayout.FillDirection = Enum.FillDirection.Horizontal
+PillLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+PillLayout.SortOrder = Enum.SortOrder.LayoutOrder
+PillLayout.Padding = UDim.new(0, 15)
 
-local ExpLabel = Instance.new("TextLabel", TopBar)
-ExpLabel.Size = UDim2.new(0, 100, 1, 0); ExpLabel.Position = UDim2.new(1, -180, 0, 0)
-ExpLabel.BackgroundTransparency = 1; ExpLabel.Text = "Verificando..."
-ExpLabel.TextColor3 = tYellow; ExpLabel.Font = Enum.Font.GothamBold; ExpLabel.TextSize = 11; ExpLabel.TextXAlignment = Enum.TextXAlignment.Right
+local Padding = Instance.new("UIPadding", Main)
+Padding.PaddingLeft = UDim.new(0, 20); Padding.PaddingRight = UDim.new(0, 20)
 
-MinBtn = Instance.new("TextButton", TopBar); MinBtn.Size = UDim2.new(0, 35, 1, 0); MinBtn.Position = UDim2.new(1, -35, 0, 0); MinBtn.BackgroundTransparency = 1; MinBtn.Text = "—"; MinBtn.TextColor3 = tGreen; MinBtn.Font = Enum.Font.GothamBlack; MinBtn.TextSize = 14
-SetBtn = Instance.new("TextButton", TopBar); SetBtn.Size = UDim2.new(0, 35, 1, 0); SetBtn.Position = UDim2.new(1, -70, 0, 0); SetBtn.BackgroundTransparency = 1; SetBtn.Text = "⚙"; SetBtn.TextColor3 = tWhite; SetBtn.Font = Enum.Font.GothamBlack; SetBtn.TextSize = 16
+-- /// SECCIÓN IZQUIERDA: STATS & INFO ///
+local InfoContainer = Instance.new("Frame", Main)
+InfoContainer.Size = UDim2.new(0, 180, 1, 0)
+InfoContainer.BackgroundTransparency = 1
+InfoContainer.LayoutOrder = 1
 
-Console = Instance.new("ScrollingFrame", FullUI)
-Console.Size = UDim2.new(1, -20, 1, -95); Console.Position = UDim2.new(0, 10, 0, 40); Console.BackgroundTransparency = 1; Console.BorderSizePixel = 0; Console.ScrollBarThickness = 2; Console.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
-UIList = Instance.new("UIListLayout", Console); UIList.Padding = UDim.new(0, 4); UIList.SortOrder = Enum.SortOrder.LayoutOrder
+local StatsLabel = Instance.new("TextLabel", InfoContainer)
+StatsLabel.Size = UDim2.new(1, 0, 0.5, 0)
+StatsLabel.BackgroundTransparency = 1
+StatsLabel.Text = "🟢 FPS --   🟢 PING --"
+StatsLabel.TextColor3 = tGreen
+StatsLabel.Font = Enum.Font.GothamMedium
+StatsLabel.TextSize = 11
+StatsLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-CmdBox = Instance.new("TextBox", FullUI)
-CmdBox.Size = UDim2.new(1, -20, 0, 35); CmdBox.Position = UDim2.new(0, 10, 1, -45); CmdBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10); CmdBox.TextColor3 = tWhite; CmdBox.Text = ""; CmdBox.PlaceholderText = "> Escribe un comando aquí..."; CmdBox.Font = Enum.Font.Gotham; CmdBox.TextSize = 13; CmdBox.TextXAlignment = Enum.TextXAlignment.Left; CmdBox.ClearTextOnFocus = false; Instance.new("UICorner", CmdBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", CmdBox).Color = Color3.fromRGB(40, 40, 40); Instance.new("UIPadding", CmdBox).PaddingLeft = UDim.new(0, 10)
+local UserLabel = Instance.new("TextLabel", InfoContainer)
+UserLabel.Size = UDim2.new(1, 0, 0.5, 0)
+UserLabel.Position = UDim2.new(0, 0, 0.5, 0)
+UserLabel.BackgroundTransparency = 1
+UserLabel.Text = "🔵 PROJECT SAFE    AK ADMIN"
+UserLabel.TextColor3 = tCyan
+UserLabel.Font = Enum.Font.GothamBold
+UserLabel.TextSize = 11
+UserLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-MiniUI = Instance.new("Frame", Main); MiniUI.Size = UDim2.new(1, 0, 1, 0); MiniUI.BackgroundTransparency = 1; MiniUI.BorderSizePixel = 0; MiniUI.Visible = false
-MiniLabel = Instance.new("TextLabel", MiniUI); MiniLabel.Size = UDim2.new(1, -40, 1, 0); MiniLabel.Position = UDim2.new(0, 15, 0, 0); MiniLabel.BackgroundTransparency = 1; MiniLabel.Text = "C.D.T TERMINAL"; MiniLabel.TextColor3 = tWhite; MiniLabel.Font = Enum.Font.GothamBold; MiniLabel.TextSize = 12; MiniLabel.TextXAlignment = Enum.TextXAlignment.Left
-Dot = Instance.new("Frame", MiniUI); Dot.Size = UDim2.new(0, 6, 0, 6); Dot.Position = UDim2.new(0, 140, 0.5, -3); Dot.BackgroundColor3 = tGreen; Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
-MaxBtn = Instance.new("TextButton", MiniUI); MaxBtn.Size = UDim2.new(0, 35, 1, 0); MaxBtn.Position = UDim2.new(1, -35, 0, 0); MaxBtn.BackgroundTransparency = 1; MaxBtn.Text = "⤢"; MaxBtn.TextColor3 = tGreen; MaxBtn.Font = Enum.Font.GothamBlack; MaxBtn.TextSize = 18
+-- Separador Visual
+local Separator = Instance.new("Frame", Main)
+Separator.Size = UDim2.new(0, 1, 0, 20)
+Separator.BackgroundColor3 = Color3.fromRGB(45, 48, 54)
+Separator.LayoutOrder = 2
 
-MakeDraggable(TopBar, Main); MakeDraggable(MiniLabel, Main)
+-- /// SECCIÓN DERECHA: BOTONES/ICONOS ///
+local function CreateIconButton(iconText, order)
+    local btn = Instance.new("TextButton", Main)
+    btn.Size = UDim2.new(0, 30, 0, 30)
+    btn.BackgroundTransparency = 1
+    btn.Text = iconText
+    btn.TextColor3 = tWhite
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 16
+    btn.LayoutOrder = order
+    return btn
+end
 
-local isMinimized = false
-MinBtn.MouseButton1Click:Connect(function()
-    isMinimized = true; FullUI.Visible = false; MiniUI.Visible = true
-    Main:TweenSize(UDim2.new(0, 190, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+local BtnCmd = CreateIconButton("⌘", 3)
+local BtnTerminal = CreateIconButton(">_", 4)
+local BtnTags = CreateIconButton("🏷️", 5)
+local BtnWifi = CreateIconButton("📶", 6)
+local BtnSettings = CreateIconButton("⚙", 7)
+
+-- /// MENÚ DESPLEGABLE DE COMANDOS (Oculto por defecto) ///
+local DropdownContainer = Instance.new("Frame", ScreenGui)
+DropdownContainer.Size = UDim2.new(0, 300, 0, 400)
+DropdownContainer.Position = UDim2.new(0.5, -150, 0, 70) -- Justo debajo de la píldora
+DropdownContainer.BackgroundColor3 = Color3.fromRGB(18, 20, 24)
+DropdownContainer.Visible = false
+DropdownContainer.ClipsDescendants = true
+Instance.new("UICorner", DropdownContainer).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", DropdownContainer).Color = Color3.fromRGB(40, 43, 48)
+
+ApplyResponsiveScale(DropdownContainer)
+
+local DropTopBar = Instance.new("Frame", DropdownContainer)
+DropTopBar.Size = UDim2.new(1, 0, 0, 35)
+DropTopBar.BackgroundColor3 = Color3.fromRGB(24, 26, 30)
+DropTopBar.BorderSizePixel = 0
+Instance.new("UICorner", DropTopBar).CornerRadius = UDim.new(0, 8)
+local DropTitle = Instance.new("TextLabel", DropTopBar)
+DropTitle.Size = UDim2.new(1, -20, 1, 0)
+DropTitle.Position = UDim2.new(0, 10, 0, 0)
+DropTitle.BackgroundTransparency = 1
+DropTitle.Text = "COMMANDS"
+DropTitle.TextColor3 = tWhite
+DropTitle.Font = Enum.Font.GothamBold
+DropTitle.TextSize = 12
+DropTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Reutilizamos tu CmdBox original aquí adentro para la búsqueda
+CmdBox = Instance.new("TextBox", DropdownContainer)
+CmdBox.Size = UDim2.new(1, -20, 0, 35)
+CmdBox.Position = UDim2.new(0, 10, 0, 45)
+CmdBox.BackgroundColor3 = Color3.fromRGB(10, 12, 15)
+CmdBox.TextColor3 = tWhite
+CmdBox.PlaceholderText = "🔍 Search (77 commands)"
+CmdBox.Font = Enum.Font.Gotham
+CmdBox.TextSize = 13
+Instance.new("UICorner", CmdBox).CornerRadius = UDim.new(0, 6)
+Instance.new("UIStroke", CmdBox).Color = Color3.fromRGB(40, 43, 48)
+
+-- Reutilizamos tu Console original para la lista
+Console = Instance.new("ScrollingFrame", DropdownContainer)
+Console.Size = UDim2.new(1, -20, 1, -95)
+Console.Position = UDim2.new(0, 10, 0, 90)
+Console.BackgroundTransparency = 1
+Console.BorderSizePixel = 0
+Console.ScrollBarThickness = 3
+UIList = Instance.new("UIListLayout", Console)
+UIList.Padding = UDim.new(0, 5)
+
+-- Animación de abrir/cerrar Dropdown
+local dropdownOpen = false
+BtnTerminal.MouseButton1Click:Connect(function()
+    dropdownOpen = not dropdownOpen
+    DropdownContainer.Visible = dropdownOpen
+    if dropdownOpen then
+        CmdBox:CaptureFocus()
+    end
 end)
-MaxBtn.MouseButton1Click:Connect(function()
-    isMinimized = false; MiniUI.Visible = false; FullUI.Visible = true
-    Main:TweenSize(UDim2.new(0, 320, 0, 350), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+
+-- Conexión de los demás botones
+BtnSettings.MouseButton1Click:Connect(function() SetMain.Visible = not SetMain.Visible end)
+BtnTags.MouseButton1Click:Connect(function() ESPMain.Visible = not ESPMain.Visible end)
+BtnWifi.MouseButton1Click:Connect(function() pcall(function() Comandos["hop"].Accion({}) end) end)
+
+-- Loop de Stats en tiempo real
+RunService.RenderStepped:Connect(function()
+    local fps = math.floor(1 / RunService.RenderStepped:Wait())
+    local ping = "N/A"
+    pcall(function() ping = math.floor(LocalPlayer:GetNetworkPing() * 1000) end)
+    StatsLabel.Text = "🟢 FPS " .. fps .. "   🟢 PING " .. ping .. "ms"
 end)
 
 -- ==================================================================
@@ -1730,12 +1837,55 @@ end
 local Comandos = {}
 local function AddCmd(cmd, desc, action) Comandos[cmd] = {Desc = desc, Accion = action} end
 
+-- ==================================================================
+-- SISTEMA DE NOTIFICACIONES Y RENDERIZADO DE COMANDOS
+-- ==================================================================
+-- Mantenemos la función para que tus comandos no den error, pero ahora usa notificaciones
 local function LogMessage(text, color)
-    local lbl = Instance.new("TextLabel", Console)
-    lbl.Size = UDim2.new(1, 0, 0, 20); lbl.BackgroundTransparency = 1; lbl.Text = "  " .. text; lbl.TextColor3 = color or tWhite; lbl.Font = Enum.Font.Gotham; lbl.TextSize = 13; lbl.TextXAlignment = Enum.TextXAlignment.Left; lbl.TextWrapped = true
-    Console.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y)
-    Console.CanvasPosition = Vector2.new(0, Console.CanvasSize.Y.Offset)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", { 
+            Title = "PROJECT SAFE", 
+            Text = text, 
+            Duration = 3 
+        })
+    end)
 end
+
+-- Esta es la nueva función que carga tus comandos en el Dropdown
+local function RenderCommandList()
+    -- Limpiar lista actual
+    for _, child in pairs(Console:GetChildren()) do
+        if child:IsA("Frame") or child:IsA("TextButton") then child:Destroy() end
+    end
+    
+    local filter = string.lower(CmdBox.Text)
+    
+    for cmd, info in pairs(Comandos) do
+        if filter == "" or string.find(string.lower(cmd), filter) or string.find(string.lower(info.Desc), filter) then
+            local cmdBtn = Instance.new("TextButton", Console)
+            cmdBtn.Size = UDim2.new(1, 0, 0, 35)
+            cmdBtn.BackgroundColor3 = Color3.fromRGB(24, 26, 30)
+            cmdBtn.Text = "   !" .. cmd .. " - " .. info.Desc
+            cmdBtn.TextColor3 = tWhite
+            cmdBtn.Font = Enum.Font.GothamMedium
+            cmdBtn.TextSize = 12
+            cmdBtn.TextXAlignment = Enum.TextXAlignment.Left
+            Instance.new("UICorner", cmdBtn).CornerRadius = UDim.new(0, 6)
+            
+            cmdBtn.MouseButton1Click:Connect(function()
+                pcall(function() info.Accion({}) end)
+                DropdownContainer.Visible = false -- Cierra el menú al ejecutar
+            end)
+        end
+    end
+    Console.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y)
+end
+
+-- Reemplaza los eventos originales del CmdBox para que funcionen con la nueva lista
+CmdBox:GetPropertyChangedSignal("Text"):Connect(RenderCommandList)
+
+-- Cargamos la lista inicial cuando se inyecta el script
+task.spawn(RenderCommandList)
 
 AddCmd("cmds", "Lista de comandos", function() LogMessage("--- COMANDOS DISPONIBLES ---", tYellow); for c, info in pairs(Comandos) do LogMessage(c .. " : " .. info.Desc, tCyan) end end)
 AddCmd("to", "TP a jugador (Ej: to juan)", function(args)
