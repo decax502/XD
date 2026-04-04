@@ -1763,28 +1763,6 @@ AddCmd("generacion", "Abre el panel del Generador de Objetos", function() GenMai
 AddCmd("spin", "Abre el panel del Spinbot (dar vueltas)", function() SpinMain.Visible = true; LogMessage("Menú Spinbot abierto.", tCyan) end)
 AddCmd("air", "Abre el panel de Walk on Air", function() AirMain.Visible = true; LogMessage("Menú Walk on Air abierto.", tCyan) end)
 
-AddCmd("gravity", "Descarga y abre el panel de Gravity Controller", function()
-    LogMessage("Descargando Gravity Controller desde GitHub...", tYellow)
-    
-    -- Usamos task.spawn para que no se congele el juego mientras descarga
-    task.spawn(function()
-        local url = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/gravity.lua"
-        local success, result = pcall(function() return game:HttpGet(url) end)
-        
-        if success then
-            local func, err = loadstring(result)
-            if func then
-                func()
-                LogMessage("Gravity Controller cargado con éxito.", tGreen)
-            else
-                LogMessage("Error al compilar Gravity: " .. tostring(err), tRed)
-            end
-        else
-            LogMessage("Error al conectar con GitHub. Verifica el link.", tRed)
-        end
-    end)
-end)
-
 AddCmd("speed", "Cambia la velocidad", function(args)
     if args[1] and tonumber(args[1]) then LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(args[1]); LogMessage("Velocidad -> " .. args[1], tGreen) end
 end)
