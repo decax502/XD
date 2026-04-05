@@ -1482,121 +1482,98 @@ GenFireBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 20. GLITCH TP MENU (EFECTO 3 CLONES + FIX SERVER REPLICATION)
+-- 18. SPINBOT MENU (BODY ANGULAR VELOCITY INTEGRADO)
 -- ==================================================================
-GlitchMain = Instance.new("Frame", ScreenGui); GlitchMain.Size = UDim2.new(0, 260, 0, 145); GlitchMain.Position = UDim2.new(0.5, -130, 0.5, -70); GlitchMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GlitchMain.BorderSizePixel = 0; GlitchMain.ClipsDescendants = true; GlitchMain.Visible = false; Instance.new("UICorner", GlitchMain).CornerRadius = UDim.new(0, 6); GlitchMainStroke = Instance.new("UIStroke", GlitchMain); GlitchMainStroke.Color = borderDark
-GlitchTopBar = Instance.new("Frame", GlitchMain); GlitchTopBar.Size = UDim2.new(1, 0, 0, 35); GlitchTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchTopBar.BorderSizePixel = 0; Instance.new("UICorner", GlitchTopBar).CornerRadius = UDim.new(0, 6)
-GlitchFix = Instance.new("Frame", GlitchTopBar); GlitchFix.Size = UDim2.new(1, 0, 0, 5); GlitchFix.Position = UDim2.new(0, 0, 1, -5); GlitchFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchFix.BorderSizePixel = 0
-GlitchTitle = Instance.new("TextLabel", GlitchTopBar); GlitchTitle.Size = UDim2.new(1, -70, 1, 0); GlitchTitle.Position = UDim2.new(0, 15, 0, 0); GlitchTitle.BackgroundTransparency = 1; GlitchTitle.Text = "GLITCH TP"; GlitchTitle.TextColor3 = tWhite; GlitchTitle.Font = Enum.Font.GothamBold; GlitchTitle.TextSize = 13; GlitchTitle.TextXAlignment = Enum.TextXAlignment.Left
-GlitchMinBtn = Instance.new("TextButton", GlitchTopBar); GlitchMinBtn.Size = UDim2.new(0, 35, 1, 0); GlitchMinBtn.Position = UDim2.new(1, -70, 0, 0); GlitchMinBtn.BackgroundTransparency = 1; GlitchMinBtn.Text = "—"; GlitchMinBtn.TextColor3 = tGreen; GlitchMinBtn.Font = Enum.Font.GothamBlack; GlitchMinBtn.TextSize = 14
-GlitchCloseBtn = Instance.new("TextButton", GlitchTopBar); GlitchCloseBtn.Size = UDim2.new(0, 35, 1, 0); GlitchCloseBtn.Position = UDim2.new(1, -35, 0, 0); GlitchCloseBtn.BackgroundTransparency = 1; GlitchCloseBtn.Text = "X"; GlitchCloseBtn.TextColor3 = tRed; GlitchCloseBtn.Font = Enum.Font.GothamBlack; GlitchCloseBtn.TextSize = 12
+SpinMain = Instance.new("Frame", ScreenGui); SpinMain.Size = UDim2.new(0, 260, 0, 145); SpinMain.Position = UDim2.new(0, 20, 0, 140); SpinMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); SpinMain.BorderSizePixel = 0; SpinMain.ClipsDescendants = true; SpinMain.Visible = false; Instance.new("UICorner", SpinMain).CornerRadius = UDim.new(0, 6); SpinMainStroke = Instance.new("UIStroke", SpinMain); SpinMainStroke.Color = borderDark
+SpinTopBar = Instance.new("Frame", SpinMain); SpinTopBar.Size = UDim2.new(1, 0, 0, 35); SpinTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinTopBar.BorderSizePixel = 0; Instance.new("UICorner", SpinTopBar).CornerRadius = UDim.new(0, 6)
+SpinFix = Instance.new("Frame", SpinTopBar); SpinFix.Size = UDim2.new(1, 0, 0, 5); SpinFix.Position = UDim2.new(0, 0, 1, -5); SpinFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinFix.BorderSizePixel = 0
+SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT (ANGULAR VELOCITY)"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
+SpinMinBtn = Instance.new("TextButton", SpinTopBar); SpinMinBtn.Size = UDim2.new(0, 35, 1, 0); SpinMinBtn.Position = UDim2.new(1, -70, 0, 0); SpinMinBtn.BackgroundTransparency = 1; SpinMinBtn.Text = "—"; SpinMinBtn.TextColor3 = tGreen; SpinMinBtn.Font = Enum.Font.GothamBlack; SpinMinBtn.TextSize = 14
+SpinCloseBtn = Instance.new("TextButton", SpinTopBar); SpinCloseBtn.Size = UDim2.new(0, 35, 1, 0); SpinCloseBtn.Position = UDim2.new(1, -35, 0, 0); SpinCloseBtn.BackgroundTransparency = 1; SpinCloseBtn.Text = "X"; SpinCloseBtn.TextColor3 = tRed; SpinCloseBtn.Font = Enum.Font.GothamBlack; SpinCloseBtn.TextSize = 12
 
-GlitchToggleBtn = Instance.new("TextButton", GlitchMain); GlitchToggleBtn.Size = UDim2.new(1, -75, 0, 45); GlitchToggleBtn.Position = UDim2.new(0, 10, 0, 45); GlitchToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); GlitchToggleBtn.Text = "GLITCH: OFF"; GlitchToggleBtn.TextColor3 = tWhite; GlitchToggleBtn.Font = Enum.Font.GothamBold; GlitchToggleBtn.TextSize = 12; Instance.new("UICorner", GlitchToggleBtn).CornerRadius = UDim.new(0, 6)
-GlitchKeyBtn = Instance.new("TextButton", GlitchMain); GlitchKeyBtn.Size = UDim2.new(0, 50, 0, 45); GlitchKeyBtn.Position = UDim2.new(1, -60, 0, 45); GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.TextColor3 = tWhite; GlitchKeyBtn.Font = Enum.Font.GothamBold; GlitchKeyBtn.TextSize = 11; Instance.new("UICorner", GlitchKeyBtn).CornerRadius = UDim.new(0, 6)
+SpinToggleBtn = Instance.new("TextButton", SpinMain); SpinToggleBtn.Size = UDim2.new(1, -75, 0, 45); SpinToggleBtn.Position = UDim2.new(0, 10, 0, 45); SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.Text = "SPIN: OFF"; SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Font = Enum.Font.GothamBold; SpinToggleBtn.TextSize = 12; Instance.new("UICorner", SpinToggleBtn).CornerRadius = UDim.new(0, 6)
+SpinKeyBtn = Instance.new("TextButton", SpinMain); SpinKeyBtn.Size = UDim2.new(0, 50, 0, 45); SpinKeyBtn.Position = UDim2.new(1, -60, 0, 45); SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinKeyBtn.Text = "KEY"; SpinKeyBtn.TextColor3 = tWhite; SpinKeyBtn.Font = Enum.Font.GothamBold; SpinKeyBtn.TextSize = 11; Instance.new("UICorner", SpinKeyBtn).CornerRadius = UDim.new(0, 6)
 
-GlitchDistMinus = Instance.new("TextButton", GlitchMain); GlitchDistMinus.Size = UDim2.new(0, 40, 0, 35); GlitchDistMinus.Position = UDim2.new(0, 10, 0, 100); GlitchDistMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchDistMinus.Text = "-"; GlitchDistMinus.TextColor3 = tWhite; GlitchDistMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", GlitchDistMinus)
-GlitchDistDisplay = Instance.new("TextBox", GlitchMain); GlitchDistDisplay.Size = UDim2.new(1, -110, 0, 35); GlitchDistDisplay.Position = UDim2.new(0, 55, 0, 100); GlitchDistDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); GlitchDistDisplay.Text = ""; GlitchDistDisplay.PlaceholderText = "DISTANCIA: 4"; GlitchDistDisplay.TextColor3 = tWhite; GlitchDistDisplay.Font = Enum.Font.GothamSemibold; GlitchDistDisplay.TextSize = 14; GlitchDistDisplay.ClearTextOnFocus = true; Instance.new("UICorner", GlitchDistDisplay); Instance.new("UIStroke", GlitchDistDisplay).Color = Color3.fromRGB(50, 50, 50)
-GlitchDistPlus = Instance.new("TextButton", GlitchMain); GlitchDistPlus.Size = UDim2.new(0, 40, 0, 35); GlitchDistPlus.Position = UDim2.new(1, -50, 0, 100); GlitchDistPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchDistPlus.Text = "+"; GlitchDistPlus.TextColor3 = tWhite; GlitchDistPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", GlitchDistPlus)
+SpinSpeedMinus = Instance.new("TextButton", SpinMain); SpinSpeedMinus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedMinus.Position = UDim2.new(0, 10, 0, 100); SpinSpeedMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedMinus.Text = "-"; SpinSpeedMinus.TextColor3 = tWhite; SpinSpeedMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedMinus)
+SpinSpeedDisplay = Instance.new("TextBox", SpinMain); SpinSpeedDisplay.Size = UDim2.new(1, -110, 0, 35); SpinSpeedDisplay.Position = UDim2.new(0, 55, 0, 100); SpinSpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); SpinSpeedDisplay.Text = ""; SpinSpeedDisplay.PlaceholderText = "SPEED: 30"; SpinSpeedDisplay.TextColor3 = tWhite; SpinSpeedDisplay.Font = Enum.Font.GothamSemibold; SpinSpeedDisplay.TextSize = 14; SpinSpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", SpinSpeedDisplay); Instance.new("UIStroke", SpinSpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
+SpinSpeedPlus = Instance.new("TextButton", SpinMain); SpinSpeedPlus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedPlus.Position = UDim2.new(1, -50, 0, 100); SpinSpeedPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedPlus.Text = "+"; SpinSpeedPlus.TextColor3 = tWhite; SpinSpeedPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedPlus)
 
-ApplyResponsiveScale(GlitchMain); MakeDraggable(GlitchTopBar, GlitchMain)
+ApplyResponsiveScale(SpinMain); MakeDraggable(SpinTopBar, SpinMain)
 
-local glitchMinimized = false
-GlitchMinBtn.MouseButton1Click:Connect(function()
-    glitchMinimized = not glitchMinimized; GlitchMain:TweenSize(glitchMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
-    GlitchMinBtn.Text = glitchMinimized and "+" or "—"; GlitchFix.Visible = not glitchMinimized
+local spinMinimized = false
+SpinMinBtn.MouseButton1Click:Connect(function()
+    spinMinimized = not spinMinimized; SpinMain:TweenSize(spinMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
 end)
 
-isGlitching = false; local glitchDistNum = 4; local glitchKeybind = nil; local isGlitchBinding = false
-local glitchStep = 1; local lastGlitchOffset = Vector3.new()
-local glitchTickCounter = 0
-local UPDATE_RATE = 3 -- Espera 3 frames antes de cambiar de lado. Esto le da tiempo al servidor de Roblox de enviarlo a los demás.
+local isSpinning = false; local spinSpeedNum = 30; local spinKeybind = nil; local isSpinBinding = false
+local spinDebounce = false
 
-GlitchDistMinus.MouseButton1Click:Connect(function() glitchDistNum = math.max(1, glitchDistNum - 1); GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
-GlitchDistPlus.MouseButton1Click:Connect(function() glitchDistNum = glitchDistNum + 1; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
-table.insert(GlobalConnections, GlitchDistDisplay.FocusLost:Connect(function() local num = tonumber(GlitchDistDisplay.Text:match("%d+")); if num then glitchDistNum = num end; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end))
+SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 5); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 5; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+table.insert(GlobalConnections, SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end))
 
-ToggleGlitch = function()
-    if ScriptIsDead then return end
+ToggleSpin = function(forceSpeed)
+    if spinDebounce or ScriptIsDead then return end
+    spinDebounce = true
+
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
     
-    if not hrp or not hum then return end
-    
-    isGlitching = not isGlitching
+    if not hrp then 
+        spinDebounce = false
+        return 
+    end
 
-    if isGlitching then
-        GlitchToggleBtn.BackgroundColor3 = tCyan
-        GlitchToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
-        GlitchToggleBtn.Text = "GLITCH: ON"
-        
-        lastGlitchOffset = Vector3.zero
-        glitchStep = 1
-        glitchTickCounter = 0
-        
-        -- PASO 1: ANTES DE LA CÁMARA (Centramos para el Shift Lock)
-        RunService:BindToRenderStep("CDT_GlitchPre", Enum.RenderPriority.Camera.Value - 10, function()
-            if not char or not hrp or not hum or hum.Health <= 0 then
-                if isGlitching then ToggleGlitch() end
-                return
-            end
-            
-            if lastGlitchOffset ~= Vector3.zero then
-                hrp.CFrame = hrp.CFrame - lastGlitchOffset
-                lastGlitchOffset = Vector3.zero
-            end
-        end)
-        
-        -- PASO 2: DESPUÉS DE LA CÁMARA (Glitch con Retardo de Red)
-        RunService:BindToRenderStep("CDT_GlitchPost", Enum.RenderPriority.Camera.Value + 10, function()
-            -- El contador obliga al script a mantener la posición un instante para que el servidor lo procese
-            glitchTickCounter = glitchTickCounter + 1
-            if glitchTickCounter >= UPDATE_RATE then
-                glitchTickCounter = 0
-                glitchStep = glitchStep + 1
-                if glitchStep > 4 then glitchStep = 1 end
-            end
-            
-            local offset = Vector3.zero
-            
-            if glitchStep == 1 then offset = -hrp.CFrame.RightVector * glitchDistNum
-            elseif glitchStep == 2 then offset = Vector3.zero
-            elseif glitchStep == 3 then offset = hrp.CFrame.RightVector * glitchDistNum
-            elseif glitchStep == 4 then offset = Vector3.zero
-            end
-            
-            if offset ~= Vector3.zero then
-                hrp.CFrame = hrp.CFrame + offset
-                lastGlitchOffset = offset
-            end
-        end)
-        
+    if forceSpeed then
+        spinSpeedNum = forceSpeed
+        isSpinning = true
     else
-        GlitchToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        GlitchToggleBtn.TextColor3 = tWhite
-        GlitchToggleBtn.Text = "GLITCH: OFF"
+        isSpinning = not isSpinning
+    end
+
+    if isSpinning then
+        SpinToggleBtn.BackgroundColor3 = tCyan
+        SpinToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
+        SpinToggleBtn.Text = "SPIN: ON"
+        SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum
         
-        pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPre") end)
-        pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPost") end)
-        
-        if hrp and lastGlitchOffset ~= Vector3.zero then
-            hrp.CFrame = hrp.CFrame - lastGlitchOffset
+        for _,v in pairs(hrp:GetChildren()) do 
+            if v.Name == "Spinning" then v:Destroy() end 
         end
         
-        lastGlitchOffset = Vector3.zero
+        local Spin = Instance.new("BodyAngularVelocity")
+        Spin.Name = "Spinning"
+        Spin.Parent = hrp
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.AngularVelocity = Vector3.new(0, spinSpeedNum, 0)
+    else
+        SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        SpinToggleBtn.TextColor3 = tWhite
+        SpinToggleBtn.Text = "SPIN: OFF"
+        
+        for _,v in pairs(hrp:GetChildren()) do 
+            if v.Name == "Spinning" then v:Destroy() end 
+        end
+        
+        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        hrp.RotVelocity = Vector3.new(0, 0, 0)
     end
+
+    task.wait(0.2)
+    spinDebounce = false
 end
 
-GlitchToggleBtn.MouseButton1Click:Connect(ToggleGlitch)
+SpinToggleBtn.MouseButton1Click:Connect(function() ToggleSpin() end)
 
-GlitchCloseBtn.MouseButton1Click:Connect(function() 
-    GlitchMain.Visible = false; glitchKeybind = nil; isGlitchBinding = false; GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    if isGlitching then ToggleGlitch() end
+SpinCloseBtn.MouseButton1Click:Connect(function() 
+    SpinMain.Visible = false; spinKeybind = nil; isSpinBinding = false; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isSpinning then ToggleSpin() end
 end)
 
-GlitchKeyBtn.MouseButton1Click:Connect(function()
-    if glitchKeybind ~= nil then glitchKeybind = nil; GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isGlitchBinding = false
-    else isGlitchBinding = true; GlitchKeyBtn.Text = "..."; GlitchKeyBtn.BackgroundColor3 = tOrange end
+SpinKeyBtn.MouseButton1Click:Connect(function()
+    if spinKeybind ~= nil then spinKeybind = nil; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isSpinBinding = false
+    else isSpinBinding = true; SpinKeyBtn.Text = "..."; SpinKeyBtn.BackgroundColor3 = tOrange end
 end)
 
 -- ==================================================================
@@ -1696,7 +1673,7 @@ AirKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 20. GLITCH TP MENU (EFECTO 3 CLONES + FIX SERVER REPLICATION)
+-- 20. GLITCH TP MENU (EFECTO BRUSCO + FIX SHIFT LOCK + ANTI-SMOOTHING)
 -- ==================================================================
 GlitchMain = Instance.new("Frame", ScreenGui); GlitchMain.Size = UDim2.new(0, 260, 0, 145); GlitchMain.Position = UDim2.new(0.5, -130, 0.5, -70); GlitchMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GlitchMain.BorderSizePixel = 0; GlitchMain.ClipsDescendants = true; GlitchMain.Visible = false; Instance.new("UICorner", GlitchMain).CornerRadius = UDim.new(0, 6); GlitchMainStroke = Instance.new("UIStroke", GlitchMain); GlitchMainStroke.Color = borderDark
 GlitchTopBar = Instance.new("Frame", GlitchMain); GlitchTopBar.Size = UDim2.new(1, 0, 0, 35); GlitchTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchTopBar.BorderSizePixel = 0; Instance.new("UICorner", GlitchTopBar).CornerRadius = UDim.new(0, 6)
@@ -1723,7 +1700,7 @@ end)
 isGlitching = false; local glitchDistNum = 4; local glitchKeybind = nil; local isGlitchBinding = false
 local glitchStep = 1; local lastGlitchOffset = Vector3.new()
 local glitchTickCounter = 0
-local UPDATE_RATE = 3 -- Espera 3 frames antes de cambiar de lado. Esto le da tiempo al servidor de Roblox de enviarlo a los demás.
+local UPDATE_RATE = 2 -- Velocidad agresiva (2 frames). Rompe la predicción visual del servidor.
 
 GlitchDistMinus.MouseButton1Click:Connect(function() glitchDistNum = math.max(1, glitchDistNum - 1); GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
 GlitchDistPlus.MouseButton1Click:Connect(function() glitchDistNum = glitchDistNum + 1; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
@@ -1748,7 +1725,7 @@ ToggleGlitch = function()
         glitchStep = 1
         glitchTickCounter = 0
         
-        -- PASO 1: ANTES DE LA CÁMARA (Centramos para el Shift Lock)
+        -- PASO 1: ANTES DE LA CÁMARA (Centramos para el Shift Lock y para ti)
         RunService:BindToRenderStep("CDT_GlitchPre", Enum.RenderPriority.Camera.Value - 10, function()
             if not char or not hrp or not hum or hum.Health <= 0 then
                 if isGlitching then ToggleGlitch() end
@@ -1761,9 +1738,8 @@ ToggleGlitch = function()
             end
         end)
         
-        -- PASO 2: DESPUÉS DE LA CÁMARA (Glitch con Retardo de Red)
+        -- PASO 2: DESPUÉS DE LA CÁMARA (Patrón caótico para el servidor)
         RunService:BindToRenderStep("CDT_GlitchPost", Enum.RenderPriority.Camera.Value + 10, function()
-            -- El contador obliga al script a mantener la posición un instante para que el servidor lo procese
             glitchTickCounter = glitchTickCounter + 1
             if glitchTickCounter >= UPDATE_RATE then
                 glitchTickCounter = 0
@@ -1773,10 +1749,11 @@ ToggleGlitch = function()
             
             local offset = Vector3.zero
             
-            if glitchStep == 1 then offset = -hrp.CFrame.RightVector * glitchDistNum
-            elseif glitchStep == 2 then offset = Vector3.zero
-            elseif glitchStep == 3 then offset = hrp.CFrame.RightVector * glitchDistNum
-            elseif glitchStep == 4 then offset = Vector3.zero
+            -- Patrón anti-suavizado: Salto enorme de un extremo a otro, luego centro.
+            if glitchStep == 1 then offset = -hrp.CFrame.RightVector * glitchDistNum       -- Izquierda
+            elseif glitchStep == 2 then offset = hrp.CFrame.RightVector * glitchDistNum      -- Derecha (Salto enorme)
+            elseif glitchStep == 3 then offset = Vector3.zero                                -- Centro
+            elseif glitchStep == 4 then offset = -hrp.CFrame.RightVector * (glitchDistNum/2) -- Medio Izquierda (Caótico)
             end
             
             if offset ~= Vector3.zero then
