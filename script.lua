@@ -8,10 +8,10 @@
     - REVERSE MODE (Flashback System).
     - FREECAM MODE (Shift-Lock Native Override).
     - ESP SYSTEM (Highlights + Team Check).
-    - SPINBOT (Velocidad Ajustable + Keybind).
+    - SPINBOT (Angular Velocity + Keybind Fix + Ventana).
     - WALK ON AIR (Generación dinámica + Keybind).
     - GLOBAL CHAT SMART (Auto-Scroll).
-    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion, air, gravity.
+    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion, air, spinstup.
     - Panel de Ajustes (⚙) con Temas Consistentes.
     - SISTEMA DE KEY, HWID Y AUTO-ACTUALIZACIÓN.
 ]]
@@ -413,73 +413,6 @@ MaxBtn.MouseButton1Click:Connect(function()
     isMinimized = false; MiniUI.Visible = false; FullUI.Visible = true
     Main:TweenSize(UDim2.new(0, 320, 0, 350), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
 end)
-
--- ==================================================================
--- 18. SPINBOT MENU (ROTACIÓN CON VELOCIDAD AJUSTABLE)
--- ==================================================================
-SpinMain = Instance.new("Frame", ScreenGui); SpinMain.Size = UDim2.new(0, 260, 0, 145); SpinMain.Position = UDim2.new(0, 20, 0, 140); SpinMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); SpinMain.BorderSizePixel = 0; SpinMain.ClipsDescendants = true; SpinMain.Visible = false; Instance.new("UICorner", SpinMain).CornerRadius = UDim.new(0, 6); SpinMainStroke = Instance.new("UIStroke", SpinMain); SpinMainStroke.Color = borderDark
-SpinTopBar = Instance.new("Frame", SpinMain); SpinTopBar.Size = UDim2.new(1, 0, 0, 35); SpinTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinTopBar.BorderSizePixel = 0; Instance.new("UICorner", SpinTopBar).CornerRadius = UDim.new(0, 6)
-SpinFix = Instance.new("Frame", SpinTopBar); SpinFix.Size = UDim2.new(1, 0, 0, 5); SpinFix.Position = UDim2.new(0, 0, 1, -5); SpinFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinFix.BorderSizePixel = 0
-SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT (CF ANGLES)"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
-SpinMinBtn = Instance.new("TextButton", SpinTopBar); SpinMinBtn.Size = UDim2.new(0, 35, 1, 0); SpinMinBtn.Position = UDim2.new(1, -70, 0, 0); SpinMinBtn.BackgroundTransparency = 1; SpinMinBtn.Text = "—"; SpinMinBtn.TextColor3 = tGreen; SpinMinBtn.Font = Enum.Font.GothamBlack; SpinMinBtn.TextSize = 14
-SpinCloseBtn = Instance.new("TextButton", SpinTopBar); SpinCloseBtn.Size = UDim2.new(0, 35, 1, 0); SpinCloseBtn.Position = UDim2.new(1, -35, 0, 0); SpinCloseBtn.BackgroundTransparency = 1; SpinCloseBtn.Text = "X"; SpinCloseBtn.TextColor3 = tRed; SpinCloseBtn.Font = Enum.Font.GothamBlack; SpinCloseBtn.TextSize = 12
-
-SpinToggleBtn = Instance.new("TextButton", SpinMain); SpinToggleBtn.Size = UDim2.new(1, -75, 0, 45); SpinToggleBtn.Position = UDim2.new(0, 10, 0, 45); SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.Text = "SPIN: OFF"; SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Font = Enum.Font.GothamBold; SpinToggleBtn.TextSize = 12; Instance.new("UICorner", SpinToggleBtn).CornerRadius = UDim.new(0, 6)
-SpinKeyBtn = Instance.new("TextButton", SpinMain); SpinKeyBtn.Size = UDim2.new(0, 50, 0, 45); SpinKeyBtn.Position = UDim2.new(1, -60, 0, 45); SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinKeyBtn.Text = "KEY"; SpinKeyBtn.TextColor3 = tWhite; SpinKeyBtn.Font = Enum.Font.GothamBold; SpinKeyBtn.TextSize = 11; Instance.new("UICorner", SpinKeyBtn).CornerRadius = UDim.new(0, 6)
-
-SpinSpeedMinus = Instance.new("TextButton", SpinMain); SpinSpeedMinus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedMinus.Position = UDim2.new(0, 10, 0, 100); SpinSpeedMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedMinus.Text = "-"; SpinSpeedMinus.TextColor3 = tWhite; SpinSpeedMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedMinus)
-SpinSpeedDisplay = Instance.new("TextBox", SpinMain); SpinSpeedDisplay.Size = UDim2.new(1, -110, 0, 35); SpinSpeedDisplay.Position = UDim2.new(0, 55, 0, 100); SpinSpeedDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); SpinSpeedDisplay.Text = ""; SpinSpeedDisplay.PlaceholderText = "SPEED: 50"; SpinSpeedDisplay.TextColor3 = tWhite; SpinSpeedDisplay.Font = Enum.Font.GothamSemibold; SpinSpeedDisplay.TextSize = 14; SpinSpeedDisplay.ClearTextOnFocus = true; Instance.new("UICorner", SpinSpeedDisplay); Instance.new("UIStroke", SpinSpeedDisplay).Color = Color3.fromRGB(50, 50, 50)
-SpinSpeedPlus = Instance.new("TextButton", SpinMain); SpinSpeedPlus.Size = UDim2.new(0, 40, 0, 35); SpinSpeedPlus.Position = UDim2.new(1, -50, 0, 100); SpinSpeedPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); SpinSpeedPlus.Text = "+"; SpinSpeedPlus.TextColor3 = tWhite; SpinSpeedPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", SpinSpeedPlus)
-
-ApplyResponsiveScale(SpinMain); MakeDraggable(SpinTopBar, SpinMain)
-
-local spinMinimized = false
-SpinMinBtn.MouseButton1Click:Connect(function()
-    spinMinimized = not spinMinimized; SpinMain:TweenSize(spinMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
-    SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
-end)
-
-local isSpinning = false; local spinSpeedNum = 50; local spinKeybind = nil; local isSpinBinding = false; local spinLoop = nil
-
-SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 10); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
-SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 10; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
-SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
-
-ToggleSpin = function()
-    local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    
-    isSpinning = not isSpinning
-    if isSpinning then
-        SpinToggleBtn.BackgroundColor3 = tCyan; SpinToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); SpinToggleBtn.Text = "SPIN: ON"
-        
-        if spinLoop then spinLoop:Disconnect() end
-        
-        spinLoop = RunService.RenderStepped:Connect(function()
-            local currentHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if currentHrp then
-                -- Lógica adaptada del script proporcionado usando CFrame.Angles
-                currentHrp.CFrame = currentHrp.CFrame * CFrame.Angles(0, math.rad(spinSpeedNum), 0)
-            end
-        end)
-    else
-        SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Text = "SPIN: OFF"
-        
-        if spinLoop then spinLoop:Disconnect(); spinLoop = nil end
-    end
-end
-SpinToggleBtn.MouseButton1Click:Connect(ToggleSpin)
-
-SpinCloseBtn.MouseButton1Click:Connect(function() 
-    SpinMain.Visible = false; spinKeybind = nil; isSpinBinding = false; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    if isSpinning then ToggleSpin() end
-end)
-
-SpinKeyBtn.MouseButton1Click:Connect(function()
-    if spinKeybind ~= nil then spinKeybind = nil; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isSpinBinding = false
-    else isSpinBinding = true; SpinKeyBtn.Text = "..."; SpinKeyBtn.BackgroundColor3 = tOrange end
-end)
-
 
 -- ==================================================================
 -- 2. MAP POINTS (WAYPOINTS MANAGER)
@@ -1549,12 +1482,12 @@ GenFireBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 18. SPINBOT MENU (C-FRAME ACCUMULATOR FIX)
+-- 18. SPINBOT MENU (BODY ANGULAR VELOCITY INTEGRADO)
 -- ==================================================================
 SpinMain = Instance.new("Frame", ScreenGui); SpinMain.Size = UDim2.new(0, 260, 0, 145); SpinMain.Position = UDim2.new(0, 20, 0, 140); SpinMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); SpinMain.BorderSizePixel = 0; SpinMain.ClipsDescendants = true; SpinMain.Visible = false; Instance.new("UICorner", SpinMain).CornerRadius = UDim.new(0, 6); SpinMainStroke = Instance.new("UIStroke", SpinMain); SpinMainStroke.Color = borderDark
 SpinTopBar = Instance.new("Frame", SpinMain); SpinTopBar.Size = UDim2.new(1, 0, 0, 35); SpinTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinTopBar.BorderSizePixel = 0; Instance.new("UICorner", SpinTopBar).CornerRadius = UDim.new(0, 6)
 SpinFix = Instance.new("Frame", SpinTopBar); SpinFix.Size = UDim2.new(1, 0, 0, 5); SpinFix.Position = UDim2.new(0, 0, 1, -5); SpinFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); SpinFix.BorderSizePixel = 0
-SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT (SMOOTH)"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
+SpinTitle = Instance.new("TextLabel", SpinTopBar); SpinTitle.Size = UDim2.new(1, -70, 1, 0); SpinTitle.Position = UDim2.new(0, 15, 0, 0); SpinTitle.BackgroundTransparency = 1; SpinTitle.Text = "SPINBOT (ANGULAR VELOCITY)"; SpinTitle.TextColor3 = tWhite; SpinTitle.Font = Enum.Font.GothamBold; SpinTitle.TextSize = 13; SpinTitle.TextXAlignment = Enum.TextXAlignment.Left
 SpinMinBtn = Instance.new("TextButton", SpinTopBar); SpinMinBtn.Size = UDim2.new(0, 35, 1, 0); SpinMinBtn.Position = UDim2.new(1, -70, 0, 0); SpinMinBtn.BackgroundTransparency = 1; SpinMinBtn.Text = "—"; SpinMinBtn.TextColor3 = tGreen; SpinMinBtn.Font = Enum.Font.GothamBlack; SpinMinBtn.TextSize = 14
 SpinCloseBtn = Instance.new("TextButton", SpinTopBar); SpinCloseBtn.Size = UDim2.new(0, 35, 1, 0); SpinCloseBtn.Position = UDim2.new(1, -35, 0, 0); SpinCloseBtn.BackgroundTransparency = 1; SpinCloseBtn.Text = "X"; SpinCloseBtn.TextColor3 = tRed; SpinCloseBtn.Font = Enum.Font.GothamBlack; SpinCloseBtn.TextSize = 12
 
@@ -1573,42 +1506,65 @@ SpinMinBtn.MouseButton1Click:Connect(function()
     SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
 end)
 
-local isSpinning = false; local spinSpeedNum = 30; local spinKeybind = nil; local isSpinBinding = false; local spinLoop = nil; local currentYaw = 0
+local isSpinning = false; local spinSpeedNum = 30; local spinKeybind = nil; local isSpinBinding = false
+local spinDebounce = false
 
 SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 5); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 5; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 
-ToggleSpin = function()
-    local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if not hrp or not char:FindFirstChild("Humanoid") then return end
+ToggleSpin = function(forceSpeed)
+    if spinDebounce then return end
+    spinDebounce = true
+
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
     
-    isSpinning = not isSpinning
-    if isSpinning then
-        SpinToggleBtn.BackgroundColor3 = tCyan; SpinToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); SpinToggleBtn.Text = "SPIN: ON"
-        
-        char.Humanoid.AutoRotate = false
-        if spinLoop then spinLoop:Disconnect() end
-        
-        local x, _, z = hrp.CFrame:ToOrientation()
-        currentYaw = hrp.Orientation.Y
-        
-        spinLoop = RunService.RenderStepped:Connect(function(dt)
-            local currentHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if currentHrp then
-                currentYaw = currentYaw + math.rad(spinSpeedNum * 60 * dt)
-                local curX, _, curZ = currentHrp.CFrame:ToOrientation()
-                currentHrp.CFrame = CFrame.new(currentHrp.Position) * CFrame.fromOrientation(curX, currentYaw, curZ)
-            end
-        end)
-    else
-        SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpinToggleBtn.TextColor3 = tWhite; SpinToggleBtn.Text = "SPIN: OFF"
-        
-        if spinLoop then spinLoop:Disconnect(); spinLoop = nil end
-        if char:FindFirstChild("Humanoid") then char.Humanoid.AutoRotate = true end
+    if not hrp then 
+        spinDebounce = false
+        return 
     end
+
+    if forceSpeed then
+        spinSpeedNum = forceSpeed
+        isSpinning = true
+    else
+        isSpinning = not isSpinning
+    end
+
+    if isSpinning then
+        SpinToggleBtn.BackgroundColor3 = tCyan
+        SpinToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
+        SpinToggleBtn.Text = "SPIN: ON"
+        SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum
+        
+        for _,v in pairs(hrp:GetChildren()) do 
+            if v.Name == "Spinning" then v:Destroy() end 
+        end
+        
+        local Spin = Instance.new("BodyAngularVelocity")
+        Spin.Name = "Spinning"
+        Spin.Parent = hrp
+        Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+        Spin.AngularVelocity = Vector3.new(0, spinSpeedNum, 0)
+    else
+        SpinToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        SpinToggleBtn.TextColor3 = tWhite
+        SpinToggleBtn.Text = "SPIN: OFF"
+        
+        for _,v in pairs(hrp:GetChildren()) do 
+            if v.Name == "Spinning" then v:Destroy() end 
+        end
+        
+        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        hrp.RotVelocity = Vector3.new(0, 0, 0)
+    end
+
+    task.wait(0.2)
+    spinDebounce = false
 end
-SpinToggleBtn.MouseButton1Click:Connect(ToggleSpin)
+
+SpinToggleBtn.MouseButton1Click:Connect(function() ToggleSpin() end)
 
 SpinCloseBtn.MouseButton1Click:Connect(function() 
     SpinMain.Visible = false; spinKeybind = nil; isSpinBinding = false; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -1760,8 +1716,11 @@ AddCmd("freecam", "Abre el panel de Cámara Libre", function() FreecamMain.Visib
 AddCmd("esp", "Abre el panel del ESP System", function() ESPMain.Visible = true; LogMessage("Menú ESP abierto.", tPurple) end)
 AddCmd("hide", "Abre el menú para ocultar avatares, sonidos locales y Voice Chat", function() HideSearchBox.Text = ""; RefreshHideMenu(); HideMain.Visible = true; LogMessage("Menú Ocultar Jugadores abierto.", tPurple) end)
 AddCmd("generacion", "Abre el panel del Generador de Objetos", function() GenMain.Visible = true; LogMessage("Generador C.D.T abierto.", tCyan) end)
-AddCmd("spin", "Abre el panel del Spinbot (dar vueltas)", function() SpinMain.Visible = true; LogMessage("Menú Spinbot abierto.", tCyan) end)
 AddCmd("air", "Abre el panel de Walk on Air", function() AirMain.Visible = true; LogMessage("Menú Walk on Air abierto.", tCyan) end)
+
+AddCmd("spinstup", "Abre el panel del Spinbot", function()
+    SpinMain.Visible = true; LogMessage("Menú Spinbot abierto.", tCyan)
+end)
 
 AddCmd("speed", "Cambia la velocidad", function(args)
     if args[1] and tonumber(args[1]) then LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(args[1]); LogMessage("Velocidad -> " .. args[1], tGreen) end
@@ -1849,62 +1808,132 @@ AddCmd("clear", "Hace de día, quita la niebla, efectos (bloom/blur) y mejora la
     end
 end)
 
+-- ==================================================================
+-- LOGICA INFBASE REPARADA (MANTIENE BASE ORIGINAL)
+-- ==================================================================
 local infBaseActivo = false
-AddCmd("infbase", "Genera baseplates infinitas alrededor de los jugadores", function()
-    if infBaseActivo then LogMessage("Baseplate infinita ya está activa.", tYellow) return end
-    local baseplateOriginal = workspace:FindFirstChild("Baseplate")
-    if not baseplateOriginal then LogMessage("Error: No se encontró 'Baseplate' en el mapa.", tRed) return end
-    
-    infBaseActivo = true; LogMessage("Iniciando sistema de Baseplate Infinita...", tGreen)
-    task.spawn(function()
-        local ORIGIN_POS = baseplateOriginal.Position; local TILE_SIZE = 648; local TILE_HEIGHT = 16
-        local RENDER_DISTANCE = 2; local DELETE_DISTANCE = 4; local UPDATE_TICK = 0.0
-        baseplateOriginal.Size = Vector3.new(TILE_SIZE, TILE_HEIGHT, TILE_SIZE)
-        local plantilla = baseplateOriginal:Clone()
-        baseplateOriginal:Destroy() 
-        local activeChunks = {}
-        local baseplateFolder = Instance.new("Folder", workspace); baseplateFolder.Name = "BaseplatesInfinitas"
-        local function getChunkKey(x, z) return x .. "_" .. z end
+local baseplateFolder = nil
+local infPlantilla = nil
+local ORIGIN_POS = Vector3.new(0, -8, 0) -- Fallback por defecto
 
-        while scriptActivoTags and infBaseActivo do
-            task.wait(UPDATE_TICK)
-            local chunksNecesarios = {}; local playerPositions = {}
-            for _, player in ipairs(Players:GetPlayers()) do
-                local char = player.Character
-                if char and char:FindFirstChild("HumanoidRootPart") then table.insert(playerPositions, char.HumanoidRootPart.Position) end
-            end
-            for _, pos in ipairs(playerPositions) do
-                local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
-                local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
-                for x = -RENDER_DISTANCE, RENDER_DISTANCE do
-                    for z = -RENDER_DISTANCE, RENDER_DISTANCE do
-                        local key = getChunkKey(currentX + x, currentZ + z)
-                        chunksNecesarios[key] = {X = currentX + x, Z = currentZ + z}
+-- Task inicial para detectar la base original SIN BORRARLA
+task.spawn(function()
+    local baseplateOriginal = workspace:FindFirstChild("Baseplate")
+    if baseplateOriginal and baseplateOriginal:IsA("BasePart") then 
+        -- Guardamos su posición como centro del mundo infinito
+        ORIGIN_POS = baseplateOriginal.Position
+        
+        -- Creamos la plantilla CLONANDO la original, pero NO BORRAMOS la original
+        infPlantilla = baseplateOriginal:Clone()
+        infPlantilla.Name = "CDT_InfBase_Template"
+        infPlantilla.Size = Vector3.new(648, 16, 648) -- Tamaño estándar de chunks
+    else
+        -- Fallback si el mapa no tiene baseplate
+        infPlantilla = Instance.new("Part")
+        infPlantilla.Name = "CDT_InfBase_Fallback"
+        infPlantilla.Size = Vector3.new(648, 16, 648)
+        infPlantilla.Anchored = true
+        infPlantilla.Material = Enum.Material.SmoothPlastic
+        infPlantilla.Color = Color3.fromRGB(99, 95, 98)
+    end
+end)
+
+AddCmd("infbase", "Genera baseplates infinitas alrededor de la original (Toggle On/Off)", function()
+    infBaseActivo = not infBaseActivo
+    if infBaseActivo then
+        LogMessage("Generación de Baseplate infinita ACTIVADA.", tGreen)
+        
+        -- Crear carpeta contenedora si no existe
+        if not baseplateFolder or not baseplateFolder.Parent then
+            baseplateFolder = Instance.new("Folder", workspace)
+            baseplateFolder.Name = "BaseplatesInfinitas_CDT"
+        end
+        
+        -- Iniciar bucle de generación dinámica
+        task.spawn(function()
+            local TILE_SIZE = 648
+            local RENDER_DISTANCE = 2 -- Chunks a la redonda a generar
+            local DELETE_DISTANCE = 4 -- Distancia para borrar chunks lejanos
+            local UPDATE_TICK = 0.5   -- Cada cuanto tiempo verificar posición
+            local activeChunks = {}
+            local function getChunkKey(x, z) return x .. "_" .. z end
+
+            while scriptActivoTags and infBaseActivo do
+                task.wait(UPDATE_TICK)
+                
+                -- Si por alguna razón la carpeta se borra, detener
+                if not baseplateFolder or not baseplateFolder.Parent then break end
+
+                local chunksNecesarios = {}
+                local playerPositions = {}
+                
+                -- Recopilar posiciones de todos los jugadores (optimizado)
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then 
+                        table.insert(playerPositions, player.Character.HumanoidRootPart.Position) 
                     end
                 end
-            end
-            for key, coords in pairs(chunksNecesarios) do
-                if not activeChunks[key] then
-                    local nueva = plantilla:Clone()
-                    nueva.Name = "Chunk_" .. key
-                    nueva.Position = Vector3.new(ORIGIN_POS.X + (coords.X * TILE_SIZE), ORIGIN_POS.Y, ORIGIN_POS.Z + (coords.Z * TILE_SIZE))
-                    nueva.Parent = baseplateFolder
-                    activeChunks[key] = {Instance = nueva, X = coords.X, Z = coords.Z}
-                end
-            end
-            for key, data in pairs(activeChunks) do
-                local estaCerca = false
+                
+                -- Calcular qué chunks se necesitan basándose en las posiciones de los jugadores
                 for _, pos in ipairs(playerPositions) do
                     local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
                     local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
-                    local dist = math.max(math.abs(data.X - currentX), math.abs(data.Z - currentZ))
-                    if dist <= DELETE_DISTANCE then estaCerca = true; break end
+                    
+                    for x = -RENDER_DISTANCE, RENDER_DISTANCE do
+                        for z = -RENDER_DISTANCE, RENDER_DISTANCE do
+                            -- No generamos el chunk 0,0 si ya existe la base original ahí para evitar Z-Fighting
+                            if x == 0 and z == 0 and workspace:FindFirstChild("Baseplate") then
+                                -- Omitir generación en el centro exacto si está la base original
+                            else
+                                local key = getChunkKey(currentX + x, currentZ + z)
+                                chunksNecesarios[key] = {X = currentX + x, Z = currentZ + z}
+                            end
+                        end
+                    end
                 end
-                if not estaCerca then data.Instance:Destroy(); activeChunks[key] = nil end
+                
+                -- Generar nuevos chunks necesarios
+                if infPlantilla then
+                    for key, coords in pairs(chunksNecesarios) do
+                        if not activeChunks[key] then
+                            local nueva = infPlantilla:Clone()
+                            nueva.Name = "Chunk_" .. key
+                            -- Posicionamiento relativo al ORIGIN_POS guardado
+                            nueva.Position = Vector3.new(ORIGIN_POS.X + (coords.X * TILE_SIZE), ORIGIN_POS.Y, ORIGIN_POS.Z + (coords.Z * TILE_SIZE))
+                            nueva.Parent = baseplateFolder
+                            activeChunks[key] = {Instance = nueva, X = coords.X, Z = coords.Z}
+                        end
+                    end
+                end
+                
+                -- Limpieza de chunks antiguos (lejanos a TODOS los jugadores)
+                for key, data in pairs(activeChunks) do
+                    local estaCerca = false
+                    for _, pos in ipairs(playerPositions) do
+                        local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
+                        local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
+                        local dist = math.max(math.abs(data.X - currentX), math.abs(data.Z - currentZ))
+                        if dist <= DELETE_DISTANCE then estaCerca = true; break end
+                    end
+                    if not estaCerca then 
+                        if data.Instance and data.Instance.Parent then data.Instance:Destroy() end
+                        activeChunks[key] = nil 
+                    end
+                end
             end
-        end
-    end)
+            
+            -- Al desactivar, limpiar todos los chunks generados, pero NO la base original
+            if baseplateFolder then baseplateFolder:Destroy(); baseplateFolder = nil end
+        end)
+    else
+        LogMessage("Generación de Baseplate infinita DESACTIVADA. Limpiando...", tOrange)
+        -- El bucle de arriba detectará infBaseActivo = false y se detendrá, limpiando la carpeta.
+    end
 end)
+
+-- ==================================================================
+-- RESTO DE COMANDOS Y LOGICA (SIN CAMBIOS)
+-- ==================================================================
 
 local isAntiAfkActive = false; local afkConnection = nil
 AddCmd("afk", "Activa o desactiva el sistema Anti-AFK", function()
@@ -1965,6 +1994,7 @@ DestruirScriptCompleto = function()
     if isAirWalkActive and type(ToggleAirWalk) == "function" then ToggleAirWalk() end
     if isClearModeActive then pcall(function() Comandos["clear"].Accion({}) end) end
     if isAntiAfkActive then pcall(function() Comandos["afk"].Accion({}) end) end
+    if infBaseActivo then infBaseActivo = false end -- Esto detiene el bucle y limpia chunks
     
     -- DESCONECTAR EVENTOS
     if inputBeganConn then inputBeganConn:Disconnect() end
@@ -1976,7 +2006,7 @@ DestruirScriptCompleto = function()
     task.spawn(function() pcall(function() request({Url = BASE_URL .. "/api/offline/" .. tostring(LocalPlayer.UserId), Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = "{}"}) end) end)
     
     -- LIMPIAR VARIABLES Y TAGS
-    scriptActivoTags = false; infBaseActivo = false 
+    scriptActivoTags = false
     for _, v in pairs(UIsActivos) do if v.UI then v.UI:Destroy() end end
     UIsActivos = {}
     
@@ -2116,8 +2146,12 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
         if noclipKeybind and input.KeyCode == noclipKeybind and type(ToggleNoclipWalk) == "function" then ToggleNoclipWalk() end
         if tripKeybind and input.KeyCode == tripKeybind and type(DoTrip) == "function" then DoTrip() end
         if isTripped and input.KeyCode == Enum.KeyCode.Space and type(GetUpFromTrip) == "function" then GetUpFromTrip(false) end
-        if spinKeybind and input.KeyCode == spinKeybind and type(ToggleSpin) == "function" then ToggleSpin() end
         if airKeybind and input.KeyCode == airKeybind and type(ToggleAirWalk) == "function" then ToggleAirWalk() end
+        
+        -- FIX DEL KEYBIND DE SPINBOT: Verifica que no estés escribiendo en un TextBox
+        if spinKeybind and input.KeyCode == spinKeybind and not UserInputService:GetFocusedTextBox() then
+            if type(ToggleSpin) == "function" then ToggleSpin() end
+        end
         
         -- FIX REVERSE: Activación por Teclado
         if reverseKeybind and input.KeyCode == reverseKeybind and isReverseActive then
