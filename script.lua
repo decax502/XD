@@ -1307,13 +1307,39 @@ ESPSkelBtn = CreateESPToggle("Skel", "ESQUELETO: OFF", false)
 ESPTeamBtn = CreateESPToggle("Team", "TEAM CHECK: ON", false); ESPTeamBtn.BackgroundColor3 = tGreen; ESPTeamBtn.TextColor3 = Color3.fromRGB(10,10,10)
 ESPFriendsBtn = CreateESPToggle("Friends", "SOLO AMIGOS: OFF", false)
 
--- Slider Distancia Max
-local RangeLabel = Instance.new("TextLabel", ESPScroll); RangeLabel.Size = UDim2.new(1, -20, 0, 15); RangeLabel.BackgroundTransparency = 1; RangeLabel.Text = "DISTANCIA MAX: 5000m"; RangeLabel.TextColor3 = tWhite; RangeLabel.Font = Enum.Font.GothamBold; RangeLabel.TextSize = 11; RangeLabel.TextXAlignment = Enum.TextXAlignment.Left
-local RangeBar = Instance.new("Frame", ESPScroll); RangeBar.Size = UDim2.new(1, -20, 0, 6); RangeBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Instance.new("UICorner", RangeBar).CornerRadius = UDim.new(1, 0)
-local RangeFill = Instance.new("Frame", RangeBar); RangeFill.Size = UDim2.new(1, 0, 1, 0); RangeFill.BackgroundColor3 = tCyan; Instance.new("UICorner", RangeFill).CornerRadius = UDim.new(1, 0)
-local RangeBtn = Instance.new("TextButton", RangeBar); RangeBtn.Size = UDim2.new(0, 12, 0, 18); RangeBtn.Position = UDim2.new(1, -6, 0.5, -9); RangeBtn.Text = ""; RangeBtn.BackgroundColor3 = tWhite; Instance.new("UICorner", RangeBtn).CornerRadius = UDim.new(1, 0)
+-- Slider Distancia Max (AHORA SÍ FUNCIONA Y ES VISIBLE)
+local RangeContainer = Instance.new("Frame", ESPScroll)
+RangeContainer.Size = UDim2.new(1, -20, 0, 40)
+RangeContainer.BackgroundTransparency = 1
 
-local maxEspDistance = 5000
+local RangeLabel = Instance.new("TextLabel", RangeContainer)
+RangeLabel.Size = UDim2.new(1, 0, 0, 15)
+RangeLabel.BackgroundTransparency = 1
+RangeLabel.Text = "DISTANCIA MAX: 5000m"
+RangeLabel.TextColor3 = tWhite
+RangeLabel.Font = Enum.Font.GothamBold
+RangeLabel.TextSize = 11
+RangeLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local RangeBar = Instance.new("Frame", RangeContainer)
+RangeBar.Size = UDim2.new(1, 0, 0, 6)
+RangeBar.Position = UDim2.new(0, 0, 0, 22)
+RangeBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Instance.new("UICorner", RangeBar).CornerRadius = UDim.new(1, 0)
+
+local RangeFill = Instance.new("Frame", RangeBar)
+RangeFill.Size = UDim2.new(1, 0, 1, 0)
+RangeFill.BackgroundColor3 = tCyan
+Instance.new("UICorner", RangeFill).CornerRadius = UDim.new(1, 0)
+
+local RangeBtn = Instance.new("TextButton", RangeBar)
+RangeBtn.Size = UDim2.new(0, 12, 0, 18)
+RangeBtn.Position = UDim2.new(1, -6, 0.5, -9)
+RangeBtn.Text = ""
+RangeBtn.BackgroundColor3 = tWhite
+Instance.new("UICorner", RangeBtn).CornerRadius = UDim.new(1, 0)
+
+maxEspDistance = 5000
 local draggingRange = false
 table.insert(GlobalConnections, RangeBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingRange = true end end))
 table.insert(GlobalConnections, UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingRange = false end end))
@@ -1327,10 +1353,10 @@ table.insert(GlobalConnections, UserInputService.InputChanged:Connect(function(i
 end))
 
 -- Color Palette
-local ColorLabel = Instance.new("TextLabel", ESPScroll); ColorLabel.Size = UDim2.new(1, -20, 0, 20); ColorLabel.BackgroundTransparency = 1; ColorLabel.Text = "COLOR DEL ESP:"; ColorLabel.TextColor3 = tWhite; ColorLabel.Font = Enum.Font.GothamBold; ColorLabel.TextSize = 11; ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
-local PaletteFrame = Instance.new("Frame", ESPScroll); PaletteFrame.Size = UDim2.new(1, -20, 0, 30); PaletteFrame.BackgroundTransparency = 1
-local PList = Instance.new("UIListLayout", PaletteFrame); PList.FillDirection = Enum.FillDirection.Horizontal; PList.Padding = UDim.new(0, 8); PList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-local Colores = {tRed, tGreen, tCyan, tPurple, tYellow, tWhite}
+ColorLabel = Instance.new("TextLabel", ESPScroll); ColorLabel.Size = UDim2.new(1, -20, 0, 20); ColorLabel.BackgroundTransparency = 1; ColorLabel.Text = "COLOR DEL ESP:"; ColorLabel.TextColor3 = tWhite; ColorLabel.Font = Enum.Font.GothamBold; ColorLabel.TextSize = 11; ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+PaletteFrame = Instance.new("Frame", ESPScroll); PaletteFrame.Size = UDim2.new(1, -20, 0, 30); PaletteFrame.BackgroundTransparency = 1
+PList = Instance.new("UIListLayout", PaletteFrame); PList.FillDirection = Enum.FillDirection.Horizontal; PList.Padding = UDim.new(0, 8); PList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Colores = {tRed, tGreen, tCyan, tPurple, tYellow, tWhite}
 for _, col in ipairs(Colores) do
     local cBtn = Instance.new("TextButton", PaletteFrame); cBtn.Size = UDim2.new(0, 30, 0, 30); cBtn.BackgroundColor3 = col; cBtn.Text = ""; Instance.new("UICorner", cBtn).CornerRadius = UDim.new(1, 0); Instance.new("UIStroke", cBtn).Color = tWhite; Instance.new("UIStroke", cBtn).Thickness = 0
     cBtn.MouseButton1Click:Connect(function() 
@@ -1363,7 +1389,7 @@ ESPCloseBtn.MouseButton1Click:Connect(function() ESPMain.Visible = false end)
 
 -- Variables Lógicas
 isESPActive = false; espBox = false; espLine = false; espName = false; espDist = false; espSkel = false; espTeam = true; espFriends = false; espColor = tRed
-local FriendCache = {}; local isSpectating = false; local spectateTarget = nil
+FriendCache = {}; isSpectating = false; spectateTarget = nil
 
 -- Utilidad Toggles
 local function toggleState(btn, stateVar, name)
@@ -1400,7 +1426,7 @@ end
 -- ==========================================
 -- MOTOR DE RENDERIZADO UNIVERSAL (SIN DRAWING API)
 -- ==========================================
-local ESPDrawFolder = Instance.new("ScreenGui")
+ESPDrawFolder = Instance.new("ScreenGui")
 ESPDrawFolder.Name = "CDT_Universal_ESP"
 ESPDrawFolder.IgnoreGuiInset = true
 ESPDrawFolder.ResetOnSpawn = false
@@ -1449,7 +1475,7 @@ local function NewGuiText()
     return txt
 end
 
-local Drawings = {}
+Drawings = {}
 local function GetDrawings(player)
     if not Drawings[player] then
         Drawings[player] = {
@@ -1467,8 +1493,8 @@ local function ClearESPPlayer(player)
     end
 end
 
-local R15_Bones = { {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"}, {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"}, {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"} }
-local R6_Bones = { {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"} }
+R15_Bones = { {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"}, {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"}, {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"} }
+R6_Bones = { {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"} }
 
 table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
     ESPScroll.CanvasSize = UDim2.new(0, 0, 0, ESPListLayout.AbsoluteContentSize.Y + 20)
@@ -1624,7 +1650,6 @@ table.insert(GlobalConnections, {
 })
 
 task.spawn(function() UpdateSpectatorList("") end)
-
 -- ==================================================================
 -- 11. INTERFAZ DE AJUSTES Y TEMAS (SETTINGS / THEMES)
 -- ==================================================================
