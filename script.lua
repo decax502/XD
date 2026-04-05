@@ -1285,7 +1285,7 @@ ESPMinBtn = Instance.new("TextButton", ESPTopBar); ESPMinBtn.Size = UDim2.new(0,
 ESPCloseBtn = Instance.new("TextButton", ESPTopBar); ESPCloseBtn.Size = UDim2.new(0, 35, 1, 0); ESPCloseBtn.Position = UDim2.new(1, -35, 0, 0); ESPCloseBtn.BackgroundTransparency = 1; ESPCloseBtn.Text = "X"; ESPCloseBtn.TextColor3 = tRed; ESPCloseBtn.Font = Enum.Font.GothamBlack; ESPCloseBtn.TextSize = 12
 
 ESPScroll = Instance.new("ScrollingFrame", ESPMain); ESPScroll.Size = UDim2.new(1, 0, 1, -35); ESPScroll.Position = UDim2.new(0, 0, 0, 35); ESPScroll.BackgroundTransparency = 1; ESPScroll.BorderSizePixel = 0; ESPScroll.ScrollBarThickness = 3; ESPScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
-ESPListLayout = Instance.new("UIListLayout", ESPScroll); ESPListLayout.Padding = UDim.new(0, 5); ESPListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; ESPListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local ESPListLayout = Instance.new("UIListLayout", ESPScroll); ESPListLayout.Padding = UDim.new(0, 5); ESPListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; ESPListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 Instance.new("UIPadding", ESPScroll).PaddingTop = UDim.new(0, 10)
 
 local function CreateESPToggle(name, defaultText, isMaster)
@@ -1297,7 +1297,7 @@ local function CreateESPToggle(name, defaultText, isMaster)
     return btn
 end
 
--- Toggles
+-- Toggles Principales
 ESPMasterBtn = CreateESPToggle("Master", "ESP MASTER: OFF", true)
 ESPBoxBtn = CreateESPToggle("Box", "BOX: OFF", false)
 ESPLineBtn = CreateESPToggle("Line", "LÍNEAS (TRACERS): OFF", false)
@@ -1307,11 +1307,30 @@ ESPSkelBtn = CreateESPToggle("Skel", "ESQUELETO: OFF", false)
 ESPTeamBtn = CreateESPToggle("Team", "TEAM CHECK: ON", false); ESPTeamBtn.BackgroundColor3 = tGreen; ESPTeamBtn.TextColor3 = Color3.fromRGB(10,10,10)
 ESPFriendsBtn = CreateESPToggle("Friends", "SOLO AMIGOS: OFF", false)
 
+-- Slider Distancia Max
+local RangeLabel = Instance.new("TextLabel", ESPScroll); RangeLabel.Size = UDim2.new(1, -20, 0, 15); RangeLabel.BackgroundTransparency = 1; RangeLabel.Text = "DISTANCIA MAX: 5000m"; RangeLabel.TextColor3 = tWhite; RangeLabel.Font = Enum.Font.GothamBold; RangeLabel.TextSize = 11; RangeLabel.TextXAlignment = Enum.TextXAlignment.Left
+local RangeBar = Instance.new("Frame", ESPScroll); RangeBar.Size = UDim2.new(1, -20, 0, 6); RangeBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40); Instance.new("UICorner", RangeBar).CornerRadius = UDim.new(1, 0)
+local RangeFill = Instance.new("Frame", RangeBar); RangeFill.Size = UDim2.new(1, 0, 1, 0); RangeFill.BackgroundColor3 = tCyan; Instance.new("UICorner", RangeFill).CornerRadius = UDim.new(1, 0)
+local RangeBtn = Instance.new("TextButton", RangeBar); RangeBtn.Size = UDim2.new(0, 12, 0, 18); RangeBtn.Position = UDim2.new(1, -6, 0.5, -9); RangeBtn.Text = ""; RangeBtn.BackgroundColor3 = tWhite; Instance.new("UICorner", RangeBtn).CornerRadius = UDim.new(1, 0)
+
+local maxEspDistance = 5000
+local draggingRange = false
+table.insert(GlobalConnections, RangeBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingRange = true end end))
+table.insert(GlobalConnections, UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingRange = false end end))
+table.insert(GlobalConnections, UserInputService.InputChanged:Connect(function(input)
+    if draggingRange and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local pos = math.clamp((input.Position.X - RangeBar.AbsolutePosition.X) / RangeBar.AbsoluteSize.X, 0, 1)
+        RangeFill.Size = UDim2.new(pos, 0, 1, 0); RangeBtn.Position = UDim2.new(pos, -6, 0.5, -9)
+        maxEspDistance = math.floor(pos * 5000); if maxEspDistance < 10 then maxEspDistance = 10 end
+        RangeLabel.Text = "DISTANCIA MAX: " .. maxEspDistance .. "m"
+    end
+end))
+
 -- Color Palette
-ColorLabel = Instance.new("TextLabel", ESPScroll); ColorLabel.Size = UDim2.new(1, -20, 0, 20); ColorLabel.BackgroundTransparency = 1; ColorLabel.Text = "COLOR DEL ESP:"; ColorLabel.TextColor3 = tWhite; ColorLabel.Font = Enum.Font.GothamBold; ColorLabel.TextSize = 11; ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
-PaletteFrame = Instance.new("Frame", ESPScroll); PaletteFrame.Size = UDim2.new(1, -20, 0, 30); PaletteFrame.BackgroundTransparency = 1
-PList = Instance.new("UIListLayout", PaletteFrame); PList.FillDirection = Enum.FillDirection.Horizontal; PList.Padding = UDim.new(0, 8); PList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-Colores = {tRed, tGreen, tCyan, tPurple, tYellow, tWhite}
+local ColorLabel = Instance.new("TextLabel", ESPScroll); ColorLabel.Size = UDim2.new(1, -20, 0, 20); ColorLabel.BackgroundTransparency = 1; ColorLabel.Text = "COLOR DEL ESP:"; ColorLabel.TextColor3 = tWhite; ColorLabel.Font = Enum.Font.GothamBold; ColorLabel.TextSize = 11; ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+local PaletteFrame = Instance.new("Frame", ESPScroll); PaletteFrame.Size = UDim2.new(1, -20, 0, 30); PaletteFrame.BackgroundTransparency = 1
+local PList = Instance.new("UIListLayout", PaletteFrame); PList.FillDirection = Enum.FillDirection.Horizontal; PList.Padding = UDim.new(0, 8); PList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+local Colores = {tRed, tGreen, tCyan, tPurple, tYellow, tWhite}
 for _, col in ipairs(Colores) do
     local cBtn = Instance.new("TextButton", PaletteFrame); cBtn.Size = UDim2.new(0, 30, 0, 30); cBtn.BackgroundColor3 = col; cBtn.Text = ""; Instance.new("UICorner", cBtn).CornerRadius = UDim.new(1, 0); Instance.new("UIStroke", cBtn).Color = tWhite; Instance.new("UIStroke", cBtn).Thickness = 0
     cBtn.MouseButton1Click:Connect(function() 
@@ -1322,21 +1341,20 @@ for _, col in ipairs(Colores) do
 end
 
 -- Spectator Section
-SpecDiv = Instance.new("Frame", ESPScroll); SpecDiv.Size = UDim2.new(1, -40, 0, 2); SpecDiv.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-SpecLabel = Instance.new("TextLabel", ESPScroll); SpecLabel.Size = UDim2.new(1, -20, 0, 20); SpecLabel.BackgroundTransparency = 1; SpecLabel.Text = "--- MODO ESPECTADOR ---"; SpecLabel.TextColor3 = tYellow; SpecLabel.Font = Enum.Font.GothamBold; SpecLabel.TextSize = 12
-SpecTargetLabel = Instance.new("TextLabel", ESPScroll); SpecTargetLabel.Size = UDim2.new(1, -20, 0, 20); SpecTargetLabel.BackgroundTransparency = 1; SpecTargetLabel.Text = "OBJETIVO: NINGUNO"; SpecTargetLabel.TextColor3 = tWhite; SpecTargetLabel.Font = Enum.Font.Gotham; SpecTargetLabel.TextSize = 11
-SpecToggleBtn = CreateESPToggle("Spec", "ESPECTAR: OFF", true)
+local SpecDiv = Instance.new("Frame", ESPScroll); SpecDiv.Size = UDim2.new(1, -40, 0, 2); SpecDiv.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+local SpecLabel = Instance.new("TextLabel", ESPScroll); SpecLabel.Size = UDim2.new(1, -20, 0, 20); SpecLabel.BackgroundTransparency = 1; SpecLabel.Text = "--- MODO ESPECTADOR ---"; SpecLabel.TextColor3 = tYellow; SpecLabel.Font = Enum.Font.GothamBold; SpecLabel.TextSize = 12
+local SpecTargetLabel = Instance.new("TextLabel", ESPScroll); SpecTargetLabel.Size = UDim2.new(1, -20, 0, 20); SpecTargetLabel.BackgroundTransparency = 1; SpecTargetLabel.Text = "OBJETIVO: NINGUNO"; SpecTargetLabel.TextColor3 = tWhite; SpecTargetLabel.Font = Enum.Font.Gotham; SpecTargetLabel.TextSize = 11
+local SpecToggleBtn = CreateESPToggle("Spec", "ESPECTAR: OFF", true)
 
--- Buscador de Espectador
-SpecSearchBox = Instance.new("TextBox", ESPScroll); SpecSearchBox.Size = UDim2.new(1, -20, 0, 30); SpecSearchBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20); SpecSearchBox.TextColor3 = Color3.fromRGB(255, 255, 255); SpecSearchBox.Text = ""; SpecSearchBox.PlaceholderText = "🔍 Buscar jugador..."; SpecSearchBox.Font = Enum.Font.Gotham; SpecSearchBox.TextSize = 12; SpecSearchBox.ClearTextOnFocus = false; Instance.new("UICorner", SpecSearchBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", SpecSearchBox).Color = Color3.fromRGB(50, 50, 50)
+local SpecSearchBox = Instance.new("TextBox", ESPScroll); SpecSearchBox.Size = UDim2.new(1, -20, 0, 30); SpecSearchBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20); SpecSearchBox.TextColor3 = Color3.fromRGB(255, 255, 255); SpecSearchBox.Text = ""; SpecSearchBox.PlaceholderText = "🔍 Buscar jugador..."; SpecSearchBox.Font = Enum.Font.Gotham; SpecSearchBox.TextSize = 12; SpecSearchBox.ClearTextOnFocus = false; Instance.new("UICorner", SpecSearchBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", SpecSearchBox).Color = Color3.fromRGB(50, 50, 50)
 
-SpecListFrame = Instance.new("Frame", ESPScroll); SpecListFrame.Size = UDim2.new(1, -20, 0, 150); SpecListFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Instance.new("UICorner", SpecListFrame).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", SpecListFrame).Color = Color3.fromRGB(40,40,40)
-SpecListScroll = Instance.new("ScrollingFrame", SpecListFrame); SpecListScroll.Size = UDim2.new(1, 0, 1, 0); SpecListScroll.BackgroundTransparency = 1; SpecListScroll.BorderSizePixel = 0; SpecListScroll.ScrollBarThickness = 2
-SpecListLayout = Instance.new("UIListLayout", SpecListScroll); SpecListLayout.Padding = UDim.new(0, 2)
+local SpecListFrame = Instance.new("Frame", ESPScroll); SpecListFrame.Size = UDim2.new(1, -20, 0, 150); SpecListFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Instance.new("UICorner", SpecListFrame).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", SpecListFrame).Color = Color3.fromRGB(40,40,40)
+local SpecListScroll = Instance.new("ScrollingFrame", SpecListFrame); SpecListScroll.Size = UDim2.new(1, 0, 1, 0); SpecListScroll.BackgroundTransparency = 1; SpecListScroll.BorderSizePixel = 0; SpecListScroll.ScrollBarThickness = 2
+local SpecListLayout = Instance.new("UIListLayout", SpecListScroll); SpecListLayout.Padding = UDim.new(0, 2)
 
 ApplyResponsiveScale(ESPMain); MakeDraggable(ESPTopBar, ESPMain)
 
-espMinimized = false
+local espMinimized = false
 ESPMinBtn.MouseButton1Click:Connect(function()
     espMinimized = not espMinimized; ESPMain:TweenSize(espMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 350), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     ESPMinBtn.Text = espMinimized and "+" or "—"; ESPFix.Visible = not espMinimized
@@ -1345,7 +1363,7 @@ ESPCloseBtn.MouseButton1Click:Connect(function() ESPMain.Visible = false end)
 
 -- Variables Lógicas
 isESPActive = false; espBox = false; espLine = false; espName = false; espDist = false; espSkel = false; espTeam = true; espFriends = false; espColor = tRed
-FriendCache = {}; isSpectating = false; spectateTarget = nil
+local FriendCache = {}; local isSpectating = false; local spectateTarget = nil
 
 -- Utilidad Toggles
 local function toggleState(btn, stateVar, name)
@@ -1382,7 +1400,7 @@ end
 -- ==========================================
 -- MOTOR DE RENDERIZADO UNIVERSAL (SIN DRAWING API)
 -- ==========================================
-ESPDrawFolder = Instance.new("ScreenGui")
+local ESPDrawFolder = Instance.new("ScreenGui")
 ESPDrawFolder.Name = "CDT_Universal_ESP"
 ESPDrawFolder.IgnoreGuiInset = true
 ESPDrawFolder.ResetOnSpawn = false
@@ -1431,7 +1449,7 @@ local function NewGuiText()
     return txt
 end
 
-Drawings = {}
+local Drawings = {}
 local function GetDrawings(player)
     if not Drawings[player] then
         Drawings[player] = {
@@ -1449,8 +1467,8 @@ local function ClearESPPlayer(player)
     end
 end
 
-R15_Bones = { {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"}, {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"}, {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"} }
-R6_Bones = { {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"} }
+local R15_Bones = { {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"}, {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"}, {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"} }
+local R6_Bones = { {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"} }
 
 table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
     ESPScroll.CanvasSize = UDim2.new(0, 0, 0, ESPListLayout.AbsoluteContentSize.Y + 20)
@@ -1469,12 +1487,15 @@ table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
         if valid and espTeam and p.Team == LocalPlayer.Team then valid = false end
         if valid and espFriends and not IsFriend(p) then valid = false end
 
+        -- Límite de distancia añadido aquí
+        local dist = hrp and (Camera.CFrame.Position - hrp.Position).Magnitude or 0
+        if valid and dist > maxEspDistance then valid = false end
+
         local D = GetDrawings(p)
         
         if valid then
             local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
             if onScreen then
-                local dist = (Camera.CFrame.Position - hrp.Position).Magnitude
                 local height = math.clamp(Camera.ViewportSize.Y / dist * 4.5, 10, 1000)
                 local width = height * 0.6
                 
@@ -1485,9 +1506,15 @@ table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
                     D.Box.Stroke.Color = espColor; D.Box.Frame.Visible = true
                 else D.Box.Frame.Visible = false end
                 
-                -- Line
+                -- Line (Tracer) desde el LocalPlayer o el centro de la pantalla
                 if espLine then
-                    UpdateGuiLine(D.Line, Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y), Vector2.new(pos.X, pos.Y + height/2), espColor)
+                    local origin2D = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y) -- Default (Abajo al centro)
+                    local myHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if myHrp then
+                        local myPos, myVis = Camera:WorldToViewportPoint(myHrp.Position)
+                        if myVis then origin2D = Vector2.new(myPos.X, myPos.Y) end
+                    end
+                    UpdateGuiLine(D.Line, origin2D, Vector2.new(pos.X, pos.Y + height/2), espColor)
                 else D.Line.Visible = false end
                 
                 -- Name
@@ -1549,7 +1576,6 @@ local function UpdateSpectatorList(filterText)
     end
 end
 
--- Detectar cuando escribes en el buscador de espectador
 table.insert(GlobalConnections, SpecSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
     UpdateSpectatorList(SpecSearchBox.Text)
 end))
@@ -1587,7 +1613,6 @@ SpecToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Sistema de limpieza de dibujos para no dejar basura si das !destroy
 table.insert(GlobalConnections, {
     Connected = true,
     Disconnect = function(self)
