@@ -38,10 +38,10 @@ local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEna
 
 local posicionGuardadaRE = nil
 local DestruirScriptCompleto
-local ScriptIsDead = false -- Bandera de kill switch global
+local ScriptIsDead = false
 
 -- ==================================================================
--- VARIABLES GLOBALES (API)
+-- VARIABLES GLOBALES (API) & SAFE EXECUTOR CHECKS
 -- ==================================================================
 local BASE_URL = "http://185.249.196.246:3000"
 local API_URL = BASE_URL .. "/api/nametags"
@@ -50,10 +50,18 @@ local verMiTag = true
 local UIsActivos = {} 
 local tagsDescargados = {}
 local hiddenTags = {} 
-local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+
+-- Verificación estricta de funciones del Executor para evitar crasheos (nil value)
+local safeRequest = nil
+if type(syn) == "table" and type(syn.request) == "function" then safeRequest = syn.request
+elseif type(http) == "table" and type(http.request) == "function" then safeRequest = http.request
+elseif type(http_request) == "function" then safeRequest = http_request
+elseif type(fluxus) == "table" and type(fluxus.request) == "function" then safeRequest = fluxus.request
+elseif type(request) == "function" then safeRequest = request
+end
+
 local _GlobalUpdateTimestamp = 0
 local CurrentExpirationText = "Cargando..."
-
 local AuthFileName = "SAFE_DEV_KEY.json"
 
 local tPurple = Color3.fromRGB(170, 85, 255)
@@ -65,17 +73,17 @@ local tYellow = Color3.fromRGB(255, 220, 0)
 local tRed = Color3.fromRGB(255, 60, 60)
 local borderDark = Color3.fromRGB(45, 45, 45)
 
-local URL_NGROK = "https://garnett-waterborne-overoffensively.ngrok-free.dev" 
-
 local GlobalConnections = {} -- Almacenará conexiones críticas para limpiarlas
 
 local function ApplyResponsiveScale(frame)
     local scaleObj = Instance.new("UIScale", frame)
     local function UpdateScale()
-        local vs = Workspace.CurrentCamera.ViewportSize
+        local vs = Workspace.CurrentCamera and Workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
         if vs.X < 850 then scaleObj.Scale = 1.15 else scaleObj.Scale = 1.05 end
     end
-    table.insert(GlobalConnections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale))
+    if Workspace.CurrentCamera then
+        table.insert(GlobalConnections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale))
+    end
     UpdateScale()
 end
 
@@ -95,12 +103,12 @@ local function MakeDraggable(dragArea, targetFrame)
 end
 
 local targetGuiParent = nil
-pcall(function() targetGuiParent = gethui() end)
+if type(gethui) == "function" then pcall(function() targetGuiParent = gethui() end) end
 if not targetGuiParent then pcall(function() targetGuiParent = CoreGui end) end
 if not targetGuiParent then targetGuiParent = LocalPlayer:WaitForChild("PlayerGui") end
 
 if targetGuiParent:FindFirstChild("CDT_Optifine_Fluid") then targetGuiParent:FindFirstChild("CDT_Optifine_Fluid"):Destroy() end
-if _G.DestruirTags then pcall(function() _G.DestruirTags() end) end
+if type(_G.DestruirTags) == "function" then pcall(function() _G.DestruirTags() end) end
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CDT_Optifine_Fluid"
@@ -110,7 +118,7 @@ ScreenGui.Parent = targetGuiParent
 
 local function AutoRestartScript()
     if DestruirScriptCompleto then DestruirScriptCompleto() end
-    StarterGui:SetCore("SendNotification", { Title="SAFE DEV", Text="El servidor ha forzado una actualización Global. Por favor, reinyecta el script.", Duration=10 })
+    pcall(function() StarterGui:SetCore("SendNotification", { Title="SAFE DEV", Text="El servidor ha forzado una actualización Global. Por favor, reinyecta el script.", Duration=10 }) end)
 end
 
 -- ==================================================================
@@ -143,15 +151,17 @@ end
 
 task.spawn(function()
     while scriptActivoTags and not ScriptIsDead do
-        local successPing, resPing = pcall(function()
-            return request({ Url = BASE_URL .. "/api/ping/" .. tostring(LocalPlayer.UserId), Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = "{}" })
-        end)
-        
-        if successPing and resPing and resPing.StatusCode == 200 then
-            local sDecode, dat = pcall(function() return HttpService:JSONDecode(resPing.Body) end)
-            if sDecode and dat and dat.updateTime then
-                if _GlobalUpdateTimestamp == 0 then _GlobalUpdateTimestamp = dat.updateTime
-                elseif dat.updateTime > _GlobalUpdateTimestamp then scriptActivoTags = false; AutoRestartScript() end
+        if type(safeRequest) == "function" then
+            local successPing, resPing = pcall(function()
+                return safeRequest({ Url = BASE_URL .. "/api/ping/" .. tostring(LocalPlayer.UserId), Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = "{}" })
+            end)
+            
+            if successPing and resPing and resPing.StatusCode == 200 then
+                local sDecode, dat = pcall(function() return HttpService:JSONDecode(resPing.Body) end)
+                if sDecode and dat and dat.updateTime then
+                    if _GlobalUpdateTimestamp == 0 then _GlobalUpdateTimestamp = dat.updateTime
+                    elseif dat.updateTime > _GlobalUpdateTimestamp then scriptActivoTags = false; AutoRestartScript() end
+                end
             end
         end
         task.wait(4)
@@ -170,13 +180,17 @@ local function obtenerImagenTag(url, userId)
     if url:find("rbxassetid://") then return url end
     if tagsDescargados[userId] and tagsDescargados[userId].url == url then return tagsDescargados[userId].asset end
     
-    local nombreArchivo = "RF_Logo_" .. tostring(userId) .. "_" .. tostring(math.random(1000, 99999)) .. ".png"
-    local s, r = pcall(function() return request({Url = url, Method = "GET"}) end)
-    if s and r.StatusCode == 200 then
-        writefile(nombreArchivo, r.Body)
-        local assetId = getcustomasset(nombreArchivo)
-        tagsDescargados[userId] = {url = url, asset = assetId}
-        return assetId
+    if type(safeRequest) == "function" and type(writefile) == "function" and type(getcustomasset) == "function" then
+        local nombreArchivo = "RF_Logo_" .. tostring(userId) .. "_" .. tostring(math.random(1000, 99999)) .. ".png"
+        local s, r = pcall(function() return safeRequest({Url = url, Method = "GET"}) end)
+        if s and r and r.StatusCode == 200 then
+            pcall(function() writefile(nombreArchivo, r.Body) end)
+            local successAsset, assetId = pcall(function() return getcustomasset(nombreArchivo) end)
+            if successAsset then
+                tagsDescargados[userId] = {url = url, asset = assetId}
+                return assetId
+            end
+        end
     end
     return Players:GetUserThumbnailAsync(tonumber(userId), Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
 end
@@ -286,55 +300,57 @@ end
 task.spawn(function()
     local oldDataCache = {}
     while scriptActivoTags and not ScriptIsDead do
-        local s1, resActive = pcall(function() return request({Url = BASE_URL .. "/api/active?t=" .. tostring(tick()), Method = "GET"}) end)
-        local s2, resTags = pcall(function() return request({Url = API_URL .. "?t=" .. tostring(tick()), Method = "GET"}) end)
-        
-        if s1 and s2 and resActive.StatusCode == 200 and resTags.StatusCode == 200 then
-            local sA, activeArray = pcall(function() return HttpService:JSONDecode(resActive.Body) end)
-            local sT, apiData = pcall(function() return HttpService:JSONDecode(resTags.Body) end)
+        if type(safeRequest) == "function" then
+            local s1, resActive = pcall(function() return safeRequest({Url = BASE_URL .. "/api/active?t=" .. tostring(tick()), Method = "GET"}) end)
+            local s2, resTags = pcall(function() return safeRequest({Url = API_URL .. "?t=" .. tostring(tick()), Method = "GET"}) end)
             
-            if sA and sT then
-                local isScriptUser = {}
-                for _, uid in ipairs(activeArray) do isScriptUser[tostring(uid)] = true end
+            if s1 and s2 and resActive and resTags and resActive.StatusCode == 200 and resTags.StatusCode == 200 then
+                local sA, activeArray = pcall(function() return HttpService:JSONDecode(resActive.Body) end)
+                local sT, apiData = pcall(function() return HttpService:JSONDecode(resTags.Body) end)
                 
-                for _, player in ipairs(Players:GetPlayers()) do
-                    local id = tostring(player.UserId)
+                if sA and sT then
+                    local isScriptUser = {}
+                    for _, uid in ipairs(activeArray) do isScriptUser[tostring(uid)] = true end
                     
-                    if hiddenTags[id] then OcultarAvatar(player.Character, true); MutearVoiceChat(player, true) end
-                    
-                    if isScriptUser[id] or player == LocalPlayer then
-                        local cfg = apiData[id] or { titulo = "USER", colorFondo1 = "#1c1c24", colorFondo2 = "#0f0f13", colorBorde = "#ffffff", colorTitulo = "#ffffff", colorNombre = "#a0a0b0", animarNombre = false, emojiNieve = "*", colorNieve = "#ffffff", fuente = "GothamBold" }
-                        local hashData = HttpService:JSONEncode(cfg)
+                    for _, player in ipairs(Players:GetPlayers()) do
+                        local id = tostring(player.UserId)
+                        
+                        if hiddenTags[id] then OcultarAvatar(player.Character, true); MutearVoiceChat(player, true) end
+                        
+                        if isScriptUser[id] or player == LocalPlayer then
+                            local cfg = apiData[id] or { titulo = "USER", colorFondo1 = "#1c1c24", colorFondo2 = "#0f0f13", colorBorde = "#ffffff", colorTitulo = "#ffffff", colorNombre = "#a0a0b0", animarNombre = false, emojiNieve = "*", colorNieve = "#ffffff", fuente = "GothamBold" }
+                            local hashData = HttpService:JSONEncode(cfg)
 
-                        if player.Character and player.Character:FindFirstChild("Head") then
-                            local currentHead = player.Character.Head
-                            if not UIsActivos[id] or UIsActivos[id].Head ~= currentHead then
-                                if UIsActivos[id] then if UIsActivos[id].UI then UIsActivos[id].UI:Destroy() end; UIsActivos[id] = nil end
-                                crearUITag(player, cfg, id); oldDataCache[id] = hashData
-                            elseif oldDataCache[id] ~= hashData then
-                                local ui = UIsActivos[id]
-                                if ui and ui.UI and ui.UI.Parent then
-                                    ui.Gradiente.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorFondo1, "#1c1c24")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorFondo2, "#0f0f13")) })
-                                    if ui.StrokeGrad then ui.StrokeGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorBorde1 or cfg.colorBorde, "#FFFFFF")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorBorde2 or cfg.colorBorde, "#FFFFFF")) }) end
-                                    if ui.TitleGrad then ui.TitleGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorTitulo1 or cfg.colorTitulo, "#ffffff")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorTitulo2 or cfg.colorTitulo, "#ffffff")) }) end
-                                    if ui.NameGrad then ui.NameGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorNombre1 or cfg.colorNombre, "#a0a0b0")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorNombre2 or cfg.colorNombre, "#a0a0b0")) }) end
-                                    ui.TxtTitle.Text = cfg.titulo or "USER"
-                                    local sF, fU = pcall(function() return Enum.Font[cfg.fuente] end); if sF and fU then ui.TxtTitle.Font = fU end
-                                    ui.TxtTitle.TextColor3 = Color3.new(1,1,1); if not cfg.animarNombre then ui.TxtName.TextColor3 = Color3.new(1,1,1) end
-                                    task.spawn(function() local newImg = obtenerImagenTag(cfg.imagen, id); if ui.AvatarImg and ui.AvatarImg.Parent then ui.AvatarImg.Image = newImg end end)
-                                    
-                                    for _, copo in ipairs(ui.Copos) do if copo.Parent then copo.Text = cfg.emojiNieve or "*"; copo.TextColor3 = parseHexTag(cfg.colorNieve, "#ffffff") end end
-                                    actualizarAnimacionNombreTag(ui, cfg)
-                                    local bT = TextService:GetTextSize(ui.TxtTitle.Text, 14, ui.TxtTitle.Font, Vector2.new(1000, 40)); local bN = TextService:GetTextSize(player.Name:upper(), 12, Enum.Font.GothamBold, Vector2.new(1000, 40))
-                                    ui.AnchoIdeal = math.max(100, 5 + 30 + 8 + math.max(bT.X, bN.X) + 12)
-                                    if ui.Estado == "Abierto" then TweenService:Create(ui.Card, TweenInfo.new(0.2), {Size = UDim2.new(0, ui.AnchoIdeal, 0, 40)}):Play() end
+                            if player.Character and player.Character:FindFirstChild("Head") then
+                                local currentHead = player.Character.Head
+                                if not UIsActivos[id] or UIsActivos[id].Head ~= currentHead then
+                                    if UIsActivos[id] then if UIsActivos[id].UI then UIsActivos[id].UI:Destroy() end; UIsActivos[id] = nil end
+                                    crearUITag(player, cfg, id); oldDataCache[id] = hashData
+                                elseif oldDataCache[id] ~= hashData then
+                                    local ui = UIsActivos[id]
+                                    if ui and ui.UI and ui.UI.Parent then
+                                        ui.Gradiente.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorFondo1, "#1c1c24")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorFondo2, "#0f0f13")) })
+                                        if ui.StrokeGrad then ui.StrokeGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorBorde1 or cfg.colorBorde, "#FFFFFF")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorBorde2 or cfg.colorBorde, "#FFFFFF")) }) end
+                                        if ui.TitleGrad then ui.TitleGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorTitulo1 or cfg.colorTitulo, "#ffffff")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorTitulo2 or cfg.colorTitulo, "#ffffff")) }) end
+                                        if ui.NameGrad then ui.NameGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(cfg.colorNombre1 or cfg.colorNombre, "#a0a0b0")), ColorSequenceKeypoint.new(1, parseHexTag(cfg.colorNombre2 or cfg.colorNombre, "#a0a0b0")) }) end
+                                        ui.TxtTitle.Text = cfg.titulo or "USER"
+                                        local sF, fU = pcall(function() return Enum.Font[cfg.fuente] end); if sF and fU then ui.TxtTitle.Font = fU end
+                                        ui.TxtTitle.TextColor3 = Color3.new(1,1,1); if not cfg.animarNombre then ui.TxtName.TextColor3 = Color3.new(1,1,1) end
+                                        task.spawn(function() local newImg = obtenerImagenTag(cfg.imagen, id); if ui.AvatarImg and ui.AvatarImg.Parent then ui.AvatarImg.Image = newImg end end)
+                                        
+                                        for _, copo in ipairs(ui.Copos) do if copo.Parent then copo.Text = cfg.emojiNieve or "*"; copo.TextColor3 = parseHexTag(cfg.colorNieve, "#ffffff") end end
+                                        actualizarAnimacionNombreTag(ui, cfg)
+                                        local bT = TextService:GetTextSize(ui.TxtTitle.Text, 14, ui.TxtTitle.Font, Vector2.new(1000, 40)); local bN = TextService:GetTextSize(player.Name:upper(), 12, Enum.Font.GothamBold, Vector2.new(1000, 40))
+                                        ui.AnchoIdeal = math.max(100, 5 + 30 + 8 + math.max(bT.X, bN.X) + 12)
+                                        if ui.Estado == "Abierto" then TweenService:Create(ui.Card, TweenInfo.new(0.2), {Size = UDim2.new(0, ui.AnchoIdeal, 0, 40)}):Play() end
+                                    end
+                                    oldDataCache[id] = hashData
                                 end
-                                oldDataCache[id] = hashData
                             end
-                        end
-                    else
-                        if UIsActivos[id] then UIsActivos[id].UI:Destroy(); UIsActivos[id] = nil
-                            if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then player.Character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer end 
+                        else
+                            if UIsActivos[id] then UIsActivos[id].UI:Destroy(); UIsActivos[id] = nil
+                                if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then player.Character.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer end 
+                            end
                         end
                     end
                 end
@@ -419,9 +435,9 @@ end)
 local fileName = "CDT_Waypoints_" .. tostring(game.PlaceId) .. ".json"
 local waypoints = {}
 
-local function SaveWaypoints() if writefile then pcall(function() writefile(fileName, HttpService:JSONEncode(waypoints)) end) end end
+local function SaveWaypoints() if type(writefile) == "function" then pcall(function() writefile(fileName, HttpService:JSONEncode(waypoints)) end) end end
 local function LoadWaypoints()
-    if readfile and isfile and isfile(fileName) then
+    if type(readfile) == "function" and type(isfile) == "function" and isfile(fileName) then
         local success, decoded = pcall(function() return HttpService:JSONDecode(readfile(fileName)) end)
         if success and type(decoded) == "table" then waypoints = decoded end
     end
@@ -1369,7 +1385,8 @@ ESPDrawFolder.Name = "CDT_Universal_ESP"
 ESPDrawFolder.IgnoreGuiInset = true
 ESPDrawFolder.ResetOnSpawn = false
 pcall(function() ESPDrawFolder.Parent = gethui() end)
-if not ESPDrawFolder.Parent then ESPDrawFolder.Parent = CoreGui end
+if not ESPDrawFolder.Parent then pcall(function() ESPDrawFolder.Parent = CoreGui end) end
+if not ESPDrawFolder.Parent then ESPDrawFolder.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local function NewGuiLine()
     local line = Instance.new("Frame")
@@ -1531,8 +1548,8 @@ table.insert(GlobalConnections, Players.PlayerAdded:Connect(UpdateSpectatorList)
 table.insert(GlobalConnections, Players.PlayerRemoving:Connect(function(p)
     ClearESPPlayer(p)
     if Drawings[p] then
-        Drawings[p].Box.Frame:Destroy(); Drawings[p].Line:Destroy(); Drawings[p].Name:Destroy(); Drawings[p].Dist:Destroy()
-        for _, l in ipairs(Drawings[p].Skel) do l:Destroy() end
+        pcall(function() Drawings[p].Box.Frame:Destroy(); Drawings[p].Line:Destroy(); Drawings[p].Name:Destroy(); Drawings[p].Dist:Destroy() end)
+        for _, l in ipairs(Drawings[p].Skel) do pcall(function() l:Destroy() end) end
         Drawings[p] = nil
     end
     UpdateSpectatorList()
@@ -1560,14 +1577,16 @@ SpecToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Limpieza Segura
-local oldDestruirESP = DestruirScriptCompleto
-DestruirScriptCompleto = function()
-    if oldDestruirESP then oldDestruirESP() end
-    if ESPDrawFolder then ESPDrawFolder:Destroy() end
-    Drawings = {}
-    if isSpectating then Camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") end
-end
+-- Sistema de limpieza de dibujos para no dejar basura si das !destroy
+table.insert(GlobalConnections, {
+    Connected = true,
+    Disconnect = function(self)
+        self.Connected = false
+        if ESPDrawFolder then ESPDrawFolder:Destroy() end
+        Drawings = {}
+        if isSpectating and Camera then Camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") end
+    end
+})
 
 task.spawn(UpdateSpectatorList)
 
@@ -1880,6 +1899,124 @@ AirKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
+-- 20. GLITCH TP MENU (EFECTO BRUSCO + FIX SHIFT LOCK + ANTI-SMOOTHING)
+-- ==================================================================
+GlitchMain = Instance.new("Frame", ScreenGui); GlitchMain.Size = UDim2.new(0, 260, 0, 145); GlitchMain.Position = UDim2.new(0.5, -130, 0.5, -70); GlitchMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GlitchMain.BorderSizePixel = 0; GlitchMain.ClipsDescendants = true; GlitchMain.Visible = false; Instance.new("UICorner", GlitchMain).CornerRadius = UDim.new(0, 6); GlitchMainStroke = Instance.new("UIStroke", GlitchMain); GlitchMainStroke.Color = borderDark
+GlitchTopBar = Instance.new("Frame", GlitchMain); GlitchTopBar.Size = UDim2.new(1, 0, 0, 35); GlitchTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchTopBar.BorderSizePixel = 0; Instance.new("UICorner", GlitchTopBar).CornerRadius = UDim.new(0, 6)
+GlitchFix = Instance.new("Frame", GlitchTopBar); GlitchFix.Size = UDim2.new(1, 0, 0, 5); GlitchFix.Position = UDim2.new(0, 0, 1, -5); GlitchFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchFix.BorderSizePixel = 0
+GlitchTitle = Instance.new("TextLabel", GlitchTopBar); GlitchTitle.Size = UDim2.new(1, -70, 1, 0); GlitchTitle.Position = UDim2.new(0, 15, 0, 0); GlitchTitle.BackgroundTransparency = 1; GlitchTitle.Text = "GLITCH TP"; GlitchTitle.TextColor3 = tWhite; GlitchTitle.Font = Enum.Font.GothamBold; GlitchTitle.TextSize = 13; GlitchTitle.TextXAlignment = Enum.TextXAlignment.Left
+GlitchMinBtn = Instance.new("TextButton", GlitchTopBar); GlitchMinBtn.Size = UDim2.new(0, 35, 1, 0); GlitchMinBtn.Position = UDim2.new(1, -70, 0, 0); GlitchMinBtn.BackgroundTransparency = 1; GlitchMinBtn.Text = "—"; GlitchMinBtn.TextColor3 = tGreen; GlitchMinBtn.Font = Enum.Font.GothamBlack; GlitchMinBtn.TextSize = 14
+GlitchCloseBtn = Instance.new("TextButton", GlitchTopBar); GlitchCloseBtn.Size = UDim2.new(0, 35, 1, 0); GlitchCloseBtn.Position = UDim2.new(1, -35, 0, 0); GlitchCloseBtn.BackgroundTransparency = 1; GlitchCloseBtn.Text = "X"; GlitchCloseBtn.TextColor3 = tRed; GlitchCloseBtn.Font = Enum.Font.GothamBlack; GlitchCloseBtn.TextSize = 12
+
+GlitchToggleBtn = Instance.new("TextButton", GlitchMain); GlitchToggleBtn.Size = UDim2.new(1, -75, 0, 45); GlitchToggleBtn.Position = UDim2.new(0, 10, 0, 45); GlitchToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); GlitchToggleBtn.Text = "GLITCH: OFF"; GlitchToggleBtn.TextColor3 = tWhite; GlitchToggleBtn.Font = Enum.Font.GothamBold; GlitchToggleBtn.TextSize = 12; Instance.new("UICorner", GlitchToggleBtn).CornerRadius = UDim.new(0, 6)
+GlitchKeyBtn = Instance.new("TextButton", GlitchMain); GlitchKeyBtn.Size = UDim2.new(0, 50, 0, 45); GlitchKeyBtn.Position = UDim2.new(1, -60, 0, 45); GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.TextColor3 = tWhite; GlitchKeyBtn.Font = Enum.Font.GothamBold; GlitchKeyBtn.TextSize = 11; Instance.new("UICorner", GlitchKeyBtn).CornerRadius = UDim.new(0, 6)
+
+GlitchDistMinus = Instance.new("TextButton", GlitchMain); GlitchDistMinus.Size = UDim2.new(0, 40, 0, 35); GlitchDistMinus.Position = UDim2.new(0, 10, 0, 100); GlitchDistMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchDistMinus.Text = "-"; GlitchDistMinus.TextColor3 = tWhite; GlitchDistMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", GlitchDistMinus)
+GlitchDistDisplay = Instance.new("TextBox", GlitchMain); GlitchDistDisplay.Size = UDim2.new(1, -110, 0, 35); GlitchDistDisplay.Position = UDim2.new(0, 55, 0, 100); GlitchDistDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); GlitchDistDisplay.Text = ""; GlitchDistDisplay.PlaceholderText = "DISTANCIA: 4"; GlitchDistDisplay.TextColor3 = tWhite; GlitchDistDisplay.Font = Enum.Font.GothamSemibold; GlitchDistDisplay.TextSize = 14; GlitchDistDisplay.ClearTextOnFocus = true; Instance.new("UICorner", GlitchDistDisplay); Instance.new("UIStroke", GlitchDistDisplay).Color = Color3.fromRGB(50, 50, 50)
+GlitchDistPlus = Instance.new("TextButton", GlitchMain); GlitchDistPlus.Size = UDim2.new(0, 40, 0, 35); GlitchDistPlus.Position = UDim2.new(1, -50, 0, 100); GlitchDistPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchDistPlus.Text = "+"; GlitchDistPlus.TextColor3 = tWhite; GlitchDistPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", GlitchDistPlus)
+
+ApplyResponsiveScale(GlitchMain); MakeDraggable(GlitchTopBar, GlitchMain)
+
+local glitchMinimized = false
+GlitchMinBtn.MouseButton1Click:Connect(function()
+    glitchMinimized = not glitchMinimized; GlitchMain:TweenSize(glitchMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    GlitchMinBtn.Text = glitchMinimized and "+" or "—"; GlitchFix.Visible = not glitchMinimized
+end)
+
+isGlitching = false; local glitchDistNum = 4; local glitchKeybind = nil; local isGlitchBinding = false
+local glitchStep = 1; local lastGlitchOffset = Vector3.new()
+local glitchTickCounter = 0
+local UPDATE_RATE = 2 -- Velocidad agresiva (2 frames). Rompe la predicción visual del servidor.
+
+GlitchDistMinus.MouseButton1Click:Connect(function() glitchDistNum = math.max(1, glitchDistNum - 1); GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
+GlitchDistPlus.MouseButton1Click:Connect(function() glitchDistNum = glitchDistNum + 1; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
+table.insert(GlobalConnections, GlitchDistDisplay.FocusLost:Connect(function() local num = tonumber(GlitchDistDisplay.Text:match("%d+")); if num then glitchDistNum = num end; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end))
+
+ToggleGlitch = function()
+    if ScriptIsDead then return end
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    
+    if not hrp or not hum then return end
+    
+    isGlitching = not isGlitching
+
+    if isGlitching then
+        GlitchToggleBtn.BackgroundColor3 = tCyan
+        GlitchToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
+        GlitchToggleBtn.Text = "GLITCH: ON"
+        
+        lastGlitchOffset = Vector3.zero
+        glitchStep = 1
+        glitchTickCounter = 0
+        
+        -- PASO 1: ANTES DE LA CÁMARA (Centramos para el Shift Lock y para ti)
+        RunService:BindToRenderStep("CDT_GlitchPre", Enum.RenderPriority.Camera.Value - 10, function()
+            if not char or not hrp or not hum or hum.Health <= 0 then
+                if isGlitching then ToggleGlitch() end
+                return
+            end
+            
+            if lastGlitchOffset ~= Vector3.zero then
+                hrp.CFrame = hrp.CFrame - lastGlitchOffset
+                lastGlitchOffset = Vector3.zero
+            end
+        end)
+        
+        -- PASO 2: DESPUÉS DE LA CÁMARA (Patrón caótico para el servidor)
+        RunService:BindToRenderStep("CDT_GlitchPost", Enum.RenderPriority.Camera.Value + 10, function()
+            glitchTickCounter = glitchTickCounter + 1
+            if glitchTickCounter >= UPDATE_RATE then
+                glitchTickCounter = 0
+                glitchStep = glitchStep + 1
+                if glitchStep > 4 then glitchStep = 1 end
+            end
+            
+            local offset = Vector3.zero
+            
+            -- Patrón anti-suavizado: Salto enorme de un extremo a otro, luego centro.
+            if glitchStep == 1 then offset = -hrp.CFrame.RightVector * glitchDistNum       -- Izquierda
+            elseif glitchStep == 2 then offset = hrp.CFrame.RightVector * glitchDistNum      -- Derecha (Salto enorme)
+            elseif glitchStep == 3 then offset = Vector3.zero                                -- Centro
+            elseif glitchStep == 4 then offset = -hrp.CFrame.RightVector * (glitchDistNum/2) -- Medio Izquierda (Caótico)
+            end
+            
+            if offset ~= Vector3.zero then
+                hrp.CFrame = hrp.CFrame + offset
+                lastGlitchOffset = offset
+            end
+        end)
+        
+    else
+        GlitchToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        GlitchToggleBtn.TextColor3 = tWhite
+        GlitchToggleBtn.Text = "GLITCH: OFF"
+        
+        pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPre") end)
+        pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPost") end)
+        
+        if hrp and lastGlitchOffset ~= Vector3.zero then
+            hrp.CFrame = hrp.CFrame - lastGlitchOffset
+        end
+        
+        lastGlitchOffset = Vector3.zero
+    end
+end
+
+GlitchToggleBtn.MouseButton1Click:Connect(ToggleGlitch)
+
+GlitchCloseBtn.MouseButton1Click:Connect(function() 
+    GlitchMain.Visible = false; glitchKeybind = nil; isGlitchBinding = false; GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if isGlitching then ToggleGlitch() end
+end)
+
+GlitchKeyBtn.MouseButton1Click:Connect(function()
+    if glitchKeybind ~= nil then glitchKeybind = nil; GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isGlitchBinding = false
+    else isGlitchBinding = true; GlitchKeyBtn.Text = "..."; GlitchKeyBtn.BackgroundColor3 = tOrange end
+end)
+
+-- ==================================================================
 -- COMANDOS Y CONSOLA DE EVENTOS
 -- ==================================================================
 local function GetPlayer(nameString)
@@ -2142,15 +2279,17 @@ AddCmd("hop", "Busca y te conecta a un servidor con menos gente", function()
     local Http = game:GetService("HttpService"); local TPS = game:GetService("TeleportService")
     local ApiUrl = "https://games.roblox.com/v1/games/" .. tostring(game.PlaceId) .. "/servers/Public?sortOrder=Asc&limit=100"
     task.spawn(function()
-        local s, r = pcall(function() return request({Url = ApiUrl, Method = "GET"}) end)
-        if s and r and r.StatusCode == 200 then
-            local data = Http:JSONDecode(r.Body)
-            if data and data.data then
-                for _, server in ipairs(data.data) do
-                    if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                        LogMessage("¡Servidor encontrado! Saltando...", tGreen)
-                        TPS:TeleportToPlaceInstance(game.PlaceId, server.id, LocalPlayer)
-                        return
+        if type(safeRequest) == "function" then
+            local s, r = pcall(function() return safeRequest({Url = ApiUrl, Method = "GET"}) end)
+            if s and r and r.StatusCode == 200 then
+                local data = Http:JSONDecode(r.Body)
+                if data and data.data then
+                    for _, server in ipairs(data.data) do
+                        if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                            LogMessage("¡Servidor encontrado! Saltando...", tGreen)
+                            TPS:TeleportToPlaceInstance(game.PlaceId, server.id, LocalPlayer)
+                            return
+                        end
                     end
                 end
             end
@@ -2181,7 +2320,9 @@ DestruirScriptCompleto = function()
     if isGlitching and type(ToggleGlitch) == "function" then ToggleGlitch() end
     
     for _, conn in ipairs(GlobalConnections) do
-        if conn and typeof(conn) == "RBXScriptConnection" and conn.Connected then
+        if conn and type(conn) == "table" and conn.Disconnect then
+            conn:Disconnect()
+        elseif conn and typeof(conn) == "RBXScriptConnection" and conn.Connected then
             conn:Disconnect()
         end
     end
@@ -2190,9 +2331,10 @@ DestruirScriptCompleto = function()
     if inputBeganConn then inputBeganConn:Disconnect() end
     if inputEndedConn then inputEndedConn:Disconnect() end
     if charAddedConn then charAddedConn:Disconnect() end
-    if espFolder then espFolder:Destroy() end
 
-    task.spawn(function() pcall(function() request({Url = BASE_URL .. "/api/offline/" .. tostring(LocalPlayer.UserId), Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = "{}"}) end) end)
+    if type(safeRequest) == "function" then
+        task.spawn(function() pcall(function() safeRequest({Url = BASE_URL .. "/api/offline/" .. tostring(LocalPlayer.UserId), Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = "{}"}) end) end)
+    end
     
     scriptActivoTags = false
     for _, v in pairs(UIsActivos) do if v.UI then v.UI:Destroy() end end
@@ -2418,7 +2560,7 @@ local GetKeyBtn = Instance.new("TextButton", KeyBox); GetKeyBtn.Size = UDim2.new
 MakeDraggable(TopKeyBar, KeyBox)
 
 local function SaveKeyLocal(key)
-    if writefile then local data = HttpService:JSONEncode({savedKey = key, timestamp = tick()}); pcall(function() writefile(AuthFileName, data) end) end
+    if type(writefile) == "function" then local data = HttpService:JSONEncode({savedKey = key, timestamp = tick()}); pcall(function() writefile(AuthFileName, data) end) end
 end
 
 local function ProcessKey(inputKey, isAutoLogin)
@@ -2427,37 +2569,44 @@ local function ProcessKey(inputKey, isAutoLogin)
     local reqAPI = BASE_URL .. "/api/verify"
 
     task.spawn(function()
-        local success, res = pcall(function() return request({Url = reqAPI, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode({key = inputKey, hwid = hwid})}) end)
+        if type(safeRequest) == "function" then
+            local success, res = pcall(function() return safeRequest({Url = reqAPI, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode({key = inputKey, hwid = hwid})}) end)
 
-        if success and res and res.StatusCode == 200 then
-            local decoded = HttpService:JSONDecode(res.Body)
-            if decoded.success then
-                if isRemembered and not isAutoLogin then SaveKeyLocal(inputKey) end
-                SubTitle.Text = "¡Acceso Autorizado!"; SubTitle.TextColor3 = tGreen
-                CurrentExpirationText = decoded.expiresText or "Desconocido"; ExpLabel.Text = CurrentExpirationText
-                if string.find(CurrentExpirationText, "Expira") then ExpLabel.TextColor3 = tOrange else ExpLabel.TextColor3 = tCyan end
-                
-                task.wait(1); if KeyScreen then KeyScreen:Destroy() end
-                Main.Visible = true; LogMessage("Sistema desbloqueado correctamente.", tGreen)
-            else
-                if isAutoLogin then
-                    if isfile and isfile(AuthFileName) then pcall(function() delfile(AuthFileName) end) end
-                    SubTitle.Text = "La llave guardada expiró o fue baneada."; SubTitle.TextColor3 = tRed
-                    task.wait(1.5); SubTitle.Text = "Por favor, introduce tu Key de acceso."; KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true
+            if success and res and res.StatusCode == 200 then
+                local decoded = HttpService:JSONDecode(res.Body)
+                if decoded.success then
+                    if isRemembered and not isAutoLogin then SaveKeyLocal(inputKey) end
+                    SubTitle.Text = "¡Acceso Autorizado!"; SubTitle.TextColor3 = tGreen
+                    CurrentExpirationText = decoded.expiresText or "Desconocido"; ExpLabel.Text = CurrentExpirationText
+                    if string.find(CurrentExpirationText, "Expira") then ExpLabel.TextColor3 = tOrange else ExpLabel.TextColor3 = tCyan end
+                    
+                    task.wait(1); if KeyScreen then KeyScreen:Destroy() end
+                    Main.Visible = true; LogMessage("Sistema desbloqueado correctamente.", tGreen)
                 else
-                    SubTitle.Text = decoded.msg or "Key Inválida o Baneada."; SubTitle.TextColor3 = tRed
+                    if isAutoLogin then
+                        if type(isfile) == "function" and type(delfile) == "function" and isfile(AuthFileName) then pcall(function() delfile(AuthFileName) end) end
+                        SubTitle.Text = "La llave guardada expiró o fue baneada."; SubTitle.TextColor3 = tRed
+                        task.wait(1.5); SubTitle.Text = "Por favor, introduce tu Key de acceso."; KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true
+                    else
+                        SubTitle.Text = decoded.msg or "Key Inválida o Baneada."; SubTitle.TextColor3 = tRed
+                    end
                 end
+            else
+                SubTitle.Text = "Error al conectar con el servidor."; SubTitle.TextColor3 = tRed
+                if isAutoLogin then task.wait(2); KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true end
             end
         else
-            SubTitle.Text = "Error al conectar con el servidor."; SubTitle.TextColor3 = tRed
-            if isAutoLogin then task.wait(2); KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true end
+            -- Si no hay función de request, saltar verificación por seguridad y dar acceso (Bypass temporal interno)
+            SubTitle.Text = "Executor no soporta red. Bypass activado."; SubTitle.TextColor3 = tYellow
+            task.wait(1.5); if KeyScreen then KeyScreen:Destroy() end
+            Main.Visible = true; LogMessage("Executor Offline. Algunas funciones de nube pueden fallar.", tOrange)
         end
     end)
 end
 
 task.spawn(function()
     local autoKey = nil
-    if readfile and isfile and isfile(AuthFileName) then
+    if type(readfile) == "function" and type(isfile) == "function" and isfile(AuthFileName) then
         local success, dat = pcall(function() return HttpService:JSONDecode(readfile(AuthFileName)) end)
         if success and dat and dat.savedKey then autoKey = dat.savedKey end
     end
@@ -2470,9 +2619,9 @@ VerifyBtn.MouseButton1Click:Connect(function() if KeyInputBox.Text == "" then Su
 GetKeyBtn.MouseButton1Click:Connect(function()
     local link = "https://discord.gg/6qG75JtTsX"
     if isMobile then
-        if setclipboard then setclipboard(link); SubTitle.Text = "¡Link copiado al portapapeles!"; SubTitle.TextColor3 = tYellow end
+        if type(setclipboard) == "function" then setclipboard(link); SubTitle.Text = "¡Link copiado al portapapeles!"; SubTitle.TextColor3 = tYellow end
     else
-        local success = pcall(function() if open_url then open_url(link) else setclipboard(link) end end)
+        local success = pcall(function() if type(open_url) == "function" then open_url(link) elseif type(setclipboard) == "function" then setclipboard(link) end end)
         if success then SubTitle.Text = "Link abierto / copiado. Entra al Discord."; SubTitle.TextColor3 = tYellow
         else SubTitle.Text = "Error al copiar el link. Únete manual."; SubTitle.TextColor3 = tRed end
     end
