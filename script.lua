@@ -1673,7 +1673,7 @@ AirKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 20. GLITCH TP MENU (EFECTO 3 CLONES + FIX SHIFT LOCK 100%)
+-- 20. GLITCH TP MENU (EFECTO 3 CLONES + FIX SERVER REPLICATION)
 -- ==================================================================
 GlitchMain = Instance.new("Frame", ScreenGui); GlitchMain.Size = UDim2.new(0, 260, 0, 145); GlitchMain.Position = UDim2.new(0.5, -130, 0.5, -70); GlitchMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GlitchMain.BorderSizePixel = 0; GlitchMain.ClipsDescendants = true; GlitchMain.Visible = false; Instance.new("UICorner", GlitchMain).CornerRadius = UDim.new(0, 6); GlitchMainStroke = Instance.new("UIStroke", GlitchMain); GlitchMainStroke.Color = borderDark
 GlitchTopBar = Instance.new("Frame", GlitchMain); GlitchTopBar.Size = UDim2.new(1, 0, 0, 35); GlitchTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchTopBar.BorderSizePixel = 0; Instance.new("UICorner", GlitchTopBar).CornerRadius = UDim.new(0, 6)
@@ -1699,6 +1699,8 @@ end)
 
 isGlitching = false; local glitchDistNum = 4; local glitchKeybind = nil; local isGlitchBinding = false
 local glitchStep = 1; local lastGlitchOffset = Vector3.new()
+local glitchTickCounter = 0
+local UPDATE_RATE = 3 -- Espera 3 frames antes de cambiar de lado. Esto le da tiempo al servidor de Roblox de enviarlo a los demás.
 
 GlitchDistMinus.MouseButton1Click:Connect(function() glitchDistNum = math.max(1, glitchDistNum - 1); GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
 GlitchDistPlus.MouseButton1Click:Connect(function() glitchDistNum = glitchDistNum + 1; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
@@ -1721,9 +1723,9 @@ ToggleGlitch = function()
         
         lastGlitchOffset = Vector3.zero
         glitchStep = 1
+        glitchTickCounter = 0
         
-        -- PASO 1: ANTES DE LA CÁMARA (Devolvemos el personaje al centro exacto)
-        -- Engañamos al Shift Lock y a la Cámara para que piensen que no nos hemos movido.
+        -- PASO 1: ANTES DE LA CÁMARA (Centramos para el Shift Lock)
         RunService:BindToRenderStep("CDT_GlitchPre", Enum.RenderPriority.Camera.Value - 10, function()
             if not char or not hrp or not hum or hum.Health <= 0 then
                 if isGlitching then ToggleGlitch() end
@@ -1736,14 +1738,18 @@ ToggleGlitch = function()
             end
         end)
         
-        -- PASO 2: DESPUÉS DE LA CÁMARA (Aplicamos el Glitch y Hitboxes)
+        -- PASO 2: DESPUÉS DE LA CÁMARA (Glitch con Retardo de Red)
         RunService:BindToRenderStep("CDT_GlitchPost", Enum.RenderPriority.Camera.Value + 10, function()
-            glitchStep = glitchStep + 1
-            if glitchStep > 4 then glitchStep = 1 end
+            -- El contador obliga al script a mantener la posición un instante para que el servidor lo procese
+            glitchTickCounter = glitchTickCounter + 1
+            if glitchTickCounter >= UPDATE_RATE then
+                glitchTickCounter = 0
+                glitchStep = glitchStep + 1
+                if glitchStep > 4 then glitchStep = 1 end
+            end
             
             local offset = Vector3.zero
             
-            -- Calculamos el Vector hacia la izquierda y derecha según la rotación de tu cámara/personaje
             if glitchStep == 1 then offset = -hrp.CFrame.RightVector * glitchDistNum
             elseif glitchStep == 2 then offset = Vector3.zero
             elseif glitchStep == 3 then offset = hrp.CFrame.RightVector * glitchDistNum
@@ -1764,7 +1770,6 @@ ToggleGlitch = function()
         pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPre") end)
         pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPost") end)
         
-        -- Restauramos si apagaste el hack justo cuando estabas a la izquierda o derecha
         if hrp and lastGlitchOffset ~= Vector3.zero then
             hrp.CFrame = hrp.CFrame - lastGlitchOffset
         end
