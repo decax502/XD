@@ -1693,11 +1693,10 @@ local function ProcesarMensajePrivado(sender, msg)
             sound:Play()
             game.Debris:AddItem(sound, 5)
 
-            -- Mostrar notificación con la cara del que lo envía
+            -- Mostrar notificación limpia (Sin Icono)
             StarterGui:SetCore("SendNotification", {
                 Title = sender.DisplayName,
                 Text = content,
-                Icon = "rbxthumb://type=AvatarHeadShot&id=" .. sender.UserId .. "&w=150&h=150",
                 Duration = 8
             })
         end
@@ -1785,7 +1784,7 @@ AddCmd("re", "Fuerza el respawn y te devuelve a tu posición actual", function()
     end
 end)
 
-AddCmd("smg", "Lista usuarios o envía MSJ (Ej: smg lista | smg juan Hola)", function(args)
+AddCmd("smg", "Envía MSJ o lista usuarios (Ej: smg lista | smg juan Hola)", function(args)
     if #args == 0 or args[1] == "lista" then
         LogMessage("Obteniendo usuarios de SAFE DEV en este server...", tYellow)
         task.spawn(function()
@@ -2120,7 +2119,7 @@ local function UpdateSuggestions()
 
     if #args == 1 then
         for cmd, info in pairs(Comandos) do if string.sub(cmd, 1, #currentCmd) == currentCmd then table.insert(suggestions, {Display = cmd .. " - " .. info.Desc, Fill = cmd .. " "}) end end
-    elseif #args == 2 and (currentCmd == "to") then
+    elseif #args == 2 and (currentCmd == "to" or currentCmd == "smg") then
         local currentArg = args[2]
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer then
