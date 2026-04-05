@@ -257,7 +257,8 @@ local function crearUITag(player, datos, userId)
     -- local avS = Instance.new("UIStroke", avF); avS.Color = Color3.new(0, 0, 0); avS.Transparency = 0; avS.Thickness = 1 <-- BORRADO
 
     local avatarImg = Instance.new("ImageLabel", avF); avatarImg.Size = UDim2.new(1, 0, 1, 0); avatarImg.BackgroundTransparency = 1
-    task.spawn(function() local img = obtenerImagenTag(cfg.imagen, id); if avatarImg and avatarImg.Parent then avatarImg.Image = img end end)
+    -- CORRECCIÓN AQUÍ: Se usan 'datos' y 'userId' correctamente
+    task.spawn(function() local img = obtenerImagenTag(datos.imagen, userId); if avatarImg and avatarImg.Parent then avatarImg.Image = img end end)
     Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
 
     -- AJUSTE DE TEXTOS PARA QUE ENCAJEN PERFECTAMENTE
