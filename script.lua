@@ -1748,7 +1748,7 @@ ToggleGlitch = function()
                     step = 0
                 end
                 
-                task.wait(0.02) -- Velocidad super rápida para efecto clone
+                task.wait(0.01) -- Velocidad super rápida para efecto clone
             end
         end)
     else
