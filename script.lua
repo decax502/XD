@@ -1261,107 +1261,275 @@ table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(inp
 end))
 
 -- ==================================================================
--- 17. ESP SYSTEM PREMIUM (HIGHLIGHTS + TEAM CHECK + KEYBIND FIX)
+-- 17. ESP SYSTEM FULL + SPECTATOR + COLOR PALETTE (DRAWING API)
 -- ==================================================================
-ESPMain = Instance.new("Frame", ScreenGui); ESPMain.Size = UDim2.new(0, 260, 0, 145); ESPMain.Position = UDim2.new(0, 20, 0, 780); ESPMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ESPMain.BorderSizePixel = 0; ESPMain.ClipsDescendants = true; ESPMain.Visible = false; Instance.new("UICorner", ESPMain).CornerRadius = UDim.new(0, 6); ESPMainStroke = Instance.new("UIStroke", ESPMain); ESPMainStroke.Color = borderDark
+ESPMain = Instance.new("Frame", ScreenGui); ESPMain.Size = UDim2.new(0, 260, 0, 350); ESPMain.Position = UDim2.new(0, 20, 0, 780); ESPMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ESPMain.BorderSizePixel = 0; ESPMain.ClipsDescendants = true; ESPMain.Visible = false; Instance.new("UICorner", ESPMain).CornerRadius = UDim.new(0, 6); ESPMainStroke = Instance.new("UIStroke", ESPMain); ESPMainStroke.Color = borderDark
 ESPTopBar = Instance.new("Frame", ESPMain); ESPTopBar.Size = UDim2.new(1, 0, 0, 35); ESPTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ESPTopBar.BorderSizePixel = 0; Instance.new("UICorner", ESPTopBar).CornerRadius = UDim.new(0, 6)
 ESPFix = Instance.new("Frame", ESPTopBar); ESPFix.Size = UDim2.new(1, 0, 0, 5); ESPFix.Position = UDim2.new(0, 0, 1, -5); ESPFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ESPFix.BorderSizePixel = 0
-ESPTitle = Instance.new("TextLabel", ESPTopBar); ESPTitle.Size = UDim2.new(1, -70, 1, 0); ESPTitle.Position = UDim2.new(0, 15, 0, 0); ESPTitle.BackgroundTransparency = 1; ESPTitle.Text = "ESP SYSTEM"; ESPTitle.TextColor3 = tWhite; ESPTitle.Font = Enum.Font.GothamBold; ESPTitle.TextSize = 13; ESPTitle.TextXAlignment = Enum.TextXAlignment.Left
+ESPTitle = Instance.new("TextLabel", ESPTopBar); ESPTitle.Size = UDim2.new(1, -70, 1, 0); ESPTitle.Position = UDim2.new(0, 15, 0, 0); ESPTitle.BackgroundTransparency = 1; ESPTitle.Text = "ESP & SPECTATOR"; ESPTitle.TextColor3 = tWhite; ESPTitle.Font = Enum.Font.GothamBold; ESPTitle.TextSize = 13; ESPTitle.TextXAlignment = Enum.TextXAlignment.Left
 ESPMinBtn = Instance.new("TextButton", ESPTopBar); ESPMinBtn.Size = UDim2.new(0, 35, 1, 0); ESPMinBtn.Position = UDim2.new(1, -70, 0, 0); ESPMinBtn.BackgroundTransparency = 1; ESPMinBtn.Text = "—"; ESPMinBtn.TextColor3 = tGreen; ESPMinBtn.Font = Enum.Font.GothamBlack; ESPMinBtn.TextSize = 14
 ESPCloseBtn = Instance.new("TextButton", ESPTopBar); ESPCloseBtn.Size = UDim2.new(0, 35, 1, 0); ESPCloseBtn.Position = UDim2.new(1, -35, 0, 0); ESPCloseBtn.BackgroundTransparency = 1; ESPCloseBtn.Text = "X"; ESPCloseBtn.TextColor3 = tRed; ESPCloseBtn.Font = Enum.Font.GothamBlack; ESPCloseBtn.TextSize = 12
 
-ESPToggleBtn = Instance.new("TextButton", ESPMain); ESPToggleBtn.Size = UDim2.new(1, -75, 0, 40); ESPToggleBtn.Position = UDim2.new(0, 10, 0, 45); ESPToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ESPToggleBtn.Text = "ESP: OFF"; ESPToggleBtn.TextColor3 = tWhite; ESPToggleBtn.Font = Enum.Font.GothamBold; ESPToggleBtn.TextSize = 12; Instance.new("UICorner", ESPToggleBtn).CornerRadius = UDim.new(0, 6)
-ESPKeyBtn = Instance.new("TextButton", ESPMain); ESPKeyBtn.Size = UDim2.new(0, 50, 0, 40); ESPKeyBtn.Position = UDim2.new(1, -60, 0, 45); ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); ESPKeyBtn.Text = "KEY"; ESPKeyBtn.TextColor3 = tWhite; ESPKeyBtn.Font = Enum.Font.GothamBold; ESPKeyBtn.TextSize = 11; Instance.new("UICorner", ESPKeyBtn).CornerRadius = UDim.new(0, 6)
+ESPScroll = Instance.new("ScrollingFrame", ESPMain); ESPScroll.Size = UDim2.new(1, 0, 1, -35); ESPScroll.Position = UDim2.new(0, 0, 0, 35); ESPScroll.BackgroundTransparency = 1; ESPScroll.BorderSizePixel = 0; ESPScroll.ScrollBarThickness = 3; ESPScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
+local ESPListLayout = Instance.new("UIListLayout", ESPScroll); ESPListLayout.Padding = UDim.new(0, 5); ESPListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; ESPListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+Instance.new("UIPadding", ESPScroll).PaddingTop = UDim.new(0, 10)
 
-ESPTeamBtn = Instance.new("TextButton", ESPMain); ESPTeamBtn.Size = UDim2.new(1, -20, 0, 40); ESPTeamBtn.Position = UDim2.new(0, 10, 0, 95); ESPTeamBtn.BackgroundColor3 = tGreen; ESPTeamBtn.Text = "TEAM CHECK: ON"; ESPTeamBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ESPTeamBtn.Font = Enum.Font.GothamBold; ESPTeamBtn.TextSize = 11; Instance.new("UICorner", ESPTeamBtn).CornerRadius = UDim.new(0, 6)
+local function CreateESPToggle(name, defaultText, isMaster)
+    local btn = Instance.new("TextButton", ESPScroll)
+    btn.Size = isMaster and UDim2.new(1, -20, 0, 35) or UDim2.new(1, -20, 0, 30)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.Text = defaultText; btn.TextColor3 = tWhite; btn.Font = Enum.Font.GothamBold; btn.TextSize = 11
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    return btn
+end
+
+-- Toggles
+ESPMasterBtn = CreateESPToggle("Master", "ESP MASTER: OFF", true)
+ESPBoxBtn = CreateESPToggle("Box", "BOX: OFF", false)
+ESPLineBtn = CreateESPToggle("Line", "LÍNEAS (TRACERS): OFF", false)
+ESPNameBtn = CreateESPToggle("Name", "NOMBRE: OFF", false)
+ESPDistBtn = CreateESPToggle("Dist", "DISTANCIA: OFF", false)
+ESPSkelBtn = CreateESPToggle("Skel", "ESQUELETO: OFF", false)
+ESPTeamBtn = CreateESPToggle("Team", "TEAM CHECK: ON", false); ESPTeamBtn.BackgroundColor3 = tGreen; ESPTeamBtn.TextColor3 = Color3.fromRGB(10,10,10)
+ESPFriendsBtn = CreateESPToggle("Friends", "SOLO AMIGOS: OFF", false)
+
+-- Color Palette
+local ColorLabel = Instance.new("TextLabel", ESPScroll); ColorLabel.Size = UDim2.new(1, -20, 0, 20); ColorLabel.BackgroundTransparency = 1; ColorLabel.Text = "COLOR DEL ESP:"; ColorLabel.TextColor3 = tWhite; ColorLabel.Font = Enum.Font.GothamBold; ColorLabel.TextSize = 11; ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+local PaletteFrame = Instance.new("Frame", ESPScroll); PaletteFrame.Size = UDim2.new(1, -20, 0, 30); PaletteFrame.BackgroundTransparency = 1
+local PList = Instance.new("UIListLayout", PaletteFrame); PList.FillDirection = Enum.FillDirection.Horizontal; PList.Padding = UDim.new(0, 8); PList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+local Colores = {tRed, tGreen, tCyan, tPurple, tYellow, tWhite}
+for _, col in ipairs(Colores) do
+    local cBtn = Instance.new("TextButton", PaletteFrame); cBtn.Size = UDim2.new(0, 30, 0, 30); cBtn.BackgroundColor3 = col; cBtn.Text = ""; Instance.new("UICorner", cBtn).CornerRadius = UDim.new(1, 0); Instance.new("UIStroke", cBtn).Color = tWhite; Instance.new("UIStroke", cBtn).Thickness = 0
+    cBtn.MouseButton1Click:Connect(function() 
+        for _, b in ipairs(PaletteFrame:GetChildren()) do if b:IsA("TextButton") then b.UIStroke.Thickness = 0 end end
+        cBtn.UIStroke.Thickness = 2; espColor = col 
+    end)
+    if col == tRed then cBtn.UIStroke.Thickness = 2 end
+end
+
+-- Spectator Section
+local SpecDiv = Instance.new("Frame", ESPScroll); SpecDiv.Size = UDim2.new(1, -40, 0, 2); SpecDiv.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+local SpecLabel = Instance.new("TextLabel", ESPScroll); SpecLabel.Size = UDim2.new(1, -20, 0, 20); SpecLabel.BackgroundTransparency = 1; SpecLabel.Text = "--- MODO ESPECTADOR ---"; SpecLabel.TextColor3 = tYellow; SpecLabel.Font = Enum.Font.GothamBold; SpecLabel.TextSize = 12
+local SpecTargetLabel = Instance.new("TextLabel", ESPScroll); SpecTargetLabel.Size = UDim2.new(1, -20, 0, 20); SpecTargetLabel.BackgroundTransparency = 1; SpecTargetLabel.Text = "OBJETIVO: NINGUNO"; SpecTargetLabel.TextColor3 = tWhite; SpecTargetLabel.Font = Enum.Font.Gotham; SpecTargetLabel.TextSize = 11
+local SpecToggleBtn = CreateESPToggle("Spec", "ESPECTAR: OFF", true)
+local SpecListFrame = Instance.new("Frame", ESPScroll); SpecListFrame.Size = UDim2.new(1, -20, 0, 150); SpecListFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Instance.new("UICorner", SpecListFrame).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", SpecListFrame).Color = Color3.fromRGB(40,40,40)
+local SpecListScroll = Instance.new("ScrollingFrame", SpecListFrame); SpecListScroll.Size = UDim2.new(1, 0, 1, 0); SpecListScroll.BackgroundTransparency = 1; SpecListScroll.BorderSizePixel = 0; SpecListScroll.ScrollBarThickness = 2
+local SpecListLayout = Instance.new("UIListLayout", SpecListScroll); SpecListLayout.Padding = UDim.new(0, 2)
 
 ApplyResponsiveScale(ESPMain); MakeDraggable(ESPTopBar, ESPMain)
 
 local espMinimized = false
 ESPMinBtn.MouseButton1Click:Connect(function()
-    espMinimized = not espMinimized; ESPMain:TweenSize(espMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    espMinimized = not espMinimized; ESPMain:TweenSize(espMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 350), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     ESPMinBtn.Text = espMinimized and "+" or "—"; ESPFix.Visible = not espMinimized
 end)
+ESPCloseBtn.MouseButton1Click:Connect(function() ESPMain.Visible = false end)
 
-local isESPActive = false; local useTeamCheck = true; local espKeybind = nil; local isEspBinding = false
-local espFolder = Instance.new("Folder", CoreGui); espFolder.Name = "CDT_ESP_Folder"
+-- Variables Lógicas
+isESPActive = false; espBox = false; espLine = false; espName = false; espDist = false; espSkel = false; espTeam = true; espFriends = false; espColor = tRed
+local Drawings = {}; local FriendCache = {}
+local isSpectating = false; local spectateTarget = nil
 
-local function ClearESP() espFolder:ClearAllChildren() end
+-- Utilidad Toggles
+local function toggleState(btn, stateVar, name)
+    local state = not stateVar
+    btn.BackgroundColor3 = state and tCyan or Color3.fromRGB(30, 30, 30)
+    btn.TextColor3 = state and Color3.fromRGB(10, 10, 10) or tWhite
+    btn.Text = name .. ": " .. (state and "ON" or "OFF")
+    return state
+end
 
-local function UpdateESP()
-    ClearESP()
-    if not isESPActive then return end
+ESPMasterBtn.MouseButton1Click:Connect(function() isESPActive = toggleState(ESPMasterBtn, isESPActive, "ESP MASTER") end)
+ESPBoxBtn.MouseButton1Click:Connect(function() espBox = toggleState(ESPBoxBtn, espBox, "BOX") end)
+ESPLineBtn.MouseButton1Click:Connect(function() espLine = toggleState(ESPLineBtn, espLine, "LÍNEAS (TRACERS)") end)
+ESPNameBtn.MouseButton1Click:Connect(function() espName = toggleState(ESPNameBtn, espName, "NOMBRE") end)
+ESPDistBtn.MouseButton1Click:Connect(function() espDist = toggleState(ESPDistBtn, espDist, "DISTANCIA") end)
+ESPSkelBtn.MouseButton1Click:Connect(function() espSkel = toggleState(ESPSkelBtn, espSkel, "ESQUELETO") end)
+ESPTeamBtn.MouseButton1Click:Connect(function() 
+    espTeam = not espTeam
+    ESPTeamBtn.BackgroundColor3 = espTeam and tGreen or Color3.fromRGB(30, 30, 30)
+    ESPTeamBtn.TextColor3 = espTeam and Color3.fromRGB(10, 10, 10) or tWhite
+    ESPTeamBtn.Text = "TEAM CHECK: " .. (espTeam and "ON" or "OFF")
+end)
+ESPFriendsBtn.MouseButton1Click:Connect(function() espFriends = toggleState(ESPFriendsBtn, espFriends, "SOLO AMIGOS") end)
 
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-            if useTeamCheck and p.Team == LocalPlayer.Team then continue end
+-- Caché de amigos para evitar lag
+local function IsFriend(player)
+    if FriendCache[player.UserId] ~= nil then return FriendCache[player.UserId] end
+    task.spawn(function()
+        local s, r = pcall(function() return LocalPlayer:IsFriendsWith(player.UserId) end)
+        FriendCache[player.UserId] = s and r or false
+    end)
+    return false
+end
 
-            local char = p.Character
-            local color = p.TeamColor and p.TeamColor.Color or tRed
+-- LÓGICA DRAWING API (ESP)
+local function NewDrawing(type)
+    local obj = Drawing.new(type)
+    if type == "Line" then obj.Thickness = 1.5 end
+    if type == "Square" then obj.Thickness = 1.5; obj.Filled = false end
+    if type == "Text" then obj.Size = 16; obj.Center = true; obj.Outline = true end
+    obj.Visible = false
+    return obj
+end
 
-            local hl = Instance.new("Highlight")
-            hl.Adornee = char; hl.FillColor = color; hl.FillTransparency = 0.6; hl.OutlineColor = color; hl.OutlineTransparency = 0.2; hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; hl.Parent = espFolder
+local function GetDrawings(player)
+    if not Drawings[player] then
+        Drawings[player] = {
+            Box = NewDrawing("Square"), Line = NewDrawing("Line"), Name = NewDrawing("Text"), Dist = NewDrawing("Text"),
+            Skel = { NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line") }
+        }
+    end
+    return Drawings[player]
+end
 
-            local bill = Instance.new("BillboardGui")
-            bill.Adornee = char:FindFirstChild("Head") or char.HumanoidRootPart
-            bill.Size = UDim2.new(0, 200, 0, 50); bill.StudsOffset = Vector3.new(0, 2.5, 0); bill.AlwaysOnTop = true
-            
-            local txt = Instance.new("TextLabel", bill)
-            txt.Size = UDim2.new(1, 0, 1, 0); txt.BackgroundTransparency = 1; txt.Font = Enum.Font.GothamBold; txt.TextSize = 12; txt.TextColor3 = color; txt.TextStrokeTransparency = 0.2
-            
-            local dist = math.floor((Camera.CFrame.Position - char.HumanoidRootPart.Position).Magnitude)
-            txt.Text = p.DisplayName .. "\n[" .. dist .. "m]"; bill.Parent = espFolder
-        end
+local function ClearESPPlayer(player)
+    if Drawings[player] then
+        Drawings[player].Box.Visible = false; Drawings[player].Line.Visible = false; Drawings[player].Name.Visible = false; Drawings[player].Dist.Visible = false
+        for _, l in ipairs(Drawings[player].Skel) do l.Visible = false end
     end
 end
+
+local R15_Bones = { {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"}, {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"}, {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"} }
+local R6_Bones = { {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"} }
 
 table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
-    if isESPActive and not ScriptIsDead then
-        for _, bill in pairs(espFolder:GetChildren()) do
-            if bill:IsA("BillboardGui") and bill.Adornee then
-                local dist = math.floor((Camera.CFrame.Position - bill.Adornee.Position).Magnitude)
-                local txt = bill:FindFirstChildOfClass("TextLabel")
-                local p = Players:GetPlayerFromCharacter(bill.Adornee.Parent)
-                if txt and p then txt.Text = p.DisplayName .. "\n[" .. dist .. "m]" end
-            end
+    ESPScroll.CanvasSize = UDim2.new(0, 0, 0, ESPListLayout.AbsoluteContentSize.Y + 20)
+    SpecListScroll.CanvasSize = UDim2.new(0, 0, 0, SpecListLayout.AbsoluteContentSize.Y + 5)
+    
+    if ScriptIsDead then return end
+
+    for _, p in pairs(Players:GetPlayers()) do
+        if p == LocalPlayer then continue end
+        
+        local char = p.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        
+        local valid = isESPActive and hrp and hum and hum.Health > 0
+        if valid and espTeam and p.Team == LocalPlayer.Team then valid = false end
+        if valid and espFriends and not IsFriend(p) then valid = false end
+
+        local D = GetDrawings(p)
+        
+        if valid then
+            local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+            if onScreen then
+                local dist = (Camera.CFrame.Position - hrp.Position).Magnitude
+                local height = math.clamp(Camera.ViewportSize.Y / dist * 4, 10, 1000)
+                local width = height * 0.6
+                
+                -- Box
+                if espBox then
+                    D.Box.Size = Vector2.new(width, height)
+                    D.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2)
+                    D.Box.Color = espColor; D.Box.Visible = true
+                else D.Box.Visible = false end
+                
+                -- Line
+                if espLine then
+                    D.Line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                    D.Line.To = Vector2.new(pos.X, pos.Y + height/2)
+                    D.Line.Color = espColor; D.Line.Visible = true
+                else D.Line.Visible = false end
+                
+                -- Name
+                if espName then
+                    D.Name.Text = p.DisplayName
+                    D.Name.Position = Vector2.new(pos.X, pos.Y - height / 2 - 18)
+                    D.Name.Color = espColor; D.Name.Visible = true
+                else D.Name.Visible = false end
+                
+                -- Dist
+                if espDist then
+                    D.Dist.Text = math.floor(dist) .. "m"
+                    D.Dist.Position = Vector2.new(pos.X, pos.Y + height / 2 + 2)
+                    D.Dist.Color = espColor; D.Dist.Visible = true
+                else D.Dist.Visible = false end
+                
+                -- Skeleton
+                if espSkel then
+                    local bones = hum.RigType == Enum.HumanoidRigType.R15 and R15_Bones or R6_Bones
+                    for i, bonePair in ipairs(bones) do
+                        local p1 = char:FindFirstChild(bonePair[1]); local p2 = char:FindFirstChild(bonePair[2])
+                        if p1 and p2 and D.Skel[i] then
+                            local pos1, vis1 = Camera:WorldToViewportPoint(p1.Position)
+                            local pos2, vis2 = Camera:WorldToViewportPoint(p2.Position)
+                            if vis1 or vis2 then
+                                D.Skel[i].From = Vector2.new(pos1.X, pos1.Y)
+                                D.Skel[i].To = Vector2.new(pos2.X, pos2.Y)
+                                D.Skel[i].Color = espColor; D.Skel[i].Visible = true
+                            else D.Skel[i].Visible = false end
+                        elseif D.Skel[i] then D.Skel[i].Visible = false end
+                    end
+                else
+                    for _, l in ipairs(D.Skel) do l.Visible = false end
+                end
+            else ClearESPPlayer(p) end
+        else ClearESPPlayer(p) end
+    end
+end))
+
+-- LÓGICA MODO ESPECTADOR (ESPEC)
+local function UpdateSpectatorList()
+    for _, child in pairs(SpecListScroll:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            local btn = Instance.new("TextButton", SpecListScroll)
+            btn.Size = UDim2.new(1, -5, 0, 22); btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25); btn.Text = "  " .. p.DisplayName
+            btn.TextColor3 = tWhite; btn.Font = Enum.Font.Gotham; btn.TextSize = 11; btn.TextXAlignment = Enum.TextXAlignment.Left
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,4)
+            btn.MouseButton1Click:Connect(function()
+                spectateTarget = p
+                SpecTargetLabel.Text = "OBJETIVO: " .. p.DisplayName
+                SpecTargetLabel.TextColor3 = tCyan
+                if isSpectating then Camera.CameraSubject = p.Character and p.Character:FindFirstChild("Humanoid") or LocalPlayer.Character.Humanoid end
+            end)
         end
     end
-end))
-
-task.spawn(function() while task.wait(1) do if isESPActive and not ScriptIsDead then UpdateESP() end end end)
-
-ToggleESP = function()
-    isESPActive = not isESPActive
-    if isESPActive then
-        ESPToggleBtn.BackgroundColor3 = tCyan; ESPToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ESPToggleBtn.Text = "ESP: ON"; UpdateESP()
-    else
-        ESPToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ESPToggleBtn.TextColor3 = tWhite; ESPToggleBtn.Text = "ESP: OFF"; ClearESP()
-    end
 end
-ESPToggleBtn.MouseButton1Click:Connect(ToggleESP)
 
-ESPTeamBtn.MouseButton1Click:Connect(function()
-    useTeamCheck = not useTeamCheck
-    if useTeamCheck then ESPTeamBtn.BackgroundColor3 = tGreen; ESPTeamBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ESPTeamBtn.Text = "TEAM CHECK: ON"
-    else ESPTeamBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); ESPTeamBtn.TextColor3 = tWhite; ESPTeamBtn.Text = "TEAM CHECK: OFF" end
-    if isESPActive then UpdateESP() end
-end)
-
-ESPCloseBtn.MouseButton1Click:Connect(function() 
-    ESPMain.Visible = false; espKeybind = nil; isEspBinding = false; ESPKeyBtn.Text = "KEY"; ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    if isESPActive then ToggleESP() end
-end)
-ESPKeyBtn.MouseButton1Click:Connect(function()
-    if espKeybind ~= nil then espKeybind = nil; ESPKeyBtn.Text = "KEY"; ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isEspBinding = false
-    else isEspBinding = true; ESPKeyBtn.Text = "..."; ESPKeyBtn.BackgroundColor3 = tOrange end
-end)
-
-table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(input, gp)
-    if isEspBinding and input.UserInputType == Enum.UserInputType.Keyboard then
-        espKeybind = input.KeyCode; ESPKeyBtn.Text = input.KeyCode.Name; ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isEspBinding = false; return
+table.insert(GlobalConnections, Players.PlayerAdded:Connect(UpdateSpectatorList))
+table.insert(GlobalConnections, Players.PlayerRemoving:Connect(function(p)
+    ClearESPPlayer(p)
+    UpdateSpectatorList()
+    -- Desactivar espectador si se va el objetivo
+    if isSpectating and spectateTarget == p then
+        isSpectating = false
+        spectateTarget = nil
+        SpecTargetLabel.Text = "OBJETIVO: NINGUNO (DESCONECTADO)"
+        SpecTargetLabel.TextColor3 = tRed
+        SpecToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); SpecToggleBtn.TextColor3 = tWhite; SpecToggleBtn.Text = "ESPECTAR: OFF"
+        Camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
     end
-    if not gp and espKeybind and input.KeyCode == espKeybind and not UserInputService:GetFocusedTextBox() then ToggleESP() end
 end))
+
+SpecToggleBtn.MouseButton1Click:Connect(function()
+    isSpectating = not isSpectating
+    SpecToggleBtn.BackgroundColor3 = isSpectating and tPurple or Color3.fromRGB(30, 30, 30)
+    SpecToggleBtn.TextColor3 = isSpectating and tWhite or tWhite
+    SpecToggleBtn.Text = "ESPECTAR: " .. (isSpectating and "ON" or "OFF")
+    
+    if isSpectating and spectateTarget and spectateTarget.Character then
+        Camera.CameraSubject = spectateTarget.Character:FindFirstChild("Humanoid")
+    else
+        Camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+    end
+end)
+
+-- Limpieza al destruir el script
+local oldDestruir = DestruirScriptCompleto
+DestruirScriptCompleto = function()
+    if oldDestruir then oldDestruir() end
+    for _, D in pairs(Drawings) do
+        D.Box:Remove(); D.Line:Remove(); D.Name:Remove(); D.Dist:Remove()
+        for _, l in ipairs(D.Skel) do l:Remove() end
+    end
+    Drawings = {}
+    if isSpectating then Camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") end
+end
+
+task.spawn(UpdateSpectatorList)
 
 
 -- ==================================================================
