@@ -232,44 +232,47 @@ local function crearUITag(player, datos, userId)
     local tTit = datos.titulo or "USER"; local tNom = player.Name:upper()
     local sF, fU = pcall(function() return Enum.Font[datos.fuente] end); if not sF or not fU then fU = Enum.Font.GothamBold end
     
-    local bT = TextService:GetTextSize(tTit, 16, fU, Vector2.new(1000, 50)); 
-    local bN = TextService:GetTextSize(tNom, 13, Enum.Font.GothamBold, Vector2.new(1000, 50))
-    local aI = 8 + 36 + 10 + math.max(bT.X, bN.X) + 16; if aI < 110 then aI = 110 end 
+    -- ALTURA REDUCIDA A 40 (Antes era 50)
+    local bT = TextService:GetTextSize(tTit, 14, fU, Vector2.new(1000, 40)); 
+    local bN = TextService:GetTextSize(tNom, 12, Enum.Font.GothamBold, Vector2.new(1000, 40))
+    local aI = 5 + 30 + 8 + math.max(bT.X, bN.X) + 12; if aI < 100 then aI = 100 end 
 
     local bill = Instance.new("BillboardGui", targetGuiParent)
-    bill.Name = nombreUI; bill.Adornee = head; bill.Size = UDim2.new(0, aI, 0, 50); bill.StudsOffset = Vector3.new(0, 1.8, 0); bill.AlwaysOnTop = true; bill.MaxDistance = math.huge; bill.ResetOnSpawn = false; bill.Active = true 
+    bill.Name = nombreUI; bill.Adornee = head; bill.Size = UDim2.new(0, aI, 0, 40); bill.StudsOffset = Vector3.new(0, 1.8, 0); bill.AlwaysOnTop = true; bill.MaxDistance = math.huge; bill.ResetOnSpawn = false; bill.Active = true 
     local scale = Instance.new("UIScale", bill); scale.Scale = 1
-    local card = Instance.new("Frame", bill); card.Size = UDim2.new(0, aI, 0, 50); card.AnchorPoint = Vector2.new(0.5, 0.5); card.Position = UDim2.new(0.5, 0, 0.5, 0); card.BackgroundColor3 = Color3.new(1, 1, 1) 
-    local corner = Instance.new("UICorner", card); corner.CornerRadius = UDim.new(0, 8)
+    
+    local card = Instance.new("Frame", bill); card.Size = UDim2.new(0, aI, 0, 40); card.AnchorPoint = Vector2.new(0.5, 0.5); card.Position = UDim2.new(0.5, 0, 0.5, 0); card.BackgroundColor3 = Color3.new(1, 1, 1) 
+    local corner = Instance.new("UICorner", card); corner.CornerRadius = UDim.new(0, 6)
     local grad = Instance.new("UIGradient", card); grad.Rotation = 45; grad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorFondo1, "#1c1c24")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorFondo2, "#0f0f13")) })
     
-    local stroke = Instance.new("UIStroke", card); stroke.Color = Color3.new(1,1,1); stroke.Transparency = 0.7; stroke.Thickness = 1.2
+    -- BORDE MÁS GRUESO (Thickness subido a 2.5 y Transparency a 0.2 para mayor definición)
+    local stroke = Instance.new("UIStroke", card); stroke.Color = Color3.new(1,1,1); stroke.Transparency = 0.2; stroke.Thickness = 2.5
     local strokeGrad = Instance.new("UIGradient", stroke); strokeGrad.Rotation = 45; strokeGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorBorde1 or datos.colorBorde, "#FFFFFF")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorBorde2 or datos.colorBorde, "#FFFFFF")) })
     
-    local snowCont = Instance.new("Frame", card); snowCont.Size = UDim2.new(1,0,1,0); snowCont.BackgroundTransparency = 1; snowCont.ClipsDescendants = true; Instance.new("UICorner", snowCont).CornerRadius = UDim.new(0,8)
+    local snowCont = Instance.new("Frame", card); snowCont.Size = UDim2.new(1,0,1,0); snowCont.BackgroundTransparency = 1; snowCont.ClipsDescendants = true; Instance.new("UICorner", snowCont).CornerRadius = UDim.new(0,6)
     local listaCopos = crearNieveTag(snowCont, datos.emojiNieve, datos.colorNieve or "#ffffff")
 
-    local avF = Instance.new("Frame", card); avF.Size = UDim2.new(0, 36, 0, 36); avF.AnchorPoint = Vector2.new(0, 0.5); avF.Position = UDim2.new(0, 8, 0.5, 0); avF.BackgroundColor3 = Color3.fromHex("#2a2a35"); Instance.new("UICorner", avF).CornerRadius = UDim.new(1, 0)
+    -- AVATAR TAMAÑO Y POSICIÓN AJUSTADA (Para encajar en el nuevo alto delgado)
+    local avF = Instance.new("Frame", card); avF.Size = UDim2.new(0, 30, 0, 30); avF.AnchorPoint = Vector2.new(0, 0.5); avF.Position = UDim2.new(0, 5, 0.5, 0); avF.BackgroundColor3 = Color3.fromHex("#2a2a35"); Instance.new("UICorner", avF).CornerRadius = UDim.new(1, 0)
     local avS = Instance.new("UIStroke", avF); avS.Color = Color3.new(0, 0, 0); avS.Transparency = 0; avS.Thickness = 1 
 
     local avatarImg = Instance.new("ImageLabel", avF); avatarImg.Size = UDim2.new(1, 0, 1, 0); avatarImg.BackgroundTransparency = 1
     task.spawn(function() local img = obtenerImagenTag(datos.imagen, userId); if avatarImg and avatarImg.Parent then avatarImg.Image = img end end)
     Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
 
-    local dot = Instance.new("Frame", avF); dot.Size = UDim2.new(0, 10, 0, 10); dot.Position = UDim2.new(1, 0, 1, 0); dot.AnchorPoint = Vector2.new(1, 1); dot.BackgroundColor3 = Color3.fromHex("#2ed573"); dot.ZIndex = 5
-    Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
-    local dotStroke = Instance.new("UIStroke", dot); dotStroke.Color = parseHexTag(datos.colorFondo2, "#0f0f13"); dotStroke.Thickness = 2
+    -- [!] EL PUNTO VERDE HA SIDO ELIMINADO TOTALMENTE AQUÍ [!] --
 
-    local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -54, 0, 36); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 50, 0.5, 0); infoGroup.BackgroundTransparency = 1
+    -- AJUSTE DE TEXTOS PARA QUE ENCAJEN PERFECTAMENTE
+    local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -43, 0, 30); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 43, 0.5, 0); infoGroup.BackgroundTransparency = 1
 
     local txtTitle = Instance.new("TextLabel", infoGroup)
-    txtTitle.BackgroundTransparency = 1; txtTitle.Size = UDim2.new(1, 0, 0, 16); txtTitle.Position = UDim2.new(0, 0, 0, 0)
+    txtTitle.BackgroundTransparency = 1; txtTitle.Size = UDim2.new(1, 0, 0, 15); txtTitle.Position = UDim2.new(0, 0, 0, 0)
     txtTitle.Font = fU; txtTitle.Text = tTit; txtTitle.TextColor3 = Color3.new(1,1,1); txtTitle.TextSize = 14; txtTitle.TextXAlignment = Enum.TextXAlignment.Left; txtTitle.TextYAlignment = Enum.TextYAlignment.Center
     local titleGrad = Instance.new("UIGradient", txtTitle); titleGrad.Rotation = 45; titleGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorTitulo1 or datos.colorTitulo, "#ffffff")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorTitulo2 or datos.colorTitulo, "#ffffff")) })
 
     local txtName = Instance.new("TextLabel", infoGroup)
-    txtName.BackgroundTransparency = 1; txtName.Size = UDim2.new(1, 0, 0, 14); txtName.Position = UDim2.new(0, 0, 0, 18)
-    txtName.Font = Enum.Font.GothamBold; txtName.Text = tNom; txtName.TextColor3 = Color3.new(1,1,1); txtName.TextSize = 13; txtName.TextXAlignment = Enum.TextXAlignment.Left; txtName.TextYAlignment = Enum.TextYAlignment.Center
+    txtName.BackgroundTransparency = 1; txtName.Size = UDim2.new(1, 0, 0, 13); txtName.Position = UDim2.new(0, 0, 0, 15)
+    txtName.Font = Enum.Font.GothamBold; txtName.Text = tNom; txtName.TextColor3 = Color3.new(1,1,1); txtName.TextSize = 12; txtName.TextXAlignment = Enum.TextXAlignment.Left; txtName.TextYAlignment = Enum.TextYAlignment.Center
     local nameGrad = Instance.new("UIGradient", txtName); nameGrad.Rotation = 45; nameGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorNombre1 or datos.colorNombre, "#a0a0b0")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorNombre2 or datos.colorNombre, "#a0a0b0")) })
     
     local btnTP = Instance.new("TextButton", card); btnTP.Size = UDim2.new(1, 0, 1, 0); btnTP.BackgroundTransparency = 1; btnTP.Text = ""; btnTP.ZIndex = 100
@@ -280,7 +283,7 @@ local function crearUITag(player, datos, userId)
         end
     end)
 
-    UIsActivos[userId] = { Estado = "Abierto", UI = bill, Escalador = scale, Head = head, Card = card, CardCorner = corner, CardStroke = stroke, Gradiente = grad, Avatar = avF, AvatarImg = avatarImg, TxtTitle = txtTitle, TxtName = txtName, SnowContainer = snowCont, Copos = listaCopos, DotStroke = dotStroke, AnchoIdeal = aI, StrokeGrad = strokeGrad, TitleGrad = titleGrad, NameGrad = nameGrad }
+    UIsActivos[userId] = { Estado = "Abierto", UI = bill, Escalador = scale, Head = head, Card = card, CardCorner = corner, CardStroke = stroke, Gradiente = grad, Avatar = avF, AvatarImg = avatarImg, TxtTitle = txtTitle, TxtName = txtName, SnowContainer = snowCont, Copos = listaCopos, AnchoIdeal = aI, StrokeGrad = strokeGrad, TitleGrad = titleGrad, NameGrad = nameGrad }
     actualizarAnimacionNombreTag(UIsActivos[userId], datos)
 end
 
@@ -323,12 +326,12 @@ task.spawn(function()
                                     local sF, fU = pcall(function() return Enum.Font[cfg.fuente] end); if sF and fU then ui.TxtTitle.Font = fU end
                                     ui.TxtTitle.TextColor3 = Color3.new(1,1,1); if not cfg.animarNombre then ui.TxtName.TextColor3 = Color3.new(1,1,1) end
                                     task.spawn(function() local newImg = obtenerImagenTag(cfg.imagen, id); if ui.AvatarImg and ui.AvatarImg.Parent then ui.AvatarImg.Image = newImg end end)
-                                    ui.DotStroke.Color = parseHexTag(cfg.colorFondo2, "#0f0f13")
+                                    
                                     for _, copo in ipairs(ui.Copos) do if copo.Parent then copo.Text = cfg.emojiNieve or "*"; copo.TextColor3 = parseHexTag(cfg.colorNieve, "#ffffff") end end
                                     actualizarAnimacionNombreTag(ui, cfg)
-                                    local bT = TextService:GetTextSize(ui.TxtTitle.Text, 16, ui.TxtTitle.Font, Vector2.new(1000, 50)); local bN = TextService:GetTextSize(player.Name:upper(), 13, Enum.Font.GothamBold, Vector2.new(1000, 50))
-                                    ui.AnchoIdeal = math.max(110, 8 + 36 + 10 + math.max(bT.X, bN.X) + 16)
-                                    if ui.Estado == "Abierto" then TweenService:Create(ui.Card, TweenInfo.new(0.2), {Size = UDim2.new(0, ui.AnchoIdeal, 0, 50)}):Play() end
+                                    local bT = TextService:GetTextSize(ui.TxtTitle.Text, 14, ui.TxtTitle.Font, Vector2.new(1000, 40)); local bN = TextService:GetTextSize(player.Name:upper(), 12, Enum.Font.GothamBold, Vector2.new(1000, 40))
+                                    ui.AnchoIdeal = math.max(100, 5 + 30 + 8 + math.max(bT.X, bN.X) + 12)
+                                    if ui.Estado == "Abierto" then TweenService:Create(ui.Card, TweenInfo.new(0.2), {Size = UDim2.new(0, ui.AnchoIdeal, 0, 40)}):Play() end
                                 end
                                 oldDataCache[id] = hashData
                             end
@@ -356,11 +359,11 @@ RunService.RenderStepped:Connect(function()
             if dist > 28 and data.Estado == "Abierto" then
                 data.Estado = "Cerrado"; data.SnowContainer.Visible = false
                 TweenService:Create(data.TxtTitle, animSpd, {TextTransparency = 1}):Play(); TweenService:Create(data.TxtName, animSpd, {TextTransparency = 1}):Play()
-                TweenService:Create(data.Card, animSpd, {Size = UDim2.new(0, 46, 0, 46)}):Play(); TweenService:Create(data.CardCorner, animSpd, {CornerRadius = UDim.new(1, 0)}):Play(); TweenService:Create(data.Avatar, animSpd, {Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5)}):Play()
+                TweenService:Create(data.Card, animSpd, {Size = UDim2.new(0, 36, 0, 36)}):Play(); TweenService:Create(data.CardCorner, animSpd, {CornerRadius = UDim.new(1, 0)}):Play(); TweenService:Create(data.Avatar, animSpd, {Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5)}):Play()
             elseif dist < 23 and data.Estado == "Cerrado" then
                 data.Estado = "Abierto"; data.SnowContainer.Visible = true
                 TweenService:Create(data.TxtTitle, animSpd, {TextTransparency = 0}):Play(); TweenService:Create(data.TxtName, animSpd, {TextTransparency = 0}):Play()
-                TweenService:Create(data.Card, animSpd, {Size = UDim2.new(0, data.AnchoIdeal, 0, 50)}):Play(); TweenService:Create(data.CardCorner, animSpd, {CornerRadius = UDim.new(0, 8)}):Play(); TweenService:Create(data.Avatar, animSpd, {Position = UDim2.new(0, 8, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5)}):Play()
+                TweenService:Create(data.Card, animSpd, {Size = UDim2.new(0, data.AnchoIdeal, 0, 40)}):Play(); TweenService:Create(data.CardCorner, animSpd, {CornerRadius = UDim.new(0, 6)}):Play(); TweenService:Create(data.Avatar, animSpd, {Position = UDim2.new(0, 5, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5)}):Play()
             end
         else
             if data.UI then data.UI:Destroy() end; UIsActivos[id] = nil
