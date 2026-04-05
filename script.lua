@@ -2079,7 +2079,7 @@ end)
 -- ==================================================================
 -- 21. AIMBOT MENU (SEMI, BRUTO, PROXIMITY, FOV & AUTOFIRE)
 -- ==================================================================
-AimMain = Instance.new("Frame", ScreenGui); AimMain.Size = UDim2.new(0, 260, 0, 360); AimMain.Position = UDim2.new(0.5, 200, 0.5, -180); AimMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); AimMain.BorderSizePixel = 0; AimMain.ClipsDescendants = true; AimMain.Visible = false; Instance.new("UICorner", AimMain).CornerRadius = UDim.new(0, 6); AimMainStroke = Instance.new("UIStroke", AimMain); AimMainStroke.Color = borderDark
+AimMain = Instance.new("Frame", ScreenGui); AimMain.Size = UDim2.new(0, 260, 0, 390); AimMain.Position = UDim2.new(0.5, 200, 0.5, -180); AimMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); AimMain.BorderSizePixel = 0; AimMain.ClipsDescendants = true; AimMain.Visible = false; Instance.new("UICorner", AimMain).CornerRadius = UDim.new(0, 6); AimMainStroke = Instance.new("UIStroke", AimMain); AimMainStroke.Color = borderDark
 AimTopBar = Instance.new("Frame", AimMain); AimTopBar.Size = UDim2.new(1, 0, 0, 35); AimTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); AimTopBar.BorderSizePixel = 0; Instance.new("UICorner", AimTopBar).CornerRadius = UDim.new(0, 6)
 AimFix = Instance.new("Frame", AimTopBar); AimFix.Size = UDim2.new(1, 0, 0, 5); AimFix.Position = UDim2.new(0, 0, 1, -5); AimFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); AimFix.BorderSizePixel = 0
 AimTitle = Instance.new("TextLabel", AimTopBar); AimTitle.Size = UDim2.new(1, -70, 1, 0); AimTitle.Position = UDim2.new(0, 15, 0, 0); AimTitle.BackgroundTransparency = 1; AimTitle.Text = "AIMBOT SYSTEM"; AimTitle.TextColor3 = tWhite; AimTitle.Font = Enum.Font.GothamBold; AimTitle.TextSize = 13; AimTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -2101,11 +2101,16 @@ end
 
 -- Toggles
 AimMasterBtn = CreateAimToggle("Master", "AIMBOT: OFF", true)
+AimTriggerBtn = CreateAimToggle("Trigger", "ACTIVACIÓN: CLICK DERECHO", false) -- Nuevo Toggle
 AimModeBtn = CreateAimToggle("Mode", "MODO: SEMI (SUAVE)", false)
 AimProxBtn = CreateAimToggle("Prox", "OBJETIVO: FOV (PANTALLA)", false)
 AimAutoFireBtn = CreateAimToggle("AutoFire", "AUTO-FIRE: OFF", false)
 AimShowFOVBtn = CreateAimToggle("ShowFOV", "MOSTRAR FOV: OFF", false)
 AimKeyBtn = CreateAimToggle("Key", "KEYBIND: NINGUNO", false)
+
+-- Configuración Inicial del Toggle de Activación
+AimTriggerBtn.BackgroundColor3 = tOrange
+AimTriggerBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
 
 -- FOV Slider
 AimFOVContainer = Instance.new("Frame", AimScroll); AimFOVContainer.Size = UDim2.new(1, -20, 0, 40); AimFOVContainer.BackgroundTransparency = 1
@@ -2118,14 +2123,14 @@ ApplyResponsiveScale(AimMain); MakeDraggable(AimTopBar, AimMain)
 
 aimMinimized = false
 AimMinBtn.MouseButton1Click:Connect(function()
-    aimMinimized = not aimMinimized; AimMain:TweenSize(aimMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 360), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    aimMinimized = not aimMinimized; AimMain:TweenSize(aimMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 390), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     AimMinBtn.Text = aimMinimized and "+" or "—"; AimFix.Visible = not aimMinimized
 end)
 AimCloseBtn.MouseButton1Click:Connect(function() AimMain.Visible = false end)
 
 -- Lógica y Variables
-aimEnabled = false; aimBrutal = false; aimProximity = false; aimAutoFire = false; aimShowFOV = false; aimFOVSize = 150
-aimKeybind = nil; isAimBinding = false
+aimEnabled = false; aimHoldToAim = true; aimBrutal = false; aimProximity = false; aimAutoFire = false; aimShowFOV = false; aimFOVSize = 150
+aimKeybind = nil; isAimBinding = false; local isRightClicking = false
 
 -- Universal FOV Circle
 FOVFolder = Instance.new("ScreenGui")
@@ -2151,6 +2156,7 @@ local function updateAimToggle(btn, stateVar, nameOn, nameOff, colorOn)
 end
 
 AimMasterBtn.MouseButton1Click:Connect(function() aimEnabled = updateAimToggle(AimMasterBtn, aimEnabled, "AIMBOT: ON", "AIMBOT: OFF", tGreen) end)
+AimTriggerBtn.MouseButton1Click:Connect(function() aimHoldToAim = updateAimToggle(AimTriggerBtn, aimHoldToAim, "ACTIVACIÓN: CLICK DERECHO", "ACTIVACIÓN: SIEMPRE", tOrange) end)
 AimModeBtn.MouseButton1Click:Connect(function() aimBrutal = updateAimToggle(AimModeBtn, aimBrutal, "MODO: BRUTO (INSTANT)", "MODO: SEMI (SUAVE)", tRed) end)
 AimProxBtn.MouseButton1Click:Connect(function() aimProximity = updateAimToggle(AimProxBtn, aimProximity, "OBJETIVO: PROXIMIDAD (CERCANO)", "OBJETIVO: FOV (PANTALLA)", tOrange) end)
 AimAutoFireBtn.MouseButton1Click:Connect(function() aimAutoFire = updateAimToggle(AimAutoFireBtn, aimAutoFire, "AUTO-FIRE: ON", "AUTO-FIRE: OFF", tPurple) end)
@@ -2177,6 +2183,14 @@ table.insert(GlobalConnections, UserInputService.InputChanged:Connect(function(i
     end
 end))
 
+-- Tracker de Click Derecho
+table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(input, gp)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then isRightClicking = true end
+end))
+table.insert(GlobalConnections, UserInputService.InputEnded:Connect(function(input, gp)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then isRightClicking = false end
+end))
+
 -- Aimbot Core Engine
 local function GetAimTarget()
     local bestTarget = nil
@@ -2191,17 +2205,14 @@ local function GetAimTarget()
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         
         if hrp and hum and hum.Health > 0 then
-            -- Skip teammate Si quieres TeamCheck global (usamos la variable espTeam si existe)
             if typeof(espTeam) ~= "nil" and espTeam and p.Team == LocalPlayer.Team then continue end
             
             local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
             if onScreen then
                 if aimProximity and myHrp then
-                    -- Busca el más cercano a tu cuerpo (Distancia 3D)
                     local dist3D = (hrp.Position - myHrp.Position).Magnitude
                     if dist3D < bestDist then bestDist = dist3D; bestTarget = hrp end
                 else
-                    -- Busca el más cercano al centro de la pantalla (Distancia 2D dentro del FOV)
                     local dist2D = (Vector2.new(pos.X, pos.Y) - centerScreen).Magnitude
                     if dist2D < aimFOVSize and dist2D < bestDist then
                         bestDist = dist2D; bestTarget = hrp
@@ -2227,6 +2238,9 @@ table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
     end
 
     if aimEnabled then
+        -- Cancelar si requiere Click Derecho y no lo estás presionando
+        if aimHoldToAim and not isRightClicking then return end
+        
         local target = GetAimTarget()
         if target then
             local targetPos = target.Position
