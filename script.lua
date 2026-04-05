@@ -1287,7 +1287,7 @@ ESPMinBtn = Instance.new("TextButton", ESPTopBar); ESPMinBtn.Size = UDim2.new(0,
 ESPCloseBtn = Instance.new("TextButton", ESPTopBar); ESPCloseBtn.Size = UDim2.new(0, 35, 1, 0); ESPCloseBtn.Position = UDim2.new(1, -35, 0, 0); ESPCloseBtn.BackgroundTransparency = 1; ESPCloseBtn.Text = "X"; ESPCloseBtn.TextColor3 = tRed; ESPCloseBtn.Font = Enum.Font.GothamBlack; ESPCloseBtn.TextSize = 12
 
 ESPScroll = Instance.new("ScrollingFrame", ESPMain); ESPScroll.Size = UDim2.new(1, 0, 1, -35); ESPScroll.Position = UDim2.new(0, 0, 0, 35); ESPScroll.BackgroundTransparency = 1; ESPScroll.BorderSizePixel = 0; ESPScroll.ScrollBarThickness = 3; ESPScroll.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
-local ESPListLayout = Instance.new("UIListLayout", ESPScroll); ESPListLayout.Padding = UDim.new(0, 5); ESPListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; ESPListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ESPListLayout = Instance.new("UIListLayout", ESPScroll); ESPListLayout.Padding = UDim.new(0, 5); ESPListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; ESPListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 Instance.new("UIPadding", ESPScroll).PaddingTop = UDim.new(0, 10)
 
 local function CreateESPToggle(name, defaultText, isMaster)
@@ -1310,10 +1310,10 @@ ESPTeamBtn = CreateESPToggle("Team", "TEAM CHECK: ON", false); ESPTeamBtn.Backgr
 ESPFriendsBtn = CreateESPToggle("Friends", "SOLO AMIGOS: OFF", false)
 
 -- Color Palette
-local ColorLabel = Instance.new("TextLabel", ESPScroll); ColorLabel.Size = UDim2.new(1, -20, 0, 20); ColorLabel.BackgroundTransparency = 1; ColorLabel.Text = "COLOR DEL ESP:"; ColorLabel.TextColor3 = tWhite; ColorLabel.Font = Enum.Font.GothamBold; ColorLabel.TextSize = 11; ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
-local PaletteFrame = Instance.new("Frame", ESPScroll); PaletteFrame.Size = UDim2.new(1, -20, 0, 30); PaletteFrame.BackgroundTransparency = 1
-local PList = Instance.new("UIListLayout", PaletteFrame); PList.FillDirection = Enum.FillDirection.Horizontal; PList.Padding = UDim.new(0, 8); PList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-local Colores = {tRed, tGreen, tCyan, tPurple, tYellow, tWhite}
+ColorLabel = Instance.new("TextLabel", ESPScroll); ColorLabel.Size = UDim2.new(1, -20, 0, 20); ColorLabel.BackgroundTransparency = 1; ColorLabel.Text = "COLOR DEL ESP:"; ColorLabel.TextColor3 = tWhite; ColorLabel.Font = Enum.Font.GothamBold; ColorLabel.TextSize = 11; ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+PaletteFrame = Instance.new("Frame", ESPScroll); PaletteFrame.Size = UDim2.new(1, -20, 0, 30); PaletteFrame.BackgroundTransparency = 1
+PList = Instance.new("UIListLayout", PaletteFrame); PList.FillDirection = Enum.FillDirection.Horizontal; PList.Padding = UDim.new(0, 8); PList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Colores = {tRed, tGreen, tCyan, tPurple, tYellow, tWhite}
 for _, col in ipairs(Colores) do
     local cBtn = Instance.new("TextButton", PaletteFrame); cBtn.Size = UDim2.new(0, 30, 0, 30); cBtn.BackgroundColor3 = col; cBtn.Text = ""; Instance.new("UICorner", cBtn).CornerRadius = UDim.new(1, 0); Instance.new("UIStroke", cBtn).Color = tWhite; Instance.new("UIStroke", cBtn).Thickness = 0
     cBtn.MouseButton1Click:Connect(function() 
@@ -1324,17 +1324,21 @@ for _, col in ipairs(Colores) do
 end
 
 -- Spectator Section
-local SpecDiv = Instance.new("Frame", ESPScroll); SpecDiv.Size = UDim2.new(1, -40, 0, 2); SpecDiv.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-local SpecLabel = Instance.new("TextLabel", ESPScroll); SpecLabel.Size = UDim2.new(1, -20, 0, 20); SpecLabel.BackgroundTransparency = 1; SpecLabel.Text = "--- MODO ESPECTADOR ---"; SpecLabel.TextColor3 = tYellow; SpecLabel.Font = Enum.Font.GothamBold; SpecLabel.TextSize = 12
-local SpecTargetLabel = Instance.new("TextLabel", ESPScroll); SpecTargetLabel.Size = UDim2.new(1, -20, 0, 20); SpecTargetLabel.BackgroundTransparency = 1; SpecTargetLabel.Text = "OBJETIVO: NINGUNO"; SpecTargetLabel.TextColor3 = tWhite; SpecTargetLabel.Font = Enum.Font.Gotham; SpecTargetLabel.TextSize = 11
-local SpecToggleBtn = CreateESPToggle("Spec", "ESPECTAR: OFF", true)
-local SpecListFrame = Instance.new("Frame", ESPScroll); SpecListFrame.Size = UDim2.new(1, -20, 0, 150); SpecListFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Instance.new("UICorner", SpecListFrame).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", SpecListFrame).Color = Color3.fromRGB(40,40,40)
-local SpecListScroll = Instance.new("ScrollingFrame", SpecListFrame); SpecListScroll.Size = UDim2.new(1, 0, 1, 0); SpecListScroll.BackgroundTransparency = 1; SpecListScroll.BorderSizePixel = 0; SpecListScroll.ScrollBarThickness = 2
-local SpecListLayout = Instance.new("UIListLayout", SpecListScroll); SpecListLayout.Padding = UDim.new(0, 2)
+SpecDiv = Instance.new("Frame", ESPScroll); SpecDiv.Size = UDim2.new(1, -40, 0, 2); SpecDiv.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+SpecLabel = Instance.new("TextLabel", ESPScroll); SpecLabel.Size = UDim2.new(1, -20, 0, 20); SpecLabel.BackgroundTransparency = 1; SpecLabel.Text = "--- MODO ESPECTADOR ---"; SpecLabel.TextColor3 = tYellow; SpecLabel.Font = Enum.Font.GothamBold; SpecLabel.TextSize = 12
+SpecTargetLabel = Instance.new("TextLabel", ESPScroll); SpecTargetLabel.Size = UDim2.new(1, -20, 0, 20); SpecTargetLabel.BackgroundTransparency = 1; SpecTargetLabel.Text = "OBJETIVO: NINGUNO"; SpecTargetLabel.TextColor3 = tWhite; SpecTargetLabel.Font = Enum.Font.Gotham; SpecTargetLabel.TextSize = 11
+SpecToggleBtn = CreateESPToggle("Spec", "ESPECTAR: OFF", true)
+
+-- Buscador de Espectador
+SpecSearchBox = Instance.new("TextBox", ESPScroll); SpecSearchBox.Size = UDim2.new(1, -20, 0, 30); SpecSearchBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20); SpecSearchBox.TextColor3 = Color3.fromRGB(255, 255, 255); SpecSearchBox.Text = ""; SpecSearchBox.PlaceholderText = "🔍 Buscar jugador..."; SpecSearchBox.Font = Enum.Font.Gotham; SpecSearchBox.TextSize = 12; SpecSearchBox.ClearTextOnFocus = false; Instance.new("UICorner", SpecSearchBox).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", SpecSearchBox).Color = Color3.fromRGB(50, 50, 50)
+
+SpecListFrame = Instance.new("Frame", ESPScroll); SpecListFrame.Size = UDim2.new(1, -20, 0, 150); SpecListFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Instance.new("UICorner", SpecListFrame).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", SpecListFrame).Color = Color3.fromRGB(40,40,40)
+SpecListScroll = Instance.new("ScrollingFrame", SpecListFrame); SpecListScroll.Size = UDim2.new(1, 0, 1, 0); SpecListScroll.BackgroundTransparency = 1; SpecListScroll.BorderSizePixel = 0; SpecListScroll.ScrollBarThickness = 2
+SpecListLayout = Instance.new("UIListLayout", SpecListScroll); SpecListLayout.Padding = UDim.new(0, 2)
 
 ApplyResponsiveScale(ESPMain); MakeDraggable(ESPTopBar, ESPMain)
 
-local espMinimized = false
+espMinimized = false
 ESPMinBtn.MouseButton1Click:Connect(function()
     espMinimized = not espMinimized; ESPMain:TweenSize(espMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 350), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     ESPMinBtn.Text = espMinimized and "+" or "—"; ESPFix.Visible = not espMinimized
@@ -1343,7 +1347,7 @@ ESPCloseBtn.MouseButton1Click:Connect(function() ESPMain.Visible = false end)
 
 -- Variables Lógicas
 isESPActive = false; espBox = false; espLine = false; espName = false; espDist = false; espSkel = false; espTeam = true; espFriends = false; espColor = tRed
-local FriendCache = {}; local isSpectating = false; local spectateTarget = nil
+FriendCache = {}; isSpectating = false; spectateTarget = nil
 
 -- Utilidad Toggles
 local function toggleState(btn, stateVar, name)
@@ -1380,7 +1384,7 @@ end
 -- ==========================================
 -- MOTOR DE RENDERIZADO UNIVERSAL (SIN DRAWING API)
 -- ==========================================
-local ESPDrawFolder = Instance.new("ScreenGui")
+ESPDrawFolder = Instance.new("ScreenGui")
 ESPDrawFolder.Name = "CDT_Universal_ESP"
 ESPDrawFolder.IgnoreGuiInset = true
 ESPDrawFolder.ResetOnSpawn = false
@@ -1429,7 +1433,7 @@ local function NewGuiText()
     return txt
 end
 
-local Drawings = {}
+Drawings = {}
 local function GetDrawings(player)
     if not Drawings[player] then
         Drawings[player] = {
@@ -1447,8 +1451,8 @@ local function ClearESPPlayer(player)
     end
 end
 
-local R15_Bones = { {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"}, {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"}, {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"} }
-local R6_Bones = { {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"} }
+R15_Bones = { {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"}, {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"}, {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"} }
+R6_Bones = { {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"} }
 
 table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
     ESPScroll.CanvasSize = UDim2.new(0, 0, 0, ESPListLayout.AbsoluteContentSize.Y + 20)
@@ -1525,26 +1529,34 @@ table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
     end
 end))
 
--- LÓGICA MODO ESPECTADOR (ESPEC)
-local function UpdateSpectatorList()
+-- LÓGICA MODO ESPECTADOR (ESPEC) Y BUSCADOR
+local function UpdateSpectatorList(filterText)
+    filterText = filterText and string.lower(filterText) or ""
     for _, child in pairs(SpecListScroll:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
-            local btn = Instance.new("TextButton", SpecListScroll)
-            btn.Size = UDim2.new(1, -5, 0, 22); btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25); btn.Text = "  " .. p.DisplayName
-            btn.TextColor3 = tWhite; btn.Font = Enum.Font.Gotham; btn.TextSize = 11; btn.TextXAlignment = Enum.TextXAlignment.Left
-            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,4)
-            btn.MouseButton1Click:Connect(function()
-                spectateTarget = p
-                SpecTargetLabel.Text = "OBJETIVO: " .. p.DisplayName
-                SpecTargetLabel.TextColor3 = tCyan
-                if isSpectating then Camera.CameraSubject = p.Character and p.Character:FindFirstChild("Humanoid") or LocalPlayer.Character.Humanoid end
-            end)
+            if filterText == "" or string.find(string.lower(p.Name), filterText) or string.find(string.lower(p.DisplayName), filterText) then
+                local btn = Instance.new("TextButton", SpecListScroll)
+                btn.Size = UDim2.new(1, -5, 0, 22); btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25); btn.Text = "  " .. p.DisplayName
+                btn.TextColor3 = tWhite; btn.Font = Enum.Font.Gotham; btn.TextSize = 11; btn.TextXAlignment = Enum.TextXAlignment.Left
+                Instance.new("UICorner", btn).CornerRadius = UDim.new(0,4)
+                btn.MouseButton1Click:Connect(function()
+                    spectateTarget = p
+                    SpecTargetLabel.Text = "OBJETIVO: " .. p.DisplayName
+                    SpecTargetLabel.TextColor3 = tCyan
+                    if isSpectating then Camera.CameraSubject = p.Character and p.Character:FindFirstChild("Humanoid") or LocalPlayer.Character.Humanoid end
+                end)
+            end
         end
     end
 end
 
-table.insert(GlobalConnections, Players.PlayerAdded:Connect(UpdateSpectatorList))
+-- Detectar cuando escribes en el buscador de espectador
+table.insert(GlobalConnections, SpecSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    UpdateSpectatorList(SpecSearchBox.Text)
+end))
+
+table.insert(GlobalConnections, Players.PlayerAdded:Connect(function() UpdateSpectatorList(SpecSearchBox.Text) end))
 table.insert(GlobalConnections, Players.PlayerRemoving:Connect(function(p)
     ClearESPPlayer(p)
     if Drawings[p] then
@@ -1552,7 +1564,7 @@ table.insert(GlobalConnections, Players.PlayerRemoving:Connect(function(p)
         for _, l in ipairs(Drawings[p].Skel) do pcall(function() l:Destroy() end) end
         Drawings[p] = nil
     end
-    UpdateSpectatorList()
+    UpdateSpectatorList(SpecSearchBox.Text)
     
     if isSpectating and spectateTarget == p then
         isSpectating = false
@@ -1588,7 +1600,7 @@ table.insert(GlobalConnections, {
     end
 })
 
-task.spawn(UpdateSpectatorList)
+task.spawn(function() UpdateSpectatorList("") end)
 
 -- ==================================================================
 -- 11. INTERFAZ DE AJUSTES Y TEMAS (SETTINGS / THEMES)
