@@ -11,7 +11,7 @@
     - SPINBOT (Angular Velocity + Keybind Fix + Comando spinstup).
     - WALK ON AIR (Generación dinámica + Keybind).
     - GLOBAL CHAT SMART (Auto-Scroll).
-    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion, air, spinstup, smg.
+    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion, air, spinstup, destroy.
     - Panel de Ajustes (⚙) con Temas Consistentes.
     - SISTEMA DE KEY, HWID Y AUTO-ACTUALIZACIÓN.
 ]]
@@ -38,7 +38,7 @@ local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEna
 
 local posicionGuardadaRE = nil
 local DestruirScriptCompleto
-local ScriptIsDead = false
+local ScriptIsDead = false -- Bandera de kill switch global
 
 -- ==================================================================
 -- VARIABLES GLOBALES (API)
@@ -50,7 +50,6 @@ local verMiTag = true
 local UIsActivos = {} 
 local tagsDescargados = {}
 local hiddenTags = {} 
-local SafeDevUsers = {} -- Usuarios activos con el script
 local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 local _GlobalUpdateTimestamp = 0
 local CurrentExpirationText = "Cargando..."
@@ -66,7 +65,9 @@ local tYellow = Color3.fromRGB(255, 220, 0)
 local tRed = Color3.fromRGB(255, 60, 60)
 local borderDark = Color3.fromRGB(45, 45, 45)
 
-local GlobalConnections = {} 
+local URL_NGROK = "https://garnett-waterborne-overoffensively.ngrok-free.dev" 
+
+local GlobalConnections = {} -- Almacenará conexiones críticas para limpiarlas
 
 local function ApplyResponsiveScale(frame)
     local scaleObj = Instance.new("UIScale", frame)
@@ -295,7 +296,6 @@ task.spawn(function()
             if sA and sT then
                 local isScriptUser = {}
                 for _, uid in ipairs(activeArray) do isScriptUser[tostring(uid)] = true end
-                SafeDevUsers = isScriptUser -- Se guarda la lista globalmente para el chat
                 
                 for _, player in ipairs(Players:GetPlayers()) do
                     local id = tostring(player.UserId)
@@ -367,62 +367,6 @@ table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
     end
 end))
 
--- ==================================================================
--- SISTEMA DE MENSAJERÍA PRIVADA (NOTIFICACIONES C.D.T)
--- ==================================================================
-local function ProcesarMensajePrivado(sender, msg)
-    local targetName, content = string.match(msg, "^!cdtmsg%s+(%S+)%s+(.+)")
-    if targetName and content then
-        if string.lower(string.sub(LocalPlayer.Name, 1, #targetName)) == string.lower(targetName) or 
-           string.lower(string.sub(LocalPlayer.DisplayName, 1, #targetName)) == string.lower(targetName) then
-            
-            if sender == LocalPlayer then return end 
-
-            local sound = Instance.new("Sound")
-            sound.SoundId = "rbxassetid://91271439961236"
-            sound.Volume = 0.3
-            sound.Parent = Workspace
-            sound:Play()
-            game.Debris:AddItem(sound, 5)
-
-            StarterGui:SetCore("SendNotification", {
-                Title = sender.DisplayName,
-                Text = content,
-                Duration = 8
-            })
-        end
-    end
-end
-
-for _, player in ipairs(Players:GetPlayers()) do
-    table.insert(GlobalConnections, player.Chatted:Connect(function(msg)
-        if not ScriptIsDead then ProcesarMensajePrivado(player, msg) end
-    end))
-end
-
-table.insert(GlobalConnections, Players.PlayerAdded:Connect(function(player)
-    table.insert(GlobalConnections, player.Chatted:Connect(function(msg)
-        if not ScriptIsDead then ProcesarMensajePrivado(player, msg) end
-    end))
-end))
-
-local TCS = game:GetService("TextChatService")
-if TCS.Version == Enum.ChatVersion.TextChatService then
-    table.insert(GlobalConnections, TCS.MessageReceived:Connect(function(textChatMessage)
-        if not ScriptIsDead and textChatMessage.TextSource then
-            local sender = Players:GetPlayerByUserId(textChatMessage.TextSource.UserId)
-            if sender then ProcesarMensajePrivado(sender, textChatMessage.Text) end
-        end
-    end))
-    
-    TCS.OnIncomingMessage = function(textChatMessage)
-        if string.match(textChatMessage.Text, "^!cdtmsg") then
-            local override = Instance.new("TextChatMessageProperties")
-            override.Text = "" 
-            return override
-        end
-    end
-end
 
 -- ==================================================================
 -- 1. CONSOLA PRINCIPAL OPTIFINE
@@ -460,14 +404,14 @@ MaxBtn = Instance.new("TextButton", MiniUI); MaxBtn.Size = UDim2.new(0, 35, 1, 0
 MakeDraggable(TopBar, Main); MakeDraggable(MiniLabel, Main)
 
 local isMinimized = false
-table.insert(GlobalConnections, MinBtn.MouseButton1Click:Connect(function()
+MinBtn.MouseButton1Click:Connect(function()
     isMinimized = true; FullUI.Visible = false; MiniUI.Visible = true
     Main:TweenSize(UDim2.new(0, 190, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
-end))
-table.insert(GlobalConnections, MaxBtn.MouseButton1Click:Connect(function()
+end)
+MaxBtn.MouseButton1Click:Connect(function()
     isMinimized = false; MiniUI.Visible = false; FullUI.Visible = true
     Main:TweenSize(UDim2.new(0, 320, 0, 350), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
-end))
+end)
 
 -- ==================================================================
 -- 2. MAP POINTS (WAYPOINTS MANAGER)
@@ -535,15 +479,15 @@ YesBtn = Instance.new("TextButton", ConfirmPopup); YesBtn.Size = UDim2.new(0, 10
 NoBtn = Instance.new("TextButton", ConfirmPopup); NoBtn.Size = UDim2.new(0, 100, 0, 35); NoBtn.Position = UDim2.new(0.5, 10, 0.5, 10); NoBtn.BackgroundColor3 = tRed; NoBtn.TextColor3 = tWhite; NoBtn.Text = "NO"; NoBtn.Font = Enum.Font.GothamBold; NoBtn.TextSize = 13; NoBtn.ZIndex = 11; Instance.new("UICorner", NoBtn).CornerRadius = UDim.new(0, 4)
 
 local accionPendiente = ""; local waypointPendiente = ""
-table.insert(GlobalConnections, NoBtn.MouseButton1Click:Connect(function() ConfirmPopup.Visible = false; accionPendiente = ""; waypointPendiente = "" end))
+NoBtn.MouseButton1Click:Connect(function() ConfirmPopup.Visible = false; accionPendiente = ""; waypointPendiente = "" end)
 
 ApplyResponsiveScale(MPMain); MakeDraggable(MPTopBar, MPMain)
 
 local mpMinimized = false
-table.insert(GlobalConnections, MPMinBtn.MouseButton1Click:Connect(function()
+MPMinBtn.MouseButton1Click:Connect(function()
     mpMinimized = not mpMinimized; MPMain:TweenSize(mpMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 350), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true); MPMinBtn.Text = mpMinimized and "+" or "—"; MPFix.Visible = not mpMinimized
-end))
-table.insert(GlobalConnections, MPCloseBtn.MouseButton1Click:Connect(function() MPMain.Visible = false end))
+end)
+MPCloseBtn.MouseButton1Click:Connect(function() MPMain.Visible = false end)
 
 local function RefreshMPList()
     for _, child in pairs(MPScroll:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
@@ -554,30 +498,30 @@ local function RefreshMPList()
         local UpdBtn = Instance.new("TextButton", Item); UpdBtn.Size = UDim2.new(0, 22, 0, 22); UpdBtn.Position = UDim2.new(1, -45, 0.5, -11); UpdBtn.BackgroundColor3 = tOrange; UpdBtn.TextColor3 = tWhite; UpdBtn.Text = "↺"; UpdBtn.Font = Enum.Font.GothamBold; UpdBtn.TextSize = 14; Instance.new("UICorner", UpdBtn).CornerRadius = UDim.new(0, 4)
         local DelBtn = Instance.new("TextButton", Item); DelBtn.Size = UDim2.new(0, 18, 0, 22); DelBtn.Position = UDim2.new(1, -20, 0.5, -11); DelBtn.BackgroundColor3 = tRed; DelBtn.TextColor3 = tWhite; DelBtn.Text = "X"; DelBtn.Font = Enum.Font.GothamBold; DelBtn.TextSize = 11; Instance.new("UICorner", DelBtn).CornerRadius = UDim.new(0, 4)
 
-        table.insert(GlobalConnections, NameBox.FocusLost:Connect(function()
+        NameBox.FocusLost:Connect(function()
             local newName = NameBox.Text
             if newName ~= "" and newName ~= wpName and not waypoints[newName] then
                 waypoints[newName] = waypoints[wpName]; waypoints[wpName] = nil; SaveWaypoints(); RefreshMPList()
             else NameBox.Text = wpName end
-        end))
-        table.insert(GlobalConnections, TpBtn.MouseButton1Click:Connect(function()
+        end)
+        TpBtn.MouseButton1Click:Connect(function()
             local char = LocalPlayer.Character; if char and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.CFrame = CFrame.new(coords.X, coords.Y, coords.Z) end
-        end))
-        table.insert(GlobalConnections, UpdBtn.MouseButton1Click:Connect(function()
+        end)
+        UpdBtn.MouseButton1Click:Connect(function()
             accionPendiente = "actualizar"; waypointPendiente = wpName
             ConfirmMsg.Text = "¿ACTUALIZAR '" .. wpName .. "' a tu posición actual?"
             ConfirmPopup.Visible = true
-        end))
-        table.insert(GlobalConnections, DelBtn.MouseButton1Click:Connect(function()
+        end)
+        DelBtn.MouseButton1Click:Connect(function()
             accionPendiente = "eliminar"; waypointPendiente = wpName
             ConfirmMsg.Text = "¿ELIMINAR el punto '" .. wpName .. "'?"
             ConfirmPopup.Visible = true
-        end))
+        end)
     end
     MPScroll.CanvasSize = UDim2.new(0, 0, 0, MPListLayout.AbsoluteContentSize.Y + 5)
 end
 
-table.insert(GlobalConnections, YesBtn.MouseButton1Click:Connect(function()
+YesBtn.MouseButton1Click:Connect(function()
     if accionPendiente == "eliminar" then waypoints[waypointPendiente] = nil
     elseif accionPendiente == "actualizar" then
         local char = LocalPlayer.Character
@@ -586,16 +530,16 @@ table.insert(GlobalConnections, YesBtn.MouseButton1Click:Connect(function()
         end
     end
     SaveWaypoints(); RefreshMPList(); ConfirmPopup.Visible = false
-end))
+end)
 
-table.insert(GlobalConnections, MPSaveBtn.MouseButton1Click:Connect(function()
+MPSaveBtn.MouseButton1Click:Connect(function()
     local name = MPInput.Text; if name == "" then name = "Punto " .. tostring(#MPScroll:GetChildren()) end
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         local p = char.HumanoidRootPart.Position; waypoints[name] = {X=p.X, Y=p.Y, Z=p.Z}
         SaveWaypoints(); MPInput.Text = ""; MPSaveBtn.Text = "✓"; task.wait(1); MPSaveBtn.Text = "ADD"; RefreshMPList()
     end
-end))
+end)
 
 -- ==================================================================
 -- 3. INTERFAZ TP MENU (JUGADORES)
@@ -613,11 +557,11 @@ TPListLayout = Instance.new("UIListLayout", TPScroll); TPListLayout.Padding = UD
 ApplyResponsiveScale(TPMain); MakeDraggable(TPTopBar, TPMain)
 
 local tpMinimized = false
-table.insert(GlobalConnections, TPMinBtn.MouseButton1Click:Connect(function()
+TPMinBtn.MouseButton1Click:Connect(function()
     tpMinimized = not tpMinimized; TPMain:TweenSize(tpMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 380), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     TPMinBtn.Text = tpMinimized and "+" or "—"; TPFix.Visible = not tpMinimized
-end))
-table.insert(GlobalConnections, TPCloseBtn.MouseButton1Click:Connect(function() TPMain.Visible = false end))
+end)
+TPCloseBtn.MouseButton1Click:Connect(function() TPMain.Visible = false end)
 
 local function RefreshTPMenu(filterText)
     filterText = filterText and string.lower(filterText) or ""
@@ -630,7 +574,7 @@ local function RefreshTPMenu(filterText)
                 task.spawn(function() pcall(function() Avatar.Image = Players:GetUserThumbnailAsync(plr.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end) end)
                 local NameLbl = Instance.new("TextLabel", Card); NameLbl.Size = UDim2.new(1, -100, 1, 0); NameLbl.Position = UDim2.new(0, 45, 0, 0); NameLbl.BackgroundTransparency = 1; NameLbl.Text = plr.DisplayName; NameLbl.TextColor3 = tWhite; NameLbl.Font = Enum.Font.GothamMedium; NameLbl.TextSize = 13; NameLbl.TextXAlignment = Enum.TextXAlignment.Left
                 local TpBtn = Instance.new("TextButton", Card); TpBtn.Size = UDim2.new(0, 40, 0, 26); TpBtn.Position = UDim2.new(1, -45, 0.5, -13); TpBtn.BackgroundColor3 = tGreen; TpBtn.Text = "TP"; TpBtn.TextColor3 = Color3.fromRGB(10, 10, 10); TpBtn.Font = Enum.Font.GothamBold; TpBtn.TextSize = 12; Instance.new("UICorner", TpBtn).CornerRadius = UDim.new(0, 4)
-                table.insert(GlobalConnections, TpBtn.MouseButton1Click:Connect(function() if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then LocalPlayer.Character.HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3) end end))
+                TpBtn.MouseButton1Click:Connect(function() if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then LocalPlayer.Character.HumanoidRootPart.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3) end end)
             end
         end
     end
@@ -656,11 +600,11 @@ HideListLayout = Instance.new("UIListLayout", HideScroll); HideListLayout.Paddin
 ApplyResponsiveScale(HideMain); MakeDraggable(HideTopBar, HideMain)
 
 local hideMinimized = false
-table.insert(GlobalConnections, HideMinBtn.MouseButton1Click:Connect(function()
+HideMinBtn.MouseButton1Click:Connect(function()
     hideMinimized = not hideMinimized; HideMain:TweenSize(hideMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 380), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     HideMinBtn.Text = hideMinimized and "+" or "—"; HideFix.Visible = not hideMinimized
-end))
-table.insert(GlobalConnections, HideCloseBtn.MouseButton1Click:Connect(function() HideMain.Visible = false end))
+end)
+HideCloseBtn.MouseButton1Click:Connect(function() HideMain.Visible = false end)
 
 local function RefreshHideMenu(filterText)
     filterText = filterText and string.lower(filterText) or ""
@@ -683,7 +627,7 @@ local function RefreshHideMenu(filterText)
                 HBtn.TextColor3 = isHid and Color3.fromRGB(10, 10, 10) or tWhite
                 HBtn.Font = Enum.Font.GothamBold; HBtn.TextSize = 11; Instance.new("UICorner", HBtn).CornerRadius = UDim.new(0, 4)
                 
-                table.insert(GlobalConnections, HBtn.MouseButton1Click:Connect(function()
+                HBtn.MouseButton1Click:Connect(function()
                     hiddenTags[idStr] = not hiddenTags[idStr]
                     local h = hiddenTags[idStr]
                     HBtn.BackgroundColor3 = h and tGreen or Color3.fromRGB(40, 40, 40)
@@ -691,7 +635,7 @@ local function RefreshHideMenu(filterText)
                     HBtn.TextColor3 = h and Color3.fromRGB(10, 10, 10) or tWhite
                     if plr.Character then OcultarAvatar(plr.Character, h) end
                     MutearVoiceChat(plr, h) 
-                end))
+                end)
             end
         end
     end
@@ -716,10 +660,10 @@ InvKeyBtn = Instance.new("TextButton", InvMain); InvKeyBtn.Size = UDim2.new(0, 5
 ApplyResponsiveScale(InvMain); MakeDraggable(InvTopBar, InvMain)
 
 local invMinimized = false
-table.insert(GlobalConnections, InvMinBtn.MouseButton1Click:Connect(function()
+InvMinBtn.MouseButton1Click:Connect(function()
     invMinimized = not invMinimized; InvMain:TweenSize(invMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     InvMinBtn.Text = invMinimized and "+" or "—"; InvFix.Visible = not invMinimized
-end))
+end)
 
 local function showNotice(txt)
     pcall(function() if CoreGui:FindFirstChild("InvisGhostNotice") then CoreGui.InvisGhostNotice:Destroy() end end)
@@ -781,16 +725,16 @@ ToggleGhost = function()
     end
     task.wait(0.5); ghostDebounce = false
 end
-table.insert(GlobalConnections, InvToggleBtn.MouseButton1Click:Connect(ToggleGhost))
+InvToggleBtn.MouseButton1Click:Connect(ToggleGhost)
 
-table.insert(GlobalConnections, InvCloseBtn.MouseButton1Click:Connect(function() 
+InvCloseBtn.MouseButton1Click:Connect(function() 
     InvMain.Visible = false; invKeybind = nil; isInvBinding = false; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     if isGhostActive then ToggleGhost() end
-end))
-table.insert(GlobalConnections, InvKeyBtn.MouseButton1Click:Connect(function()
+end)
+InvKeyBtn.MouseButton1Click:Connect(function()
     if invKeybind ~= nil then invKeybind = nil; InvKeyBtn.Text = "KEY"; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false
     else isInvBinding = true; InvKeyBtn.Text = "..."; InvKeyBtn.BackgroundColor3 = tOrange end
-end))
+end)
 
 -- ==================================================================
 -- 5. INTERFAZ Y LÓGICA DEL MENÚ FLY (NORMAL FLY SIN NOCLIP)
@@ -812,17 +756,17 @@ FlySpeedPlus = Instance.new("TextButton", FlyMain); FlySpeedPlus.Size = UDim2.ne
 ApplyResponsiveScale(FlyMain); MakeDraggable(FlyTopBar, FlyMain)
 
 local flyMinimized = false
-table.insert(GlobalConnections, FlyMinBtn.MouseButton1Click:Connect(function()
+FlyMinBtn.MouseButton1Click:Connect(function()
     flyMinimized = not flyMinimized; FlyMain:TweenSize(flyMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     FlyMinBtn.Text = flyMinimized and "+" or "—"; FlyFix.Visible = not flyMinimized
-end))
+end)
 
 isFlying = false; flycontrol = {F = 0, R = 0, B = 0, L = 0, U = 0, D = 0}
 local flySpeed = 100; local flyKeybind = nil; local isFlyBinding = false; local flyLoop = nil
 
-table.insert(GlobalConnections, FlySpeedMinus.MouseButton1Click:Connect(function() flySpeed = math.max(10, flySpeed - 10); FlySpeedDisplay.Text = "SPEED: " .. flySpeed end))
-table.insert(GlobalConnections, FlySpeedPlus.MouseButton1Click:Connect(function() flySpeed = flySpeed + 10; FlySpeedDisplay.Text = "SPEED: " .. flySpeed end))
-table.insert(GlobalConnections, FlySpeedDisplay.FocusLost:Connect(function() local num = tonumber(FlySpeedDisplay.Text:match("%d+")); if num then flySpeed = num end; FlySpeedDisplay.Text = "SPEED: " .. flySpeed end))
+FlySpeedMinus.MouseButton1Click:Connect(function() flySpeed = math.max(10, flySpeed - 10); FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
+FlySpeedPlus.MouseButton1Click:Connect(function() flySpeed = flySpeed + 10; FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
+FlySpeedDisplay.FocusLost:Connect(function() local num = tonumber(FlySpeedDisplay.Text:match("%d+")); if num then flySpeed = num end; FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
 
 ToggleFly = function()
     local char = LocalPlayer.Character; if not char then return end
@@ -847,16 +791,16 @@ ToggleFly = function()
         hum.PlatformStand = false
     end
 end
-table.insert(GlobalConnections, FlyToggleBtn.MouseButton1Click:Connect(ToggleFly))
+FlyToggleBtn.MouseButton1Click:Connect(ToggleFly)
 
-table.insert(GlobalConnections, FlyCloseBtn.MouseButton1Click:Connect(function() 
+FlyCloseBtn.MouseButton1Click:Connect(function() 
     FlyMain.Visible = false; flyKeybind = nil; isFlyBinding = false; FlyKeyBtn.Text = "KEY"; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     if isFlying then ToggleFly() end
-end))
-table.insert(GlobalConnections, FlyKeyBtn.MouseButton1Click:Connect(function()
+end)
+FlyKeyBtn.MouseButton1Click:Connect(function()
     if flyKeybind ~= nil then flyKeybind = nil; FlyKeyBtn.Text = "KEY"; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFlyBinding = false
     else isFlyBinding = true; FlyKeyBtn.Text = "..."; FlyKeyBtn.BackgroundColor3 = tOrange end
-end))
+end)
 
 -- ==================================================================
 -- 6. NOCLIP WALK (ATRAVIESA PAREDES CAMINANDO + ANTI-VACÍO)
@@ -874,10 +818,10 @@ NoclipKeyBtn = Instance.new("TextButton", NoclipMain); NoclipKeyBtn.Size = UDim2
 ApplyResponsiveScale(NoclipMain); MakeDraggable(NoclipTopBar, NoclipMain)
 
 local noclipMinimized = false
-table.insert(GlobalConnections, NoclipMinBtn.MouseButton1Click:Connect(function()
+NoclipMinBtn.MouseButton1Click:Connect(function()
     noclipMinimized = not noclipMinimized; NoclipMain:TweenSize(noclipMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     NoclipMinBtn.Text = noclipMinimized and "+" or "—"; NoclipFix.Visible = not noclipMinimized
-end))
+end)
 
 local isNoclipActive = false; local noclipLoop = nil; local noclipFloor = nil; local noclipKeybind = nil; local isNoclipBinding = false
 
@@ -907,16 +851,16 @@ ToggleNoclipWalk = function()
         if char then for _, part in pairs(char:GetChildren()) do if part:IsA("BasePart") then part.CanCollide = true end end end
     end
 end
-table.insert(GlobalConnections, NoclipToggleBtn.MouseButton1Click:Connect(ToggleNoclipWalk))
+NoclipToggleBtn.MouseButton1Click:Connect(ToggleNoclipWalk)
 
-table.insert(GlobalConnections, NoclipCloseBtn.MouseButton1Click:Connect(function() 
+NoclipCloseBtn.MouseButton1Click:Connect(function() 
     NoclipMain.Visible = false; noclipKeybind = nil; isNoclipBinding = false; NoclipKeyBtn.Text = "KEY"; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
     if isNoclipActive then ToggleNoclipWalk() end
-end))
-table.insert(GlobalConnections, NoclipKeyBtn.MouseButton1Click:Connect(function()
+end)
+NoclipKeyBtn.MouseButton1Click:Connect(function()
     if noclipKeybind ~= nil then noclipKeybind = nil; NoclipKeyBtn.Text = "KEY"; NoclipKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isNoclipBinding = false
     else isNoclipBinding = true; NoclipKeyBtn.Text = "..."; NoclipKeyBtn.BackgroundColor3 = tOrange end
-end))
+end)
 
 -- ==================================================================
 -- 7. VEHICLE FLY (ZACH'S SCRIPT LERP)
@@ -938,16 +882,16 @@ VFlySpeedPlus = Instance.new("TextButton", VFlyMain); VFlySpeedPlus.Size = UDim2
 ApplyResponsiveScale(VFlyMain); MakeDraggable(VFlyTopBar, VFlyMain)
 
 local vflyMinimized = false
-table.insert(GlobalConnections, VFlyMinBtn.MouseButton1Click:Connect(function()
+VFlyMinBtn.MouseButton1Click:Connect(function()
     vflyMinimized = not vflyMinimized; VFlyMain:TweenSize(vflyMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     VFlyMinBtn.Text = vflyMinimized and "+" or "—"; VFlyFix.Visible = not vflyMinimized
-end))
+end)
 
 local isVFlying = false; local vFlySpeedNum = 256; local vFlyAccel = 4; local vFlyTurn = 16; local vFlyMultiplier = 3; local vFlyKeybind = nil; local isVFlyBinding = false; local vFlyConn = nil; local vFlyCurrentVel = Vector3.new(0,0,0)
 
-table.insert(GlobalConnections, VFlySpeedMinus.MouseButton1Click:Connect(function() vFlySpeedNum = math.max(1, vFlySpeedNum - 10); VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end))
-table.insert(GlobalConnections, VFlySpeedPlus.MouseButton1Click:Connect(function() vFlySpeedNum = vFlySpeedNum + 10; VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end))
-table.insert(GlobalConnections, VFlySpeedDisplay.FocusLost:Connect(function() local num = tonumber(VFlySpeedDisplay.Text:match("%d+")); if num then vFlySpeedNum = math.max(1, num) end; VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end))
+VFlySpeedMinus.MouseButton1Click:Connect(function() vFlySpeedNum = math.max(1, vFlySpeedNum - 10); VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end)
+VFlySpeedPlus.MouseButton1Click:Connect(function() vFlySpeedNum = vFlySpeedNum + 10; VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end)
+VFlySpeedDisplay.FocusLost:Connect(function() local num = tonumber(VFlySpeedDisplay.Text:match("%d+")); if num then vFlySpeedNum = math.max(1, num) end; VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end)
 
 local function VFlyLoop(delta)
     local char = LocalPlayer.Character; if not char then return end
@@ -975,22 +919,22 @@ ToggleVFly = function()
     isVFlying = not isVFlying; local char = LocalPlayer.Character; local root = char and char:FindFirstChild("HumanoidRootPart")
     if isVFlying then
         VFlyToggleBtn.BackgroundColor3 = tPurple; VFlyToggleBtn.Text = "V-FLY: ON"
-        if root then vFlyCurrentVel = root.Velocity end; vFlyConn = RunService.Heartbeat:Connect(VFlyLoop)
+        if root then vFlyCurrentVel = root.Velocity end; table.insert(GlobalConnections, RunService.Heartbeat:Connect(VFlyLoop))
     else
         VFlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); VFlyToggleBtn.Text = "V-FLY: OFF"
         if vFlyConn then vFlyConn:Disconnect(); vFlyConn = nil end
     end
 end
-table.insert(GlobalConnections, VFlyToggleBtn.MouseButton1Click:Connect(ToggleVFly))
+VFlyToggleBtn.MouseButton1Click:Connect(ToggleVFly)
 
-table.insert(GlobalConnections, VFlyCloseBtn.MouseButton1Click:Connect(function() 
+VFlyCloseBtn.MouseButton1Click:Connect(function() 
     VFlyMain.Visible = false; vFlyKeybind = nil; isVFlyBinding = false; VFlyKeyBtn.Text = "KEY"; VFlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
     if isVFlying then ToggleVFly() end
-end))
-table.insert(GlobalConnections, VFlyKeyBtn.MouseButton1Click:Connect(function()
+end)
+VFlyKeyBtn.MouseButton1Click:Connect(function()
     if vFlyKeybind ~= nil then vFlyKeybind = nil; VFlyKeyBtn.Text = "KEY"; VFlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isVFlyBinding = false
     else isVFlyBinding = true; VFlyKeyBtn.Text = "..."; VFlyKeyBtn.BackgroundColor3 = tOrange end
-end))
+end)
 
 -- ==================================================================
 -- 8. TRIP MODE MENU (CAÍDA INFINITA + LEVANTARSE)
@@ -1008,10 +952,10 @@ TripKeyBtn = Instance.new("TextButton", TripMain); TripKeyBtn.Size = UDim2.new(0
 ApplyResponsiveScale(TripMain); MakeDraggable(TripTopBar, TripMain)
 
 local tripMinimized = false
-table.insert(GlobalConnections, TripMinBtn.MouseButton1Click:Connect(function()
+TripMinBtn.MouseButton1Click:Connect(function()
     tripMinimized = not tripMinimized; TripMain:TweenSize(tripMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     TripMinBtn.Text = tripMinimized and "+" or "—"; TripFix.Visible = not tripMinimized
-end))
+end)
 
 local tripKeybind = nil; local isTripBinding = false; local tripStateConn = nil 
 isTripped = false
@@ -1079,17 +1023,17 @@ DoTrip = function()
     end
 end
 
-table.insert(GlobalConnections, TripToggleBtn.MouseButton1Click:Connect(function()
+TripToggleBtn.MouseButton1Click:Connect(function()
     if isTripped then GetUpFromTrip(false) else DoTrip() end
-end))
-table.insert(GlobalConnections, TripCloseBtn.MouseButton1Click:Connect(function() 
+end)
+TripCloseBtn.MouseButton1Click:Connect(function() 
     TripMain.Visible = false; tripKeybind = nil; isTripBinding = false; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
     if isTripped then GetUpFromTrip(false) end
-end))
-table.insert(GlobalConnections, TripKeyBtn.MouseButton1Click:Connect(function()
+end)
+TripKeyBtn.MouseButton1Click:Connect(function()
     if tripKeybind ~= nil then tripKeybind = nil; TripKeyBtn.Text = "KEY"; TripKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isTripBinding = false
     else isTripBinding = true; TripKeyBtn.Text = "..."; TripKeyBtn.BackgroundColor3 = tOrange end
-end))
+end)
 
 -- ==================================================================
 -- 13. REVERSE MODE (FLASHBACK / TIME REWIND) + FIX DE KEYBIND
@@ -1109,10 +1053,10 @@ ReverseActionBtn = Instance.new("TextButton", ReverseMain); ReverseActionBtn.Siz
 ApplyResponsiveScale(ReverseMain); MakeDraggable(ReverseTopBar, ReverseMain)
 
 local reverseMinimized = false
-table.insert(GlobalConnections, ReverseMinBtn.MouseButton1Click:Connect(function()
+ReverseMinBtn.MouseButton1Click:Connect(function()
     reverseMinimized = not reverseMinimized; ReverseMain:TweenSize(reverseMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     ReverseMinBtn.Text = reverseMinimized and "+" or "—"; ReverseFix.Visible = not reverseMinimized
-end))
+end)
 
 local isReverseActive = false; local reverseKeybind = nil; local isReverseBinding = false; local isMobileRewinding = false
 local flashbacklength = 500; local flashbackspeed = 2; local frames = {}
@@ -1170,7 +1114,7 @@ ToggleReverse = function()
         if char and hrp and hum then CleanCharacterState(char, hrp, hum) end
     end
 end
-table.insert(GlobalConnections, ReverseToggleBtn.MouseButton1Click:Connect(ToggleReverse))
+ReverseToggleBtn.MouseButton1Click:Connect(ToggleReverse)
 
 table.insert(GlobalConnections, ReverseActionBtn.InputBegan:Connect(function(input)
     if not isReverseActive then return end
@@ -1183,14 +1127,14 @@ table.insert(GlobalConnections, ReverseActionBtn.InputEnded:Connect(function(inp
         isMobileRewinding = false; if isReverseActive then ReverseActionBtn.BackgroundColor3 = tPurple; ReverseActionBtn.TextColor3 = tWhite end
     end
 end))
-table.insert(GlobalConnections, ReverseCloseBtn.MouseButton1Click:Connect(function() 
+ReverseCloseBtn.MouseButton1Click:Connect(function() 
     ReverseMain.Visible = false; reverseKeybind = nil; isReverseBinding = false; ReverseKeyBtn.Text = "KEY"; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isMobileRewinding = false 
     if isReverseActive then ToggleReverse() end
-end))
-table.insert(GlobalConnections, ReverseKeyBtn.MouseButton1Click:Connect(function()
+end)
+ReverseKeyBtn.MouseButton1Click:Connect(function()
     if reverseKeybind ~= nil then reverseKeybind = nil; ReverseKeyBtn.Text = "KEY"; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isReverseBinding = false
     else isReverseBinding = true; ReverseKeyBtn.Text = "..."; ReverseKeyBtn.BackgroundColor3 = tOrange end
-end))
+end)
 
 -- ==================================================================
 -- 14. FREECAM MENU (EXPLORACIÓN LIBRE + SHIFT LOCK FIX)
@@ -1212,18 +1156,18 @@ FreecamSpeedPlus = Instance.new("TextButton", FreecamMain); FreecamSpeedPlus.Siz
 ApplyResponsiveScale(FreecamMain); MakeDraggable(FreecamTopBar, FreecamMain)
 
 local fcMinimized = false
-table.insert(GlobalConnections, FreecamMinBtn.MouseButton1Click:Connect(function()
+FreecamMinBtn.MouseButton1Click:Connect(function()
     fcMinimized = not fcMinimized; FreecamMain:TweenSize(fcMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     FreecamMinBtn.Text = fcMinimized and "+" or "—"; FreecamFix.Visible = not fcMinimized
-end))
+end)
 
 local isFreecamActive = false; local fcSpeed = 60; local fcSmoothness = 0.1; local fcKeybind = nil; local isFcBinding = false
 local fcTargetCFrame = CFrame.new(); local fcVelocity = Vector3.zero; local fcPitch, fcYaw = 0, 0
 local fcRenderConn, fcInputConn1, fcInputConn2; local isHoldingRightClick = false; local isShiftLocked = false
 
-table.insert(GlobalConnections, FreecamSpeedMinus.MouseButton1Click:Connect(function() fcSpeed = math.max(10, fcSpeed - 10); FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end))
-table.insert(GlobalConnections, FreecamSpeedPlus.MouseButton1Click:Connect(function() fcSpeed = fcSpeed + 10; FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end))
-table.insert(GlobalConnections, FreecamSpeedDisplay.FocusLost:Connect(function() local num = tonumber(FreecamSpeedDisplay.Text:match("%d+")); if num then fcSpeed = num end; FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end))
+FreecamSpeedMinus.MouseButton1Click:Connect(function() fcSpeed = math.max(10, fcSpeed - 10); FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
+FreecamSpeedPlus.MouseButton1Click:Connect(function() fcSpeed = fcSpeed + 10; FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
+FreecamSpeedDisplay.FocusLost:Connect(function() local num = tonumber(FreecamSpeedDisplay.Text:match("%d+")); if num then fcSpeed = num end; FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
 
 local function getFCMovement()
     local vec = Vector3.zero
@@ -1299,15 +1243,21 @@ ToggleFreecam = function()
         if fcRenderConn then fcRenderConn:Disconnect() end
     end
 end
-table.insert(GlobalConnections, FreecamToggleBtn.MouseButton1Click:Connect(ToggleFreecam))
+FreecamToggleBtn.MouseButton1Click:Connect(ToggleFreecam)
 
-table.insert(GlobalConnections, FreecamCloseBtn.MouseButton1Click:Connect(function() 
+FreecamCloseBtn.MouseButton1Click:Connect(function() 
     FreecamMain.Visible = false; fcKeybind = nil; isFcBinding = false; FreecamKeyBtn.Text = "KEY"; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     if isFreecamActive then ToggleFreecam() end
-end))
-table.insert(GlobalConnections, FreecamKeyBtn.MouseButton1Click:Connect(function()
+end)
+FreecamKeyBtn.MouseButton1Click:Connect(function()
     if fcKeybind ~= nil then fcKeybind = nil; FreecamKeyBtn.Text = "KEY"; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFcBinding = false
     else isFcBinding = true; FreecamKeyBtn.Text = "..."; FreecamKeyBtn.BackgroundColor3 = tOrange end
+end)
+table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(input, gp)
+    if isFcBinding and input.UserInputType == Enum.UserInputType.Keyboard then
+        fcKeybind = input.KeyCode; FreecamKeyBtn.Text = input.KeyCode.Name; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFcBinding = false; return
+    end
+    if fcKeybind and input.KeyCode == fcKeybind and not UserInputService:GetFocusedTextBox() then ToggleFreecam() end
 end))
 
 -- ==================================================================
@@ -1328,10 +1278,10 @@ ESPTeamBtn = Instance.new("TextButton", ESPMain); ESPTeamBtn.Size = UDim2.new(1,
 ApplyResponsiveScale(ESPMain); MakeDraggable(ESPTopBar, ESPMain)
 
 local espMinimized = false
-table.insert(GlobalConnections, ESPMinBtn.MouseButton1Click:Connect(function()
+ESPMinBtn.MouseButton1Click:Connect(function()
     espMinimized = not espMinimized; ESPMain:TweenSize(espMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     ESPMinBtn.Text = espMinimized and "+" or "—"; ESPFix.Visible = not espMinimized
-end))
+end)
 
 local isESPActive = false; local useTeamCheck = true; local espKeybind = nil; local isEspBinding = false
 local espFolder = Instance.new("Folder", CoreGui); espFolder.Name = "CDT_ESP_Folder"
@@ -1388,23 +1338,31 @@ ToggleESP = function()
         ESPToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ESPToggleBtn.TextColor3 = tWhite; ESPToggleBtn.Text = "ESP: OFF"; ClearESP()
     end
 end
-table.insert(GlobalConnections, ESPToggleBtn.MouseButton1Click:Connect(ToggleESP))
+ESPToggleBtn.MouseButton1Click:Connect(ToggleESP)
 
-table.insert(GlobalConnections, ESPTeamBtn.MouseButton1Click:Connect(function()
+ESPTeamBtn.MouseButton1Click:Connect(function()
     useTeamCheck = not useTeamCheck
     if useTeamCheck then ESPTeamBtn.BackgroundColor3 = tGreen; ESPTeamBtn.TextColor3 = Color3.fromRGB(10, 10, 10); ESPTeamBtn.Text = "TEAM CHECK: ON"
     else ESPTeamBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); ESPTeamBtn.TextColor3 = tWhite; ESPTeamBtn.Text = "TEAM CHECK: OFF" end
     if isESPActive then UpdateESP() end
-end))
+end)
 
-table.insert(GlobalConnections, ESPCloseBtn.MouseButton1Click:Connect(function() 
+ESPCloseBtn.MouseButton1Click:Connect(function() 
     ESPMain.Visible = false; espKeybind = nil; isEspBinding = false; ESPKeyBtn.Text = "KEY"; ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     if isESPActive then ToggleESP() end
-end))
-table.insert(GlobalConnections, ESPKeyBtn.MouseButton1Click:Connect(function()
+end)
+ESPKeyBtn.MouseButton1Click:Connect(function()
     if espKeybind ~= nil then espKeybind = nil; ESPKeyBtn.Text = "KEY"; ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isEspBinding = false
     else isEspBinding = true; ESPKeyBtn.Text = "..."; ESPKeyBtn.BackgroundColor3 = tOrange end
+end)
+
+table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(input, gp)
+    if isEspBinding and input.UserInputType == Enum.UserInputType.Keyboard then
+        espKeybind = input.KeyCode; ESPKeyBtn.Text = input.KeyCode.Name; ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isEspBinding = false; return
+    end
+    if not gp and espKeybind and input.KeyCode == espKeybind and not UserInputService:GetFocusedTextBox() then ToggleESP() end
 end))
+
 
 -- ==================================================================
 -- 11. INTERFAZ DE AJUSTES Y TEMAS (SETTINGS / THEMES)
@@ -1421,14 +1379,14 @@ ThemeToggleBtn = Instance.new("TextButton", SetMain); ThemeToggleBtn.Size = UDim
 ApplyResponsiveScale(SetMain); MakeDraggable(SetTopBar, SetMain)
 
 local setMinimized = false
-table.insert(GlobalConnections, SetMinBtn.MouseButton1Click:Connect(function()
+SetMinBtn.MouseButton1Click:Connect(function()
     setMinimized = not setMinimized; SetMain:TweenSize(setMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     SetMinBtn.Text = setMinimized and "+" or "—"; SetFix.Visible = not setMinimized
-end))
-table.insert(GlobalConnections, SetCloseBtn.MouseButton1Click:Connect(function() SetMain.Visible = false end))
+end)
+SetCloseBtn.MouseButton1Click:Connect(function() SetMain.Visible = false end)
 
 local currentTheme = "Default"
-table.insert(GlobalConnections, ThemeToggleBtn.MouseButton1Click:Connect(function()
+ThemeToggleBtn.MouseButton1Click:Connect(function()
     if currentTheme == "Default" then
         currentTheme = "Glass"
         ThemeToggleBtn.Text = "TEMA: CRISTAL"
@@ -1458,7 +1416,7 @@ table.insert(GlobalConnections, ThemeToggleBtn.MouseButton1Click:Connect(functio
     for _, tb in ipairs(topbars) do if tb then tb.BackgroundTransparency = tbTrans; tb.BackgroundColor3 = tbColor end end
     for _, fx in ipairs(fixes) do if fx then fx.BackgroundTransparency = tbTrans; fx.BackgroundColor3 = tbColor end end
     for _, s in ipairs(strokes) do if s then s.Color = strokeColor; s.Transparency = strokeTrans; if isGlass then s.Thickness = 1.2 else s.Thickness = 1 end end end
-end))
+end)
 
 -- ==================================================================
 -- 12. GENERADOR C.D.T (EVENT GENERATION SLIDERS)
@@ -1507,12 +1465,12 @@ GenFireBtn.Size = UDim2.new(1, -20, 0, 40); GenFireBtn.Position = UDim2.new(0, 1
 ApplyResponsiveScale(GenMain); MakeDraggable(GenTopBar, GenMain)
 
 local genMinimized = false
-table.insert(GlobalConnections, GenMinBtn.MouseButton1Click:Connect(function()
+GenMinBtn.MouseButton1Click:Connect(function()
     genMinimized = not genMinimized; GenMain:TweenSize(genMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 310), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true); GenMinBtn.Text = genMinimized and "+" or "—"; GenFix.Visible = not genMinimized
-end))
-table.insert(GlobalConnections, GenCloseBtn.MouseButton1Click:Connect(function() GenMain.Visible = false end))
+end)
+GenCloseBtn.MouseButton1Click:Connect(function() GenMain.Visible = false end)
 
-table.insert(GlobalConnections, GenFireBtn.MouseButton1Click:Connect(function()
+GenFireBtn.MouseButton1Click:Connect(function()
     local Event = ReplicatedStorage:FindFirstChild("event_generation")
     if Event then
         local valX, valY, valZ = getX(), getY(), getZ()
@@ -1521,7 +1479,7 @@ table.insert(GlobalConnections, GenFireBtn.MouseButton1Click:Connect(function()
     else
         local oldText = GenFireBtn.Text; GenFireBtn.BackgroundColor3 = tRed; GenFireBtn.TextColor3 = tWhite; GenFireBtn.Text = "ERROR: EVENTO NO ENCONTRADO"; task.wait(2); GenFireBtn.BackgroundColor3 = tGreen; GenFireBtn.TextColor3 = Color3.fromRGB(10, 10, 10); GenFireBtn.Text = oldText
     end
-end))
+end)
 
 -- ==================================================================
 -- 18. SPINBOT MENU (BODY ANGULAR VELOCITY INTEGRADO)
@@ -1543,16 +1501,16 @@ SpinSpeedPlus = Instance.new("TextButton", SpinMain); SpinSpeedPlus.Size = UDim2
 ApplyResponsiveScale(SpinMain); MakeDraggable(SpinTopBar, SpinMain)
 
 local spinMinimized = false
-table.insert(GlobalConnections, SpinMinBtn.MouseButton1Click:Connect(function()
+SpinMinBtn.MouseButton1Click:Connect(function()
     spinMinimized = not spinMinimized; SpinMain:TweenSize(spinMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
-end))
+end)
 
 local isSpinning = false; local spinSpeedNum = 30; local spinKeybind = nil; local isSpinBinding = false
 local spinDebounce = false
 
-table.insert(GlobalConnections, SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 5); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end))
-table.insert(GlobalConnections, SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 5; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end))
+SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 5); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 5; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 table.insert(GlobalConnections, SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end))
 
 ToggleSpin = function(forceSpeed)
@@ -1606,17 +1564,17 @@ ToggleSpin = function(forceSpeed)
     spinDebounce = false
 end
 
-table.insert(GlobalConnections, SpinToggleBtn.MouseButton1Click:Connect(function() ToggleSpin() end))
+SpinToggleBtn.MouseButton1Click:Connect(function() ToggleSpin() end)
 
-table.insert(GlobalConnections, SpinCloseBtn.MouseButton1Click:Connect(function() 
+SpinCloseBtn.MouseButton1Click:Connect(function() 
     SpinMain.Visible = false; spinKeybind = nil; isSpinBinding = false; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     if isSpinning then ToggleSpin() end
-end))
+end)
 
-table.insert(GlobalConnections, SpinKeyBtn.MouseButton1Click:Connect(function()
+SpinKeyBtn.MouseButton1Click:Connect(function()
     if spinKeybind ~= nil then spinKeybind = nil; SpinKeyBtn.Text = "KEY"; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isSpinBinding = false
     else isSpinBinding = true; SpinKeyBtn.Text = "..."; SpinKeyBtn.BackgroundColor3 = tOrange end
-end))
+end)
 
 -- ==================================================================
 -- 19. WALK ON AIR MENU (INVISIBLE DYNAMIC BASE)
@@ -1634,10 +1592,10 @@ AirKeyBtn = Instance.new("TextButton", AirMain); AirKeyBtn.Size = UDim2.new(0, 5
 ApplyResponsiveScale(AirMain); MakeDraggable(AirTopBar, AirMain)
 
 local airMinimized = false
-table.insert(GlobalConnections, AirMinBtn.MouseButton1Click:Connect(function()
+AirMinBtn.MouseButton1Click:Connect(function()
     airMinimized = not airMinimized; AirMain:TweenSize(airMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     AirMinBtn.Text = airMinimized and "+" or "—"; AirFix.Visible = not airMinimized
-end))
+end)
 
 local isAirWalkActive = false; local airKeybind = nil; local isAirBinding = false; local airBaseplateFolder = nil
 local airPlantilla = Instance.new("Part"); airPlantilla.Size = Vector3.new(648, 16, 648); airPlantilla.Anchored = true; airPlantilla.CanCollide = true; airPlantilla.Transparency = 1; airPlantilla.Material = Enum.Material.SmoothPlastic
@@ -1702,74 +1660,17 @@ ToggleAirWalk = function()
         if airBaseplateFolder then airBaseplateFolder:Destroy(); airBaseplateFolder = nil end
     end
 end
-table.insert(GlobalConnections, AirToggleBtn.MouseButton1Click:Connect(ToggleAirWalk))
+AirToggleBtn.MouseButton1Click:Connect(ToggleAirWalk)
 
-table.insert(GlobalConnections, AirCloseBtn.MouseButton1Click:Connect(function() 
+AirCloseBtn.MouseButton1Click:Connect(function() 
     AirMain.Visible = false; airKeybind = nil; isAirBinding = false; AirKeyBtn.Text = "KEY"; AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
     if isAirWalkActive then ToggleAirWalk() end
-end))
+end)
 
-table.insert(GlobalConnections, AirKeyBtn.MouseButton1Click:Connect(function()
+AirKeyBtn.MouseButton1Click:Connect(function()
     if airKeybind ~= nil then airKeybind = nil; AirKeyBtn.Text = "KEY"; AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isAirBinding = false
     else isAirBinding = true; AirKeyBtn.Text = "..."; AirKeyBtn.BackgroundColor3 = tOrange end
-end))
-
--- ==================================================================
--- SISTEMA DE MENSAJERÍA PRIVADA (NOTIFICACIONES C.D.T)
--- ==================================================================
-local function ProcesarMensajePrivado(sender, msg)
-    local targetName, content = string.match(msg, "^!cdtmsg%s+(%S+)%s+(.+)")
-    if targetName and content then
-        if string.lower(string.sub(LocalPlayer.Name, 1, #targetName)) == string.lower(targetName) or 
-           string.lower(string.sub(LocalPlayer.DisplayName, 1, #targetName)) == string.lower(targetName) then
-            
-            if sender == LocalPlayer then return end 
-
-            local sound = Instance.new("Sound")
-            sound.SoundId = "rbxassetid://91271439961236"
-            sound.Volume = 0.3
-            sound.Parent = Workspace
-            sound:Play()
-            game.Debris:AddItem(sound, 5)
-
-            StarterGui:SetCore("SendNotification", {
-                Title = sender.DisplayName,
-                Text = content,
-                Duration = 8
-            })
-        end
-    end
-end
-
-for _, player in ipairs(Players:GetPlayers()) do
-    table.insert(GlobalConnections, player.Chatted:Connect(function(msg)
-        if not ScriptIsDead then ProcesarMensajePrivado(player, msg) end
-    end))
-end
-
-table.insert(GlobalConnections, Players.PlayerAdded:Connect(function(player)
-    table.insert(GlobalConnections, player.Chatted:Connect(function(msg)
-        if not ScriptIsDead then ProcesarMensajePrivado(player, msg) end
-    end))
-end))
-
-local TCS = game:GetService("TextChatService")
-if TCS.Version == Enum.ChatVersion.TextChatService then
-    table.insert(GlobalConnections, TCS.MessageReceived:Connect(function(textChatMessage)
-        if not ScriptIsDead and textChatMessage.TextSource then
-            local sender = Players:GetPlayerByUserId(textChatMessage.TextSource.UserId)
-            if sender then ProcesarMensajePrivado(sender, textChatMessage.Text) end
-        end
-    end))
-    
-    TCS.OnIncomingMessage = function(textChatMessage)
-        if string.match(textChatMessage.Text, "^!cdtmsg") then
-            local override = Instance.new("TextChatMessageProperties")
-            override.Text = "" 
-            return override
-        end
-    end
-end
+end)
 
 -- ==================================================================
 -- COMANDOS Y CONSOLA DE EVENTOS
@@ -1819,43 +1720,6 @@ AddCmd("air", "Abre el panel de Walk on Air", function() AirMain.Visible = true;
 
 AddCmd("spinstup", "Abre el panel del Spinbot", function()
     SpinMain.Visible = true; LogMessage("Menú Spinbot abierto.", tCyan)
-end)
-
-AddCmd("smg", "Envía MSJ o lista usuarios (Ej: smg lista | smg juan Hola)", function(args)
-    if #args == 0 or args[1] == "lista" then
-        local count = 0
-        LogMessage("--- USUARIOS CON C.D.T EN ESTE SERVER ---", tPurple)
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and SafeDevUsers[tostring(p.UserId)] then
-                LogMessage("🟢 " .. p.DisplayName .. " (@" .. p.Name .. ")", tGreen)
-                count = count + 1
-            end
-        end
-        if count == 0 then LogMessage("Nadie más en este servidor usa el script.", tOrange) end
-    elseif #args >= 2 then
-        local target = args[1]
-        table.remove(args, 1)
-        local message = table.concat(args, " ")
-        
-        local chatString = "!cdtmsg " .. target .. " " .. message
-        
-        local textChat = game:GetService("TextChatService")
-        if textChat and textChat.Version == Enum.ChatVersion.TextChatService then
-            if textChat:FindFirstChild("TextChannels") and textChat.TextChannels:FindFirstChild("RBXGeneral") then
-                textChat.TextChannels.RBXGeneral:SendAsync(chatString)
-            end
-        else
-            local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-            if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
-                chatEvents.SayMessageRequest:FireServer(chatString, "All")
-            else
-                Players:Chat(chatString)
-            end
-        end
-        LogMessage("Mensaje enviado a " .. target, tCyan)
-    else
-        LogMessage("Uso: smg lista | smg [jugador] [mensaje]", tOrange)
-    end
 end)
 
 AddCmd("speed", "Cambia la velocidad", function(args)
@@ -2163,14 +2027,10 @@ local function UpdateSuggestions()
 
     if #args == 1 then
         for cmd, info in pairs(Comandos) do if string.sub(cmd, 1, #currentCmd) == currentCmd then table.insert(suggestions, {Display = cmd .. " - " .. info.Desc, Fill = cmd .. " "}) end end
-    elseif #args == 2 and (currentCmd == "to" or currentCmd == "smg") then
+    elseif #args == 2 and (currentCmd == "to") then
         local currentArg = args[2]
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer then
-                if currentCmd == "smg" and not SafeDevUsers[tostring(p.UserId)] then
-                    continue
-                end
-                
                 local pName = string.lower(p.Name); local dName = string.lower(p.DisplayName)
                 if string.sub(pName, 1, #currentArg) == currentArg or string.sub(dName, 1, #currentArg) == currentArg then table.insert(suggestions, {Display = p.DisplayName .. " (@" .. p.Name .. ")", Fill = currentCmd .. " " .. p.Name}) end
             end
@@ -2377,4 +2237,30 @@ local function ProcessKey(inputKey, isAutoLogin)
             end
         else
             SubTitle.Text = "Error al conectar con el servidor."; SubTitle.TextColor3 = tRed
-            if isAutoLogin then task.wait(2);
+            if isAutoLogin then task.wait(2); KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true end
+        end
+    end)
+end
+
+task.spawn(function()
+    local autoKey = nil
+    if readfile and isfile and isfile(AuthFileName) then
+        local success, dat = pcall(function() return HttpService:JSONDecode(readfile(AuthFileName)) end)
+        if success and dat and dat.savedKey then autoKey = dat.savedKey end
+    end
+    if autoKey then task.wait(1); ProcessKey(autoKey, true)
+    else task.wait(1.5); SubTitle.Text = "Por favor, introduce tu Key de acceso."; KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true end
+end)
+
+VerifyBtn.MouseButton1Click:Connect(function() if KeyInputBox.Text == "" then SubTitle.Text = "No puedes dejar el campo vacío."; SubTitle.TextColor3 = tRed return end; ProcessKey(KeyInputBox.Text, false) end)
+
+GetKeyBtn.MouseButton1Click:Connect(function()
+    local link = "https://discord.gg/6qG75JtTsX"
+    if isMobile then
+        if setclipboard then setclipboard(link); SubTitle.Text = "¡Link copiado al portapapeles!"; SubTitle.TextColor3 = tYellow end
+    else
+        local success = pcall(function() if open_url then open_url(link) else setclipboard(link) end end)
+        if success then SubTitle.Text = "Link abierto / copiado. Entra al Discord."; SubTitle.TextColor3 = tYellow
+        else SubTitle.Text = "Error al copiar el link. Únete manual."; SubTitle.TextColor3 = tRed end
+    end
+end)
