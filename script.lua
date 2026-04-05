@@ -2717,7 +2717,6 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
         if glitchKeybind and input.KeyCode == glitchKeybind and not UserInputService:GetFocusedTextBox() then
             if type(ToggleGlitch) == "function" then ToggleGlitch() end
         end
-
         if aimKeybind and input.KeyCode == aimKeybind and not UserInputService:GetFocusedTextBox() then
             aimEnabled = updateAimToggle(AimMasterBtn, aimEnabled, "AIMBOT: ON", "AIMBOT: OFF", tGreen)
         end
