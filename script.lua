@@ -1407,10 +1407,10 @@ ThemeToggleBtn.MouseButton1Click:Connect(function()
     local strokeColor = isGlass and tCyan or borderDark
     local strokeTrans = isGlass and 0.3 or 0
 
-    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain, HideMain, GenMain, ReverseMain, FreecamMain, ESPMain, SpinMain, AirMain}
-    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar, HideTopBar, GenTopBar, ReverseTopBar, FreecamTopBar, ESPTopBar, SpinTopBar, AirTopBar}
-    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix, HideFix, GenFix, ReverseFix, FreecamFix, ESPFix, SpinFix, AirFix}
-    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke, ReverseMainStroke, FreecamMainStroke, ESPMainStroke, SpinMainStroke, AirMainStroke}
+    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain, HideMain, GenMain, ReverseMain, FreecamMain, ESPMain, SpinMain, AirMain, GlitchMain}
+    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar, HideTopBar, GenTopBar, ReverseTopBar, FreecamTopBar, ESPTopBar, SpinTopBar, AirTopBar, GlitchTopBar}
+    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix, HideFix, GenFix, ReverseFix, FreecamFix, ESPFix, SpinFix, AirFix, GlitchFix}
+    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke, ReverseMainStroke, FreecamMainStroke, ESPMainStroke, SpinMainStroke, AirMainStroke, GlitchMainStroke}
     
     for _, f in ipairs(frames) do if f then f.BackgroundTransparency = bgTrans; f.BackgroundColor3 = bgColor end end
     for _, tb in ipairs(topbars) do if tb then tb.BackgroundTransparency = tbTrans; tb.BackgroundColor3 = tbColor end end
