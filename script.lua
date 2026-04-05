@@ -1673,6 +1673,53 @@ AirKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
+-- SISTEMA DE MENSAJERÍA PRIVADA (NOTIFICACIONES C.D.T)
+-- ==================================================================
+local function ProcesarMensajePrivado(sender, msg)
+    -- Detectamos si el mensaje tiene el formato de nuestro script
+    local targetName, content = string.match(msg, "^!cdtmsg%s+(%S+)%s+(.+)")
+    
+    if targetName and content then
+        -- Comprobamos si el mensaje es para nosotros (coincidencia de nombre o displayname)
+        if string.lower(string.sub(LocalPlayer.Name, 1, #targetName)) == string.lower(targetName) or 
+           string.lower(string.sub(LocalPlayer.DisplayName, 1, #targetName)) == string.lower(targetName) then
+            
+            -- Evitamos que nos llegue notificación si nos enviamos un mensaje a nosotros mismos
+            if sender == LocalPlayer then return end 
+
+            -- 1. Reproducir el sonido solicitado
+            local sound = Instance.new("Sound")
+            sound.SoundId = "rbxassetid://91271439961236"
+            sound.Volume = 0.3
+            sound.Parent = Workspace
+            sound:Play()
+            game.Debris:AddItem(sound, 5) -- Se elimina automáticamente después de 5 seg
+
+            -- 2. Mostrar la notificación oficial de Roblox
+            StarterGui:SetCore("SendNotification", {
+                Title = sender.DisplayName,
+                Text = content,
+                Duration = 8
+            })
+        end
+    end
+end
+
+-- Escuchar mensajes de los jugadores que ya están en el servidor
+for _, player in ipairs(Players:GetPlayers()) do
+    table.insert(GlobalConnections, player.Chatted:Connect(function(msg)
+        if not ScriptIsDead then ProcesarMensajePrivado(player, msg) end
+    end))
+end
+
+-- Escuchar mensajes de los jugadores nuevos que entren
+table.insert(GlobalConnections, Players.PlayerAdded:Connect(function(player)
+    table.insert(GlobalConnections, player.Chatted:Connect(function(msg)
+        if not ScriptIsDead then ProcesarMensajePrivado(player, msg) end
+    end))
+end))
+
+-- ==================================================================
 -- COMANDOS Y CONSOLA DE EVENTOS
 -- ==================================================================
 local function GetPlayer(nameString)
@@ -1738,6 +1785,35 @@ AddCmd("re", "Fuerza el respawn y te devuelve a tu posición actual", function()
         if hrp and hum then
             posicionGuardadaRE = hrp.CFrame; hum.Health = 0; LogMessage("Reiniciando, no te muevas...", tYellow)
         else LogMessage("Error: No se encontró tu personaje.", tRed) end
+    end
+end)
+
+AddCmd("msg", "Envía mensaje privado a otro usuario del script (Ej: msg juan Hola bro)", function(args)
+    if #args >= 2 then
+        local target = args[1]
+        table.remove(args, 1)
+        local message = table.concat(args, " ")
+        
+        -- Formato interno que solo el script detecta
+        local chatString = "!cdtmsg " .. target .. " " .. message
+        
+        -- Detección del sistema de chat del juego (Nuevo o Clásico)
+        local textChat = game:GetService("TextChatService")
+        if textChat and textChat.Version == Enum.ChatVersion.TextChatService then
+            if textChat:FindFirstChild("TextChannels") and textChat.TextChannels:FindFirstChild("RBXGeneral") then
+                textChat.TextChannels.RBXGeneral:SendAsync(chatString)
+            end
+        else
+            local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+            if chatEvents and chatEvents:FindFirstChild("SayMessageRequest") then
+                chatEvents.SayMessageRequest:FireServer(chatString, "All")
+            else
+                Players:Chat(chatString)
+            end
+        end
+        LogMessage("Mensaje enviado a " .. target .. " exitosamente.", tGreen)
+    else
+        LogMessage("Uso correcto: msg [jugador] [mensaje]", tOrange)
     end
 end)
 
