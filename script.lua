@@ -252,14 +252,15 @@ local function crearUITag(player, datos, userId)
     local snowCont = Instance.new("Frame", card); snowCont.Size = UDim2.new(1,0,1,0); snowCont.BackgroundTransparency = 1; snowCont.ClipsDescendants = true; Instance.new("UICorner", snowCont).CornerRadius = UDim.new(0,6)
     local listaCopos = crearNieveTag(snowCont, datos.emojiNieve, datos.colorNieve or "#ffffff")
 
-    -- AVATAR TAMAÑO Y POSICIÓN AJUSTADA (Se quitó el color de fondo y el borde negro)
-    local avF = Instance.new("Frame", card); avF.Size = UDim2.new(0, 30, 0, 30); avF.AnchorPoint = Vector2.new(0, 0.5); avF.Position = UDim2.new(0, 5, 0.5, 0); avF.BackgroundTransparency = 1; Instance.new("UICorner", avF).CornerRadius = UDim.new(1, 0)
-    -- local avS = Instance.new("UIStroke", avF); avS.Color = Color3.new(0, 0, 0); avS.Transparency = 0; avS.Thickness = 1 <-- BORRADO
+    -- AVATAR TAMAÑO Y POSICIÓN AJUSTADA (Para encajar en el nuevo alto delgado)
+    local avF = Instance.new("Frame", card); avF.Size = UDim2.new(0, 30, 0, 30); avF.AnchorPoint = Vector2.new(0, 0.5); avF.Position = UDim2.new(0, 5, 0.5, 0); avF.BackgroundColor3 = Color3.fromHex("#2a2a35"); Instance.new("UICorner", avF).CornerRadius = UDim.new(1, 0)
+    local avS = Instance.new("UIStroke", avF); avS.Color = Color3.new(0, 0, 0); avS.Transparency = 0; avS.Thickness = 1 
 
     local avatarImg = Instance.new("ImageLabel", avF); avatarImg.Size = UDim2.new(1, 0, 1, 0); avatarImg.BackgroundTransparency = 1
-    -- CORRECCIÓN AQUÍ: Se usan 'datos' y 'userId' correctamente
     task.spawn(function() local img = obtenerImagenTag(datos.imagen, userId); if avatarImg and avatarImg.Parent then avatarImg.Image = img end end)
     Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
+
+    -- [!] EL PUNTO VERDE HA SIDO ELIMINADO TOTALMENTE AQUÍ [!] --
 
     -- AJUSTE DE TEXTOS PARA QUE ENCAJEN PERFECTAMENTE
     local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -43, 0, 30); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 43, 0.5, 0); infoGroup.BackgroundTransparency = 1
