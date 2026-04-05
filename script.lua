@@ -8,10 +8,10 @@
     - REVERSE MODE (Flashback System).
     - FREECAM MODE (Shift-Lock Native Override).
     - ESP SYSTEM (Highlights + Team Check).
-    - SPINBOT (Angular Velocity + Keybind Fix + Ventana).
+    - SPINBOT (Angular Velocity + Keybind Fix + Comando spinstup).
     - WALK ON AIR (Generación dinámica + Keybind).
     - GLOBAL CHAT SMART (Auto-Scroll).
-    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion, air, spinstup.
+    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion, air, spinstup, destroy.
     - Panel de Ajustes (⚙) con Temas Consistentes.
     - SISTEMA DE KEY, HWID Y AUTO-ACTUALIZACIÓN.
 ]]
@@ -38,6 +38,7 @@ local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEna
 
 local posicionGuardadaRE = nil
 local DestruirScriptCompleto
+local ScriptIsDead = false -- Bandera de kill switch global
 
 -- ==================================================================
 -- VARIABLES GLOBALES (API)
@@ -66,29 +67,31 @@ local borderDark = Color3.fromRGB(45, 45, 45)
 
 local URL_NGROK = "https://garnett-waterborne-overoffensively.ngrok-free.dev" 
 
+local GlobalConnections = {} -- Almacenará conexiones críticas para limpiarlas
+
 local function ApplyResponsiveScale(frame)
     local scaleObj = Instance.new("UIScale", frame)
     local function UpdateScale()
         local vs = Workspace.CurrentCamera.ViewportSize
         if vs.X < 850 then scaleObj.Scale = 1.15 else scaleObj.Scale = 1.05 end
     end
-    Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
+    table.insert(GlobalConnections, Workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale))
     UpdateScale()
 end
 
 local function MakeDraggable(dragArea, targetFrame)
     local dragging, dragInput, dragStart, startPos
-    dragArea.InputBegan:Connect(function(input)
+    table.insert(GlobalConnections, dragArea.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true; dragStart = input.Position; startPos = targetFrame.Position end
-    end)
-    dragArea.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
-    UserInputService.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
-    UserInputService.InputChanged:Connect(function(input)
+    end))
+    table.insert(GlobalConnections, dragArea.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end))
+    table.insert(GlobalConnections, UserInputService.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end))
+    table.insert(GlobalConnections, UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
             targetFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
-    end)
+    end))
 end
 
 local targetGuiParent = nil
@@ -139,7 +142,7 @@ local function MutearVoiceChat(player, ocultar)
 end
 
 task.spawn(function()
-    while scriptActivoTags do
+    while scriptActivoTags and not ScriptIsDead do
         local successPing, resPing = pcall(function()
             return request({ Url = BASE_URL .. "/api/ping/" .. tostring(LocalPlayer.UserId), Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = "{}" })
         end)
@@ -205,13 +208,13 @@ local function actualizarAnimacionNombreTag(uiData, cfg)
         if not uiData.animNameTask then
             uiData.animNameTask = true
             task.spawn(function()
-                while uiData.animNameTask and uiData.TxtName and uiData.TxtName.Parent do
+                while uiData.animNameTask and uiData.TxtName and uiData.TxtName.Parent and not ScriptIsDead do
                     local t1 = TweenService:Create(uiData.TxtName, TweenInfo.new(1), {TextColor3 = Color3.fromHex("#60a5fa")})
                     t1:Play() t1.Completed:Wait()
-                    if not uiData.animNameTask then break end
+                    if not uiData.animNameTask or ScriptIsDead then break end
                     local t2 = TweenService:Create(uiData.TxtName, TweenInfo.new(1), {TextColor3 = Color3.fromHex("#c084fc")})
                     t2:Play() t2.Completed:Wait()
-                    if not uiData.animNameTask then break end
+                    if not uiData.animNameTask or ScriptIsDead then break end
                     local t3 = TweenService:Create(uiData.TxtName, TweenInfo.new(1), {TextColor3 = Color3.new(1,1,1)})
                     t3:Play() t3.Completed:Wait()
                 end
@@ -232,7 +235,6 @@ local function crearUITag(player, datos, userId)
     local tTit = datos.titulo or "USER"; local tNom = player.Name:upper()
     local sF, fU = pcall(function() return Enum.Font[datos.fuente] end); if not sF or not fU then fU = Enum.Font.GothamBold end
     
-    -- ALTURA REDUCIDA A 40 (Antes era 50)
     local bT = TextService:GetTextSize(tTit, 14, fU, Vector2.new(1000, 40)); 
     local bN = TextService:GetTextSize(tNom, 12, Enum.Font.GothamBold, Vector2.new(1000, 40))
     local aI = 5 + 30 + 8 + math.max(bT.X, bN.X) + 12; if aI < 100 then aI = 100 end 
@@ -245,24 +247,18 @@ local function crearUITag(player, datos, userId)
     local corner = Instance.new("UICorner", card); corner.CornerRadius = UDim.new(0, 6)
     local grad = Instance.new("UIGradient", card); grad.Rotation = 45; grad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorFondo1, "#1c1c24")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorFondo2, "#0f0f13")) })
     
-    -- BORDE MÁS GRUESO (Thickness subido a 2.5 y Transparency a 0.2 para mayor definición)
     local stroke = Instance.new("UIStroke", card); stroke.Color = Color3.new(1,1,1); stroke.Transparency = 0.2; stroke.Thickness = 2.5
     local strokeGrad = Instance.new("UIGradient", stroke); strokeGrad.Rotation = 45; strokeGrad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, parseHexTag(datos.colorBorde1 or datos.colorBorde, "#FFFFFF")), ColorSequenceKeypoint.new(1, parseHexTag(datos.colorBorde2 or datos.colorBorde, "#FFFFFF")) })
     
     local snowCont = Instance.new("Frame", card); snowCont.Size = UDim2.new(1,0,1,0); snowCont.BackgroundTransparency = 1; snowCont.ClipsDescendants = true; Instance.new("UICorner", snowCont).CornerRadius = UDim.new(0,6)
     local listaCopos = crearNieveTag(snowCont, datos.emojiNieve, datos.colorNieve or "#ffffff")
 
-    -- AVATAR TAMAÑO Y POSICIÓN AJUSTADA (Para encajar en el nuevo alto delgado)
-    local avF = Instance.new("Frame", card); avF.Size = UDim2.new(0, 30, 0, 30); avF.AnchorPoint = Vector2.new(0, 0.5); avF.Position = UDim2.new(0, 5, 0.5, 0); avF.BackgroundColor3 = Color3.fromHex("#2a2a35"); Instance.new("UICorner", avF).CornerRadius = UDim.new(1, 0)
-    local avS = Instance.new("UIStroke", avF); avS.Color = Color3.new(0, 0, 0); avS.Transparency = 0; avS.Thickness = 1 
+    local avF = Instance.new("Frame", card); avF.Size = UDim2.new(0, 30, 0, 30); avF.AnchorPoint = Vector2.new(0, 0.5); avF.Position = UDim2.new(0, 5, 0.5, 0); avF.BackgroundTransparency = 1; Instance.new("UICorner", avF).CornerRadius = UDim.new(1, 0)
 
     local avatarImg = Instance.new("ImageLabel", avF); avatarImg.Size = UDim2.new(1, 0, 1, 0); avatarImg.BackgroundTransparency = 1
     task.spawn(function() local img = obtenerImagenTag(datos.imagen, userId); if avatarImg and avatarImg.Parent then avatarImg.Image = img end end)
     Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
 
-    -- [!] EL PUNTO VERDE HA SIDO ELIMINADO TOTALMENTE AQUÍ [!] --
-
-    -- AJUSTE DE TEXTOS PARA QUE ENCAJEN PERFECTAMENTE
     local infoGroup = Instance.new("Frame", card); infoGroup.Size = UDim2.new(1, -43, 0, 30); infoGroup.AnchorPoint = Vector2.new(0, 0.5); infoGroup.Position = UDim2.new(0, 43, 0.5, 0); infoGroup.BackgroundTransparency = 1
 
     local txtTitle = Instance.new("TextLabel", infoGroup)
@@ -289,7 +285,7 @@ end
 
 task.spawn(function()
     local oldDataCache = {}
-    while scriptActivoTags do
+    while scriptActivoTags and not ScriptIsDead do
         local s1, resActive = pcall(function() return request({Url = BASE_URL .. "/api/active?t=" .. tostring(tick()), Method = "GET"}) end)
         local s2, resTags = pcall(function() return request({Url = API_URL .. "?t=" .. tostring(tick()), Method = "GET"}) end)
         
@@ -349,8 +345,8 @@ task.spawn(function()
 end)
 
 local animSpd = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-RunService.RenderStepped:Connect(function()
-    if not scriptActivoTags then return end
+table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
+    if not scriptActivoTags or ScriptIsDead then return end
     for id, data in pairs(UIsActivos) do
         if data.Head and data.Head.Parent and data.UI.Parent then
             if id == tostring(LocalPlayer.UserId) then data.UI.Enabled = verMiTag else data.UI.Enabled = not hiddenTags[id] end
@@ -369,7 +365,7 @@ RunService.RenderStepped:Connect(function()
             if data.UI then data.UI:Destroy() end; UIsActivos[id] = nil
         end
     end
-end)
+end))
 
 
 -- ==================================================================
@@ -432,7 +428,8 @@ local function LoadWaypoints()
 end
 LoadWaypoints()
 
-LocalPlayer.Chatted:Connect(function(msg)
+table.insert(GlobalConnections, LocalPlayer.Chatted:Connect(function(msg)
+    if ScriptIsDead then return end
     local msgLower = string.lower(msg)
     if msgLower == "!re" then
         local char = LocalPlayer.Character
@@ -460,7 +457,7 @@ LocalPlayer.Chatted:Connect(function(msg)
             end
         end
     end
-end)
+end))
 
 MPMain = Instance.new("Frame", ScreenGui); MPMain.Size = UDim2.new(0, 260, 0, 350); MPMain.Position = UDim2.new(0.5, 150, 0.5, -175); MPMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); MPMain.BorderSizePixel = 0; MPMain.ClipsDescendants = true; MPMain.Visible = false; Instance.new("UICorner", MPMain).CornerRadius = UDim.new(0, 6); MPMainStroke = Instance.new("UIStroke", MPMain); MPMainStroke.Color = borderDark
 MPTopBar = Instance.new("Frame", MPMain); MPTopBar.Size = UDim2.new(1, 0, 0, 35); MPTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); MPTopBar.BorderSizePixel = 0; Instance.new("UICorner", MPTopBar).CornerRadius = UDim.new(0, 6)
@@ -583,9 +580,9 @@ local function RefreshTPMenu(filterText)
     end
     TPScroll.CanvasSize = UDim2.new(0, 0, 0, TPListLayout.AbsoluteContentSize.Y + 10)
 end
-TPSearchBox:GetPropertyChangedSignal("Text"):Connect(function() RefreshTPMenu(TPSearchBox.Text) end)
-Players.PlayerAdded:Connect(function() if TPMain.Visible then RefreshTPMenu(TPSearchBox.Text) end end)
-Players.PlayerRemoving:Connect(function() if TPMain.Visible then RefreshTPMenu(TPSearchBox.Text) end end)
+table.insert(GlobalConnections, TPSearchBox:GetPropertyChangedSignal("Text"):Connect(function() RefreshTPMenu(TPSearchBox.Text) end))
+table.insert(GlobalConnections, Players.PlayerAdded:Connect(function() if TPMain.Visible then RefreshTPMenu(TPSearchBox.Text) end end))
+table.insert(GlobalConnections, Players.PlayerRemoving:Connect(function() if TPMain.Visible then RefreshTPMenu(TPSearchBox.Text) end end))
 
 -- ==================================================================
 -- INTERFAZ HIDE MENU (OCULTAR AVATAR, SONIDOS LOCALES Y VOICE CHAT)
@@ -644,9 +641,9 @@ local function RefreshHideMenu(filterText)
     end
     HideScroll.CanvasSize = UDim2.new(0, 0, 0, HideListLayout.AbsoluteContentSize.Y + 10)
 end
-HideSearchBox:GetPropertyChangedSignal("Text"):Connect(function() RefreshHideMenu(HideSearchBox.Text) end)
-Players.PlayerAdded:Connect(function() if HideMain.Visible then RefreshHideMenu(HideSearchBox.Text) end end)
-Players.PlayerRemoving:Connect(function() if HideMain.Visible then RefreshHideMenu(HideSearchBox.Text) end end)
+table.insert(GlobalConnections, HideSearchBox:GetPropertyChangedSignal("Text"):Connect(function() RefreshHideMenu(HideSearchBox.Text) end))
+table.insert(GlobalConnections, Players.PlayerAdded:Connect(function() if HideMain.Visible then RefreshHideMenu(HideSearchBox.Text) end end))
+table.insert(GlobalConnections, Players.PlayerRemoving:Connect(function() if HideMain.Visible then RefreshHideMenu(HideSearchBox.Text) end end))
 
 -- ==================================================================
 -- 4. INTERFAZ INVISIBLE MENU (SEAT MODE FIX GHOST)
@@ -922,7 +919,7 @@ ToggleVFly = function()
     isVFlying = not isVFlying; local char = LocalPlayer.Character; local root = char and char:FindFirstChild("HumanoidRootPart")
     if isVFlying then
         VFlyToggleBtn.BackgroundColor3 = tPurple; VFlyToggleBtn.Text = "V-FLY: ON"
-        if root then vFlyCurrentVel = root.Velocity end; vFlyConn = RunService.Heartbeat:Connect(VFlyLoop)
+        if root then vFlyCurrentVel = root.Velocity end; table.insert(GlobalConnections, RunService.Heartbeat:Connect(VFlyLoop))
     else
         VFlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); VFlyToggleBtn.Text = "V-FLY: OFF"
         if vFlyConn then vFlyConn:Disconnect(); vFlyConn = nil end
@@ -1119,17 +1116,17 @@ ToggleReverse = function()
 end
 ReverseToggleBtn.MouseButton1Click:Connect(ToggleReverse)
 
-ReverseActionBtn.InputBegan:Connect(function(input)
+table.insert(GlobalConnections, ReverseActionBtn.InputBegan:Connect(function(input)
     if not isReverseActive then return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         isMobileRewinding = true; ReverseActionBtn.BackgroundColor3 = tCyan; ReverseActionBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
     end
-end)
-ReverseActionBtn.InputEnded:Connect(function(input)
+end))
+table.insert(GlobalConnections, ReverseActionBtn.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         isMobileRewinding = false; if isReverseActive then ReverseActionBtn.BackgroundColor3 = tPurple; ReverseActionBtn.TextColor3 = tWhite end
     end
-end)
+end))
 ReverseCloseBtn.MouseButton1Click:Connect(function() 
     ReverseMain.Visible = false; reverseKeybind = nil; isReverseBinding = false; ReverseKeyBtn.Text = "KEY"; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isMobileRewinding = false 
     if isReverseActive then ToggleReverse() end
@@ -1256,12 +1253,12 @@ FreecamKeyBtn.MouseButton1Click:Connect(function()
     if fcKeybind ~= nil then fcKeybind = nil; FreecamKeyBtn.Text = "KEY"; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFcBinding = false
     else isFcBinding = true; FreecamKeyBtn.Text = "..."; FreecamKeyBtn.BackgroundColor3 = tOrange end
 end)
-UserInputService.InputBegan:Connect(function(input, gp)
+table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(input, gp)
     if isFcBinding and input.UserInputType == Enum.UserInputType.Keyboard then
         fcKeybind = input.KeyCode; FreecamKeyBtn.Text = input.KeyCode.Name; FreecamKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFcBinding = false; return
     end
     if fcKeybind and input.KeyCode == fcKeybind and not UserInputService:GetFocusedTextBox() then ToggleFreecam() end
-end)
+end))
 
 -- ==================================================================
 -- 17. ESP SYSTEM PREMIUM (HIGHLIGHTS + TEAM CHECK + KEYBIND FIX)
@@ -1318,8 +1315,8 @@ local function UpdateESP()
     end
 end
 
-RunService.RenderStepped:Connect(function()
-    if isESPActive then
+table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
+    if isESPActive and not ScriptIsDead then
         for _, bill in pairs(espFolder:GetChildren()) do
             if bill:IsA("BillboardGui") and bill.Adornee then
                 local dist = math.floor((Camera.CFrame.Position - bill.Adornee.Position).Magnitude)
@@ -1329,9 +1326,9 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
-end)
+end))
 
-task.spawn(function() while task.wait(1) do if isESPActive then UpdateESP() end end end)
+task.spawn(function() while task.wait(1) do if isESPActive and not ScriptIsDead then UpdateESP() end end end)
 
 ToggleESP = function()
     isESPActive = not isESPActive
@@ -1359,12 +1356,12 @@ ESPKeyBtn.MouseButton1Click:Connect(function()
     else isEspBinding = true; ESPKeyBtn.Text = "..."; ESPKeyBtn.BackgroundColor3 = tOrange end
 end)
 
-UserInputService.InputBegan:Connect(function(input, gp)
+table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(input, gp)
     if isEspBinding and input.UserInputType == Enum.UserInputType.Keyboard then
         espKeybind = input.KeyCode; ESPKeyBtn.Text = input.KeyCode.Name; ESPKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isEspBinding = false; return
     end
     if not gp and espKeybind and input.KeyCode == espKeybind and not UserInputService:GetFocusedTextBox() then ToggleESP() end
-end)
+end))
 
 
 -- ==================================================================
@@ -1452,9 +1449,9 @@ local function CreateCDTSlider(parent, name, yPos, defaultValue)
         value = math.floor(1 + (pos * 199)); Fill.Size = UDim2.new(pos, 0, 1, 0); SliderBtn.Position = UDim2.new(pos, -6, 0.5, -9); Label.Text = name .. ": " .. value
     end
 
-    SliderBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true end end)
-    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
-    UserInputService.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then update(input) end end)
+    table.insert(GlobalConnections, SliderBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true end end))
+    table.insert(GlobalConnections, UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end))
+    table.insert(GlobalConnections, UserInputService.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then update(input) end end))
     return function() return value end
 end
 
@@ -1514,10 +1511,10 @@ local spinDebounce = false
 
 SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 5); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 5; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
-SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
+table.insert(GlobalConnections, SpinSpeedDisplay.FocusLost:Connect(function() local num = tonumber(SpinSpeedDisplay.Text:match("%d+")); if num then spinSpeedNum = num end; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end))
 
 ToggleSpin = function(forceSpeed)
-    if spinDebounce then return end
+    if spinDebounce or ScriptIsDead then return end
     spinDebounce = true
 
     local char = LocalPlayer.Character
@@ -1623,7 +1620,7 @@ ToggleAirWalk = function()
         local activeChunks = {}
         
         task.spawn(function()
-            while isAirWalkActive and airBaseplateFolder and airBaseplateFolder.Parent do
+            while isAirWalkActive and airBaseplateFolder and airBaseplateFolder.Parent and not ScriptIsDead do
                 task.wait(0.0)
                 local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
                 if hrp then
@@ -1752,7 +1749,7 @@ AddCmd("tptool", "Te da una herramienta para hacer TP donde hagas click", functi
     tpTool.Name = toolName; tpTool.RequiresHandle = false; tpTool.CanBeDropped = false
     local mouse = LocalPlayer:GetMouse()
 
-    tpTool.Activated:Connect(function()
+    table.insert(GlobalConnections, tpTool.Activated:Connect(function()
         local char = LocalPlayer.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
         if hrp and mouse.Hit then
             hrp.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3.5, 0))
@@ -1761,7 +1758,7 @@ AddCmd("tptool", "Te da una herramienta para hacer TP donde hagas click", functi
                 flash.Brightness = 1; TweenService:Create(flash, TweenInfo.new(0.3), {Brightness = 0}):Play(); game.Debris:AddItem(flash, 0.4)
             end)
         end
-    end)
+    end))
     tpTool.Parent = LocalPlayer.Backpack
     LogMessage("TP Tool creado. Equípalo y toca donde quieras ir.", tGreen)
 end)
@@ -1817,21 +1814,16 @@ end)
 local infBaseActivo = false
 local baseplateFolder = nil
 local infPlantilla = nil
-local ORIGIN_POS = Vector3.new(0, -8, 0) -- Fallback por defecto
+local ORIGIN_POS = Vector3.new(0, -8, 0)
 
--- Task inicial para detectar la base original SIN BORRARLA
 task.spawn(function()
     local baseplateOriginal = workspace:FindFirstChild("Baseplate")
     if baseplateOriginal and baseplateOriginal:IsA("BasePart") then 
-        -- Guardamos su posición como centro del mundo infinito
         ORIGIN_POS = baseplateOriginal.Position
-        
-        -- Creamos la plantilla CLONANDO la original, pero NO BORRAMOS la original
         infPlantilla = baseplateOriginal:Clone()
         infPlantilla.Name = "CDT_InfBase_Template"
-        infPlantilla.Size = Vector3.new(648, 16, 648) -- Tamaño estándar de chunks
+        infPlantilla.Size = Vector3.new(648, 16, 648) 
     else
-        -- Fallback si el mapa no tiene baseplate
         infPlantilla = Instance.new("Part")
         infPlantilla.Name = "CDT_InfBase_Fallback"
         infPlantilla.Size = Vector3.new(648, 16, 648)
@@ -1845,48 +1837,37 @@ AddCmd("infbase", "Genera baseplates infinitas alrededor de la original (Toggle 
     infBaseActivo = not infBaseActivo
     if infBaseActivo then
         LogMessage("Generación de Baseplate infinita ACTIVADA.", tGreen)
-        
-        -- Crear carpeta contenedora si no existe
         if not baseplateFolder or not baseplateFolder.Parent then
             baseplateFolder = Instance.new("Folder", workspace)
             baseplateFolder.Name = "BaseplatesInfinitas_CDT"
         end
         
-        -- Iniciar bucle de generación dinámica
         task.spawn(function()
             local TILE_SIZE = 648
-            local RENDER_DISTANCE = 2 -- Chunks a la redonda a generar
-            local DELETE_DISTANCE = 4 -- Distancia para borrar chunks lejanos
-            local UPDATE_TICK = 0.5   -- Cada cuanto tiempo verificar posición
+            local RENDER_DISTANCE = 2
+            local DELETE_DISTANCE = 4
+            local UPDATE_TICK = 0.5   
             local activeChunks = {}
             local function getChunkKey(x, z) return x .. "_" .. z end
 
-            while scriptActivoTags and infBaseActivo do
+            while scriptActivoTags and infBaseActivo and not ScriptIsDead do
                 task.wait(UPDATE_TICK)
-                
-                -- Si por alguna razón la carpeta se borra, detener
                 if not baseplateFolder or not baseplateFolder.Parent then break end
 
                 local chunksNecesarios = {}
                 local playerPositions = {}
-                
-                -- Recopilar posiciones de todos los jugadores (optimizado)
                 for _, player in ipairs(Players:GetPlayers()) do
                     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then 
                         table.insert(playerPositions, player.Character.HumanoidRootPart.Position) 
                     end
                 end
                 
-                -- Calcular qué chunks se necesitan basándose en las posiciones de los jugadores
                 for _, pos in ipairs(playerPositions) do
                     local currentX = math.floor((pos.X - ORIGIN_POS.X + TILE_SIZE / 2) / TILE_SIZE)
                     local currentZ = math.floor((pos.Z - ORIGIN_POS.Z + TILE_SIZE / 2) / TILE_SIZE)
-                    
                     for x = -RENDER_DISTANCE, RENDER_DISTANCE do
                         for z = -RENDER_DISTANCE, RENDER_DISTANCE do
-                            -- No generamos el chunk 0,0 si ya existe la base original ahí para evitar Z-Fighting
                             if x == 0 and z == 0 and workspace:FindFirstChild("Baseplate") then
-                                -- Omitir generación en el centro exacto si está la base original
                             else
                                 local key = getChunkKey(currentX + x, currentZ + z)
                                 chunksNecesarios[key] = {X = currentX + x, Z = currentZ + z}
@@ -1895,13 +1876,11 @@ AddCmd("infbase", "Genera baseplates infinitas alrededor de la original (Toggle 
                     end
                 end
                 
-                -- Generar nuevos chunks necesarios
                 if infPlantilla then
                     for key, coords in pairs(chunksNecesarios) do
                         if not activeChunks[key] then
                             local nueva = infPlantilla:Clone()
                             nueva.Name = "Chunk_" .. key
-                            -- Posicionamiento relativo al ORIGIN_POS guardado
                             nueva.Position = Vector3.new(ORIGIN_POS.X + (coords.X * TILE_SIZE), ORIGIN_POS.Y, ORIGIN_POS.Z + (coords.Z * TILE_SIZE))
                             nueva.Parent = baseplateFolder
                             activeChunks[key] = {Instance = nueva, X = coords.X, Z = coords.Z}
@@ -1909,7 +1888,6 @@ AddCmd("infbase", "Genera baseplates infinitas alrededor de la original (Toggle 
                     end
                 end
                 
-                -- Limpieza de chunks antiguos (lejanos a TODOS los jugadores)
                 for key, data in pairs(activeChunks) do
                     local estaCerca = false
                     for _, pos in ipairs(playerPositions) do
@@ -1924,19 +1902,12 @@ AddCmd("infbase", "Genera baseplates infinitas alrededor de la original (Toggle 
                     end
                 end
             end
-            
-            -- Al desactivar, limpiar todos los chunks generados, pero NO la base original
             if baseplateFolder then baseplateFolder:Destroy(); baseplateFolder = nil end
         end)
     else
         LogMessage("Generación de Baseplate infinita DESACTIVADA. Limpiando...", tOrange)
-        -- El bucle de arriba detectará infBaseActivo = false y se detendrá, limpiando la carpeta.
     end
 end)
-
--- ==================================================================
--- RESTO DE COMANDOS Y LOGICA (SIN CAMBIOS)
--- ==================================================================
 
 local isAntiAfkActive = false; local afkConnection = nil
 AddCmd("afk", "Activa o desactiva el sistema Anti-AFK", function()
@@ -1946,6 +1917,7 @@ AddCmd("afk", "Activa o desactiva el sistema Anti-AFK", function()
             VirtualUser:CaptureController(); VirtualUser:ClickButton2(Vector2.new())
             LogMessage("Anti-AFK evadió una desconexión por inactividad.", tYellow)
         end)
+        table.insert(GlobalConnections, afkConnection)
         LogMessage("Anti-AFK Activado. Puedes dejar el juego en segundo plano.", tGreen)
     else
         if afkConnection then afkConnection:Disconnect(); afkConnection = nil end
@@ -1984,7 +1956,8 @@ end)
 -- DEFINICIÓN DE DESTRUCCIÓN TOTAL PARA EL COMANDO !destroy
 -- ==================================================================
 DestruirScriptCompleto = function()
-    -- APAGAR TODOS LOS MÓDULOS ACTIVOS PRIMERO
+    ScriptIsDead = true
+    
     if isGhostActive and type(ToggleGhost) == "function" then ToggleGhost() end
     if isFlying and type(ToggleFly) == "function" then ToggleFly() end
     if isVFlying and type(ToggleVFly) == "function" then ToggleVFly() end
@@ -1997,18 +1970,22 @@ DestruirScriptCompleto = function()
     if isAirWalkActive and type(ToggleAirWalk) == "function" then ToggleAirWalk() end
     if isClearModeActive then pcall(function() Comandos["clear"].Accion({}) end) end
     if isAntiAfkActive then pcall(function() Comandos["afk"].Accion({}) end) end
-    if infBaseActivo then infBaseActivo = false end -- Esto detiene el bucle y limpia chunks
+    if infBaseActivo then infBaseActivo = false end
     
-    -- DESCONECTAR EVENTOS
+    for _, conn in ipairs(GlobalConnections) do
+        if conn and typeof(conn) == "RBXScriptConnection" and conn.Connected then
+            conn:Disconnect()
+        end
+    end
+    GlobalConnections = {}
+    
     if inputBeganConn then inputBeganConn:Disconnect() end
     if inputEndedConn then inputEndedConn:Disconnect() end
     if charAddedConn then charAddedConn:Disconnect() end
     if espFolder then espFolder:Destroy() end
 
-    -- NOTIFICAR A LA API (SI APLICA)
     task.spawn(function() pcall(function() request({Url = BASE_URL .. "/api/offline/" .. tostring(LocalPlayer.UserId), Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = "{}"}) end) end)
     
-    -- LIMPIAR VARIABLES Y TAGS
     scriptActivoTags = false
     for _, v in pairs(UIsActivos) do if v.UI then v.UI:Destroy() end end
     UIsActivos = {}
@@ -2022,7 +1999,6 @@ DestruirScriptCompleto = function()
     end
     hiddenTags = {}
 
-    -- DESTRUIR UI
     if targetGuiParent then
         for _, obj in ipairs(targetGuiParent:GetChildren()) do if string.sub(obj.Name, 1, 9) == "SafeHTML_" then obj:Destroy() end end
     end
@@ -2065,7 +2041,9 @@ local function UpdateSuggestions()
         SuggestFrame.Visible = true; local ySize = 0
         for _, sug in ipairs(suggestions) do
             local btn = Instance.new("TextButton", SuggestFrame); btn.Size = UDim2.new(1, -5, 0, 22); btn.BackgroundTransparency = 1; btn.Text = "  " .. sug.Display; btn.TextColor3 = tWhite; btn.Font = Enum.Font.Gotham; btn.TextSize = 13; btn.TextXAlignment = Enum.TextXAlignment.Left; btn.ZIndex = 11; btn:SetAttribute("Fill", sug.Fill)
-            btn.MouseEnter:Connect(function() btn.TextColor3 = tPurple end); btn.MouseLeave:Connect(function() btn.TextColor3 = tWhite end); btn.MouseButton1Click:Connect(function() CmdBox.Text = sug.Fill; CmdBox:CaptureFocus(); SuggestFrame.Visible = false end)
+            table.insert(GlobalConnections, btn.MouseEnter:Connect(function() btn.TextColor3 = tPurple end))
+            table.insert(GlobalConnections, btn.MouseLeave:Connect(function() btn.TextColor3 = tWhite end))
+            table.insert(GlobalConnections, btn.MouseButton1Click:Connect(function() CmdBox.Text = sug.Fill; CmdBox:CaptureFocus(); SuggestFrame.Visible = false end))
             ySize = ySize + 24
         end
         local frameHeight = math.min(ySize, 100); SuggestFrame.CanvasSize = UDim2.new(0, 0, 0, ySize); SuggestFrame.Size = UDim2.new(1, -20, 0, frameHeight); SuggestFrame.Position = UDim2.new(0, 10, 1, -45 - frameHeight - 5)
@@ -2074,19 +2052,19 @@ local function UpdateSuggestions()
     end
 end
 
-CmdBox:GetPropertyChangedSignal("Text"):Connect(UpdateSuggestions)
-UserInputService.InputBegan:Connect(function(input)
+table.insert(GlobalConnections, CmdBox:GetPropertyChangedSignal("Text"):Connect(UpdateSuggestions))
+table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.Tab and CmdBox:IsFocused() and SuggestFrame.Visible then
         for _, child in ipairs(SuggestFrame:GetChildren()) do if child:IsA("TextButton") then local fill = child:GetAttribute("Fill"); if fill then task.defer(function() CmdBox.Text = fill; CmdBox:CaptureFocus(); CmdBox.CursorPosition = #fill + 1 end); SuggestFrame.Visible = false break end end end
     end
-end)
-CmdBox.FocusLost:Connect(function(enterPressed)
+end))
+table.insert(GlobalConnections, CmdBox.FocusLost:Connect(function(enterPressed)
     if enterPressed and CmdBox.Text ~= "" then
         local input = string.lower(CmdBox.Text); CmdBox.Text = ""; SuggestFrame.Visible = false; LogMessage("> " .. input, tWhite)
         local split = string.split(input, " "); local cmd = split[1]; table.remove(split, 1)
         if Comandos[cmd] then pcall(function() Comandos[cmd].Accion(split) end) else LogMessage("Error: Comando desconocido.", tOrange) end
     end
-end)
+end))
 
 charAddedConn = LocalPlayer.CharacterAdded:Connect(function(character) 
     if isGhostActive then ToggleGhost() end
@@ -2116,6 +2094,8 @@ if inputBeganConn then inputBeganConn:Disconnect() end
 if inputEndedConn then inputEndedConn:Disconnect() end
 
 inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
+    if ScriptIsDead then return end
+    
     -- Asignación de teclas
     if isInvBinding and input.UserInputType == Enum.UserInputType.Keyboard then invKeybind = input.KeyCode; InvKeyBtn.Text = input.KeyCode.Name; InvKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isInvBinding = false; return end
     if isFlyBinding and input.UserInputType == Enum.UserInputType.Keyboard then flyKeybind = input.KeyCode; FlyKeyBtn.Text = input.KeyCode.Name; FlyKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isFlyBinding = false; return end
@@ -2174,6 +2154,7 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
 end)
 
 inputEndedConn = UserInputService.InputEnded:Connect(function(input, gp)
+    if ScriptIsDead then return end
     if not gp then
         if isFlying and type(flycontrol) == "table" then
             if input.KeyCode == Enum.KeyCode.W then flycontrol.F = 0
