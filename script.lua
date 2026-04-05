@@ -1261,7 +1261,7 @@ table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(inp
 end))
 
 -- ==================================================================
--- 17. ESP SYSTEM FULL + SPECTATOR + COLOR PALETTE (DRAWING API)
+-- 17. ESP SYSTEM FULL + SPECTATOR + UNIVERSAL ENGINE (BULLETPROOF)
 -- ==================================================================
 ESPMain = Instance.new("Frame", ScreenGui); ESPMain.Size = UDim2.new(0, 260, 0, 350); ESPMain.Position = UDim2.new(0, 20, 0, 780); ESPMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); ESPMain.BorderSizePixel = 0; ESPMain.ClipsDescendants = true; ESPMain.Visible = false; Instance.new("UICorner", ESPMain).CornerRadius = UDim.new(0, 6); ESPMainStroke = Instance.new("UIStroke", ESPMain); ESPMainStroke.Color = borderDark
 ESPTopBar = Instance.new("Frame", ESPMain); ESPTopBar.Size = UDim2.new(1, 0, 0, 35); ESPTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); ESPTopBar.BorderSizePixel = 0; Instance.new("UICorner", ESPTopBar).CornerRadius = UDim.new(0, 6)
@@ -1327,8 +1327,7 @@ ESPCloseBtn.MouseButton1Click:Connect(function() ESPMain.Visible = false end)
 
 -- Variables Lógicas
 isESPActive = false; espBox = false; espLine = false; espName = false; espDist = false; espSkel = false; espTeam = true; espFriends = false; espColor = tRed
-local Drawings = {}; local FriendCache = {}
-local isSpectating = false; local spectateTarget = nil
+local FriendCache = {}; local isSpectating = false; local spectateTarget = nil
 
 -- Utilidad Toggles
 local function toggleState(btn, stateVar, name)
@@ -1353,7 +1352,6 @@ ESPTeamBtn.MouseButton1Click:Connect(function()
 end)
 ESPFriendsBtn.MouseButton1Click:Connect(function() espFriends = toggleState(ESPFriendsBtn, espFriends, "SOLO AMIGOS") end)
 
--- Caché de amigos para evitar lag
 local function IsFriend(player)
     if FriendCache[player.UserId] ~= nil then return FriendCache[player.UserId] end
     task.spawn(function()
@@ -1363,21 +1361,63 @@ local function IsFriend(player)
     return false
 end
 
--- LÓGICA DRAWING API (ESP)
-local function NewDrawing(type)
-    local obj = Drawing.new(type)
-    if type == "Line" then obj.Thickness = 1.5 end
-    if type == "Square" then obj.Thickness = 1.5; obj.Filled = false end
-    if type == "Text" then obj.Size = 16; obj.Center = true; obj.Outline = true end
-    obj.Visible = false
-    return obj
+-- ==========================================
+-- MOTOR DE RENDERIZADO UNIVERSAL (SIN DRAWING API)
+-- ==========================================
+local ESPDrawFolder = Instance.new("ScreenGui")
+ESPDrawFolder.Name = "CDT_Universal_ESP"
+ESPDrawFolder.IgnoreGuiInset = true
+ESPDrawFolder.ResetOnSpawn = false
+pcall(function() ESPDrawFolder.Parent = gethui() end)
+if not ESPDrawFolder.Parent then ESPDrawFolder.Parent = CoreGui end
+
+local function NewGuiLine()
+    local line = Instance.new("Frame")
+    line.AnchorPoint = Vector2.new(0.5, 0.5)
+    line.BorderSizePixel = 0
+    line.Visible = false
+    line.Parent = ESPDrawFolder
+    return line
 end
 
+local function UpdateGuiLine(frame, p1, p2, color)
+    if not p1 or not p2 then frame.Visible = false return end
+    local dist = (p1 - p2).Magnitude
+    local mid = (p1 + p2) / 2
+    frame.Size = UDim2.new(0, dist, 0, 1.5)
+    frame.Position = UDim2.new(0, mid.X, 0, mid.Y)
+    frame.Rotation = math.deg(math.atan2(p2.Y - p1.Y, p2.X - p1.X))
+    frame.BackgroundColor3 = color
+    frame.Visible = true
+end
+
+local function NewGuiBox()
+    local box = Instance.new("Frame")
+    box.BackgroundTransparency = 1
+    box.Visible = false
+    box.Parent = ESPDrawFolder
+    local stroke = Instance.new("UIStroke", box)
+    stroke.Thickness = 1.5
+    return {Frame = box, Stroke = stroke}
+end
+
+local function NewGuiText()
+    local txt = Instance.new("TextLabel")
+    txt.BackgroundTransparency = 1
+    txt.Font = Enum.Font.GothamBold
+    txt.TextSize = 12
+    txt.TextStrokeTransparency = 0.2
+    txt.Visible = false
+    txt.Parent = ESPDrawFolder
+    return txt
+end
+
+local Drawings = {}
 local function GetDrawings(player)
     if not Drawings[player] then
         Drawings[player] = {
-            Box = NewDrawing("Square"), Line = NewDrawing("Line"), Name = NewDrawing("Text"), Dist = NewDrawing("Text"),
-            Skel = { NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line"), NewDrawing("Line") }
+            Box = NewGuiBox(), Line = NewGuiLine(), Name = NewGuiText(), Dist = NewGuiText(),
+            Skel = { NewGuiLine(), NewGuiLine(), NewGuiLine(), NewGuiLine(), NewGuiLine(), NewGuiLine(), NewGuiLine(), NewGuiLine(), NewGuiLine(), NewGuiLine(), NewGuiLine(), NewGuiLine() }
         }
     end
     return Drawings[player]
@@ -1385,7 +1425,7 @@ end
 
 local function ClearESPPlayer(player)
     if Drawings[player] then
-        Drawings[player].Box.Visible = false; Drawings[player].Line.Visible = false; Drawings[player].Name.Visible = false; Drawings[player].Dist.Visible = false
+        Drawings[player].Box.Frame.Visible = false; Drawings[player].Line.Visible = false; Drawings[player].Name.Visible = false; Drawings[player].Dist.Visible = false
         for _, l in ipairs(Drawings[player].Skel) do l.Visible = false end
     end
 end
@@ -1416,35 +1456,35 @@ table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
             local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
             if onScreen then
                 local dist = (Camera.CFrame.Position - hrp.Position).Magnitude
-                local height = math.clamp(Camera.ViewportSize.Y / dist * 4, 10, 1000)
+                local height = math.clamp(Camera.ViewportSize.Y / dist * 4.5, 10, 1000)
                 local width = height * 0.6
                 
                 -- Box
                 if espBox then
-                    D.Box.Size = Vector2.new(width, height)
-                    D.Box.Position = Vector2.new(pos.X - width / 2, pos.Y - height / 2)
-                    D.Box.Color = espColor; D.Box.Visible = true
-                else D.Box.Visible = false end
+                    D.Box.Frame.Size = UDim2.new(0, width, 0, height)
+                    D.Box.Frame.Position = UDim2.new(0, pos.X - width / 2, 0, pos.Y - height / 2)
+                    D.Box.Stroke.Color = espColor; D.Box.Frame.Visible = true
+                else D.Box.Frame.Visible = false end
                 
                 -- Line
                 if espLine then
-                    D.Line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                    D.Line.To = Vector2.new(pos.X, pos.Y + height/2)
-                    D.Line.Color = espColor; D.Line.Visible = true
+                    UpdateGuiLine(D.Line, Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y), Vector2.new(pos.X, pos.Y + height/2), espColor)
                 else D.Line.Visible = false end
                 
                 -- Name
                 if espName then
                     D.Name.Text = p.DisplayName
-                    D.Name.Position = Vector2.new(pos.X, pos.Y - height / 2 - 18)
-                    D.Name.Color = espColor; D.Name.Visible = true
+                    D.Name.Position = UDim2.new(0, pos.X - 50, 0, pos.Y - height / 2 - 20)
+                    D.Name.Size = UDim2.new(0, 100, 0, 20)
+                    D.Name.TextColor3 = espColor; D.Name.Visible = true
                 else D.Name.Visible = false end
                 
                 -- Dist
                 if espDist then
                     D.Dist.Text = math.floor(dist) .. "m"
-                    D.Dist.Position = Vector2.new(pos.X, pos.Y + height / 2 + 2)
-                    D.Dist.Color = espColor; D.Dist.Visible = true
+                    D.Dist.Position = UDim2.new(0, pos.X - 50, 0, pos.Y + height / 2)
+                    D.Dist.Size = UDim2.new(0, 100, 0, 20)
+                    D.Dist.TextColor3 = espColor; D.Dist.Visible = true
                 else D.Dist.Visible = false end
                 
                 -- Skeleton
@@ -1456,9 +1496,7 @@ table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
                             local pos1, vis1 = Camera:WorldToViewportPoint(p1.Position)
                             local pos2, vis2 = Camera:WorldToViewportPoint(p2.Position)
                             if vis1 or vis2 then
-                                D.Skel[i].From = Vector2.new(pos1.X, pos1.Y)
-                                D.Skel[i].To = Vector2.new(pos2.X, pos2.Y)
-                                D.Skel[i].Color = espColor; D.Skel[i].Visible = true
+                                UpdateGuiLine(D.Skel[i], Vector2.new(pos1.X, pos1.Y), Vector2.new(pos2.X, pos2.Y), espColor)
                             else D.Skel[i].Visible = false end
                         elseif D.Skel[i] then D.Skel[i].Visible = false end
                     end
@@ -1492,8 +1530,13 @@ end
 table.insert(GlobalConnections, Players.PlayerAdded:Connect(UpdateSpectatorList))
 table.insert(GlobalConnections, Players.PlayerRemoving:Connect(function(p)
     ClearESPPlayer(p)
+    if Drawings[p] then
+        Drawings[p].Box.Frame:Destroy(); Drawings[p].Line:Destroy(); Drawings[p].Name:Destroy(); Drawings[p].Dist:Destroy()
+        for _, l in ipairs(Drawings[p].Skel) do l:Destroy() end
+        Drawings[p] = nil
+    end
     UpdateSpectatorList()
-    -- Desactivar espectador si se va el objetivo
+    
     if isSpectating and spectateTarget == p then
         isSpectating = false
         spectateTarget = nil
@@ -1517,14 +1560,11 @@ SpecToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Limpieza al destruir el script
-local oldDestruir = DestruirScriptCompleto
+-- Limpieza Segura
+local oldDestruirESP = DestruirScriptCompleto
 DestruirScriptCompleto = function()
-    if oldDestruir then oldDestruir() end
-    for _, D in pairs(Drawings) do
-        D.Box:Remove(); D.Line:Remove(); D.Name:Remove(); D.Dist:Remove()
-        for _, l in ipairs(D.Skel) do l:Remove() end
-    end
+    if oldDestruirESP then oldDestruirESP() end
+    if ESPDrawFolder then ESPDrawFolder:Destroy() end
     Drawings = {}
     if isSpectating then Camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") end
 end
