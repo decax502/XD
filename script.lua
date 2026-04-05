@@ -1673,7 +1673,7 @@ AirKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 20. GLITCH TP MENU (EFECTO 3 CLONES RAPIDO)
+-- 20. GLITCH TP MENU (EFECTO 3 CLONES + SHIFT LOCK FIX)
 -- ==================================================================
 GlitchMain = Instance.new("Frame", ScreenGui); GlitchMain.Size = UDim2.new(0, 260, 0, 145); GlitchMain.Position = UDim2.new(0.5, -130, 0.5, -70); GlitchMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GlitchMain.BorderSizePixel = 0; GlitchMain.ClipsDescendants = true; GlitchMain.Visible = false; Instance.new("UICorner", GlitchMain).CornerRadius = UDim.new(0, 6); GlitchMainStroke = Instance.new("UIStroke", GlitchMain); GlitchMainStroke.Color = borderDark
 GlitchTopBar = Instance.new("Frame", GlitchMain); GlitchTopBar.Size = UDim2.new(1, 0, 0, 35); GlitchTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchTopBar.BorderSizePixel = 0; Instance.new("UICorner", GlitchTopBar).CornerRadius = UDim.new(0, 6)
@@ -1698,7 +1698,7 @@ GlitchMinBtn.MouseButton1Click:Connect(function()
 end)
 
 isGlitching = false; local glitchDistNum = 4; local glitchKeybind = nil; local isGlitchBinding = false
-local camDummy = nil; local glitchTask = nil
+local glitchStep = 1; local lastGlitchOffset = CFrame.new(); local currentWorldOffset = Vector3.new()
 
 GlitchDistMinus.MouseButton1Click:Connect(function() glitchDistNum = math.max(1, glitchDistNum - 1); GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
 GlitchDistPlus.MouseButton1Click:Connect(function() glitchDistNum = glitchDistNum + 1; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
@@ -1719,46 +1719,60 @@ ToggleGlitch = function()
         GlitchToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
         GlitchToggleBtn.Text = "GLITCH: ON"
         
-        -- Cámara suave para no volverse loco visualmente
-        camDummy = Instance.new("Part")
-        camDummy.Transparency = 1
-        camDummy.CanCollide = false
-        camDummy.Anchored = true
-        camDummy.CFrame = hrp.CFrame
-        camDummy.Parent = workspace
-        Camera.CameraSubject = camDummy
+        lastGlitchOffset = CFrame.new()
+        currentWorldOffset = Vector3.new()
+        glitchStep = 1
         
-        glitchTask = task.spawn(function()
-            local step = 0
-            while isGlitching and char and hrp and camDummy do
-                -- Seguimos al jugador sin saltos bruscos
-                camDummy.CFrame = camDummy.CFrame:Lerp(hrp.CFrame, 0.5)
-                
-                local baseCFrame = hrp.CFrame
-                step = step + 1
-                
-                if step == 1 then
-                    hrp.CFrame = baseCFrame * CFrame.new(-glitchDistNum, 0, 0)
-                elseif step == 2 then
-                    hrp.CFrame = baseCFrame
-                elseif step == 3 then
-                    hrp.CFrame = baseCFrame * CFrame.new(glitchDistNum, 0, 0)
-                else
-                    hrp.CFrame = baseCFrame
-                    step = 0
-                end
-                
-                task.wait(0.01) -- Velocidad super rápida para efecto clone
+        -- PASO 1: Movemos el RootPart de forma ultrarrápida (Antes de que la cámara se actualice)
+        RunService:BindToRenderStep("CDT_GlitchPre", Enum.RenderPriority.Camera.Value - 10, function()
+            if not char or not hrp or not hum or hum.Health <= 0 then
+                if isGlitching then ToggleGlitch() end
+                return
+            end
+            
+            -- Recuperamos el centro exacto donde deberías estar
+            local baseCFrame = hrp.CFrame * lastGlitchOffset:Inverse()
+            
+            glitchStep = glitchStep + 1
+            if glitchStep > 4 then glitchStep = 1 end
+            
+            local targetOffset = CFrame.new()
+            if glitchStep == 1 then targetOffset = CFrame.new(-glitchDistNum, 0, 0)
+            elseif glitchStep == 2 then targetOffset = CFrame.new(0, 0, 0)
+            elseif glitchStep == 3 then targetOffset = CFrame.new(glitchDistNum, 0, 0)
+            elseif glitchStep == 4 then targetOffset = CFrame.new(0, 0, 0)
+            end
+            
+            -- Aplicamos el glitch
+            hrp.CFrame = baseCFrame * targetOffset
+            lastGlitchOffset = targetOffset
+            
+            -- Calculamos cuánto se movió en el mundo real para contrarrestarlo en la cámara
+            currentWorldOffset = hrp.CFrame.Position - baseCFrame.Position
+        end)
+        
+        -- PASO 2: Forzamos la cámara a ignorar el glitch (Después de que el Shift Lock calcula todo)
+        RunService:BindToRenderStep("CDT_GlitchPost", Enum.RenderPriority.Camera.Value + 10, function()
+            if isGlitching then
+                Camera.CFrame = Camera.CFrame + (-currentWorldOffset)
             end
         end)
+        
     else
         GlitchToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         GlitchToggleBtn.TextColor3 = tWhite
         GlitchToggleBtn.Text = "GLITCH: OFF"
         
-        if glitchTask then task.cancel(glitchTask); glitchTask = nil end
-        if camDummy then camDummy:Destroy(); camDummy = nil end
-        if hum then Camera.CameraSubject = hum end
+        pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPre") end)
+        pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPost") end)
+        
+        -- Restauramos la posición central al apagarlo
+        if hrp and lastGlitchOffset ~= CFrame.new() then
+            hrp.CFrame = hrp.CFrame * lastGlitchOffset:Inverse()
+        end
+        
+        lastGlitchOffset = CFrame.new()
+        currentWorldOffset = Vector3.new()
     end
 end
 
