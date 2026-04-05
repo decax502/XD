@@ -51,7 +51,6 @@ local UIsActivos = {}
 local tagsDescargados = {}
 local hiddenTags = {} 
 
--- Verificación estricta de funciones del Executor para evitar crasheos (nil value)
 local safeRequest = nil
 if type(syn) == "table" and type(syn.request) == "function" then safeRequest = syn.request
 elseif type(http) == "table" and type(http.request) == "function" then safeRequest = http.request
@@ -73,7 +72,7 @@ local tYellow = Color3.fromRGB(255, 220, 0)
 local tRed = Color3.fromRGB(255, 60, 60)
 local borderDark = Color3.fromRGB(45, 45, 45)
 
-local GlobalConnections = {} -- Almacenará conexiones críticas para limpiarlas
+local GlobalConnections = {} 
 
 local function ApplyResponsiveScale(frame)
     local scaleObj = Instance.new("UIScale", frame)
@@ -383,7 +382,6 @@ table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
     end
 end))
 
-
 -- ==================================================================
 -- 1. CONSOLA PRINCIPAL OPTIFINE
 -- ==================================================================
@@ -419,7 +417,7 @@ MaxBtn = Instance.new("TextButton", MiniUI); MaxBtn.Size = UDim2.new(0, 35, 1, 0
 
 MakeDraggable(TopBar, Main); MakeDraggable(MiniLabel, Main)
 
-local isMinimized = false
+isMinimized = false
 MinBtn.MouseButton1Click:Connect(function()
     isMinimized = true; FullUI.Visible = false; MiniUI.Visible = true
     Main:TweenSize(UDim2.new(0, 190, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
@@ -432,8 +430,8 @@ end)
 -- ==================================================================
 -- 2. MAP POINTS (WAYPOINTS MANAGER)
 -- ==================================================================
-local fileName = "CDT_Waypoints_" .. tostring(game.PlaceId) .. ".json"
-local waypoints = {}
+fileName = "CDT_Waypoints_" .. tostring(game.PlaceId) .. ".json"
+waypoints = {}
 
 local function SaveWaypoints() if type(writefile) == "function" then pcall(function() writefile(fileName, HttpService:JSONEncode(waypoints)) end) end end
 local function LoadWaypoints()
@@ -494,12 +492,12 @@ ConfirmMsg = Instance.new("TextLabel", ConfirmPopup); ConfirmMsg.Size = UDim2.ne
 YesBtn = Instance.new("TextButton", ConfirmPopup); YesBtn.Size = UDim2.new(0, 100, 0, 35); YesBtn.Position = UDim2.new(0.5, -110, 0.5, 10); YesBtn.BackgroundColor3 = tGreen; YesBtn.TextColor3 = Color3.fromRGB(10, 10, 10); YesBtn.Text = "SÍ"; YesBtn.Font = Enum.Font.GothamBold; YesBtn.TextSize = 13; YesBtn.ZIndex = 11; Instance.new("UICorner", YesBtn).CornerRadius = UDim.new(0, 4)
 NoBtn = Instance.new("TextButton", ConfirmPopup); NoBtn.Size = UDim2.new(0, 100, 0, 35); NoBtn.Position = UDim2.new(0.5, 10, 0.5, 10); NoBtn.BackgroundColor3 = tRed; NoBtn.TextColor3 = tWhite; NoBtn.Text = "NO"; NoBtn.Font = Enum.Font.GothamBold; NoBtn.TextSize = 13; NoBtn.ZIndex = 11; Instance.new("UICorner", NoBtn).CornerRadius = UDim.new(0, 4)
 
-local accionPendiente = ""; local waypointPendiente = ""
+accionPendiente = ""; waypointPendiente = ""
 NoBtn.MouseButton1Click:Connect(function() ConfirmPopup.Visible = false; accionPendiente = ""; waypointPendiente = "" end)
 
 ApplyResponsiveScale(MPMain); MakeDraggable(MPTopBar, MPMain)
 
-local mpMinimized = false
+mpMinimized = false
 MPMinBtn.MouseButton1Click:Connect(function()
     mpMinimized = not mpMinimized; MPMain:TweenSize(mpMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 350), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true); MPMinBtn.Text = mpMinimized and "+" or "—"; MPFix.Visible = not mpMinimized
 end)
@@ -572,7 +570,7 @@ TPListLayout = Instance.new("UIListLayout", TPScroll); TPListLayout.Padding = UD
 
 ApplyResponsiveScale(TPMain); MakeDraggable(TPTopBar, TPMain)
 
-local tpMinimized = false
+tpMinimized = false
 TPMinBtn.MouseButton1Click:Connect(function()
     tpMinimized = not tpMinimized; TPMain:TweenSize(tpMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 380), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     TPMinBtn.Text = tpMinimized and "+" or "—"; TPFix.Visible = not tpMinimized
@@ -615,7 +613,7 @@ HideListLayout = Instance.new("UIListLayout", HideScroll); HideListLayout.Paddin
 
 ApplyResponsiveScale(HideMain); MakeDraggable(HideTopBar, HideMain)
 
-local hideMinimized = false
+hideMinimized = false
 HideMinBtn.MouseButton1Click:Connect(function()
     hideMinimized = not hideMinimized; HideMain:TweenSize(hideMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 380), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     HideMinBtn.Text = hideMinimized and "+" or "—"; HideFix.Visible = not hideMinimized
@@ -675,7 +673,7 @@ InvKeyBtn = Instance.new("TextButton", InvMain); InvKeyBtn.Size = UDim2.new(0, 5
 
 ApplyResponsiveScale(InvMain); MakeDraggable(InvTopBar, InvMain)
 
-local invMinimized = false
+invMinimized = false
 InvMinBtn.MouseButton1Click:Connect(function()
     invMinimized = not invMinimized; InvMain:TweenSize(invMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     InvMinBtn.Text = invMinimized and "+" or "—"; InvFix.Visible = not invMinimized
@@ -688,8 +686,8 @@ local function showNotice(txt)
     task.spawn(function() task.wait(2); pcall(function() g:Destroy() end) end)
 end
 
-local isGhostActive = false; local invKeybind = nil; local isInvBinding = false; local ghostDebounce = false
-local currentInvisSeat = nil 
+isGhostActive = false; invKeybind = nil; isInvBinding = false; ghostDebounce = false
+currentInvisSeat = nil 
 
 local function setCharacterTransparency(char, val)
     for _, p in ipairs(char:GetDescendants()) do
@@ -771,14 +769,14 @@ FlySpeedPlus = Instance.new("TextButton", FlyMain); FlySpeedPlus.Size = UDim2.ne
 
 ApplyResponsiveScale(FlyMain); MakeDraggable(FlyTopBar, FlyMain)
 
-local flyMinimized = false
+flyMinimized = false
 FlyMinBtn.MouseButton1Click:Connect(function()
     flyMinimized = not flyMinimized; FlyMain:TweenSize(flyMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     FlyMinBtn.Text = flyMinimized and "+" or "—"; FlyFix.Visible = not flyMinimized
 end)
 
 isFlying = false; flycontrol = {F = 0, R = 0, B = 0, L = 0, U = 0, D = 0}
-local flySpeed = 100; local flyKeybind = nil; local isFlyBinding = false; local flyLoop = nil
+flySpeed = 100; flyKeybind = nil; isFlyBinding = false; flyLoop = nil
 
 FlySpeedMinus.MouseButton1Click:Connect(function() flySpeed = math.max(10, flySpeed - 10); FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
 FlySpeedPlus.MouseButton1Click:Connect(function() flySpeed = flySpeed + 10; FlySpeedDisplay.Text = "SPEED: " .. flySpeed end)
@@ -833,13 +831,13 @@ NoclipKeyBtn = Instance.new("TextButton", NoclipMain); NoclipKeyBtn.Size = UDim2
 
 ApplyResponsiveScale(NoclipMain); MakeDraggable(NoclipTopBar, NoclipMain)
 
-local noclipMinimized = false
+noclipMinimized = false
 NoclipMinBtn.MouseButton1Click:Connect(function()
     noclipMinimized = not noclipMinimized; NoclipMain:TweenSize(noclipMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     NoclipMinBtn.Text = noclipMinimized and "+" or "—"; NoclipFix.Visible = not noclipMinimized
 end)
 
-local isNoclipActive = false; local noclipLoop = nil; local noclipFloor = nil; local noclipKeybind = nil; local isNoclipBinding = false
+isNoclipActive = false; noclipLoop = nil; noclipFloor = nil; noclipKeybind = nil; isNoclipBinding = false
 
 ToggleNoclipWalk = function()
     isNoclipActive = not isNoclipActive; local char = LocalPlayer.Character
@@ -897,13 +895,13 @@ VFlySpeedPlus = Instance.new("TextButton", VFlyMain); VFlySpeedPlus.Size = UDim2
 
 ApplyResponsiveScale(VFlyMain); MakeDraggable(VFlyTopBar, VFlyMain)
 
-local vflyMinimized = false
+vflyMinimized = false
 VFlyMinBtn.MouseButton1Click:Connect(function()
     vflyMinimized = not vflyMinimized; VFlyMain:TweenSize(vflyMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     VFlyMinBtn.Text = vflyMinimized and "+" or "—"; VFlyFix.Visible = not vflyMinimized
 end)
 
-local isVFlying = false; local vFlySpeedNum = 256; local vFlyAccel = 4; local vFlyTurn = 16; local vFlyMultiplier = 3; local vFlyKeybind = nil; local isVFlyBinding = false; local vFlyConn = nil; local vFlyCurrentVel = Vector3.new(0,0,0)
+isVFlying = false; vFlySpeedNum = 256; vFlyAccel = 4; vFlyTurn = 16; vFlyMultiplier = 3; vFlyKeybind = nil; isVFlyBinding = false; vFlyConn = nil; vFlyCurrentVel = Vector3.new(0,0,0)
 
 VFlySpeedMinus.MouseButton1Click:Connect(function() vFlySpeedNum = math.max(1, vFlySpeedNum - 10); VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end)
 VFlySpeedPlus.MouseButton1Click:Connect(function() vFlySpeedNum = vFlySpeedNum + 10; VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end)
@@ -967,13 +965,13 @@ TripKeyBtn = Instance.new("TextButton", TripMain); TripKeyBtn.Size = UDim2.new(0
 
 ApplyResponsiveScale(TripMain); MakeDraggable(TripTopBar, TripMain)
 
-local tripMinimized = false
+tripMinimized = false
 TripMinBtn.MouseButton1Click:Connect(function()
     tripMinimized = not tripMinimized; TripMain:TweenSize(tripMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     TripMinBtn.Text = tripMinimized and "+" or "—"; TripFix.Visible = not tripMinimized
 end)
 
-local tripKeybind = nil; local isTripBinding = false; local tripStateConn = nil 
+tripKeybind = nil; isTripBinding = false; tripStateConn = nil 
 isTripped = false
 
 local function CleanTripConnections()
@@ -1068,16 +1066,16 @@ ReverseActionBtn = Instance.new("TextButton", ReverseMain); ReverseActionBtn.Siz
 
 ApplyResponsiveScale(ReverseMain); MakeDraggable(ReverseTopBar, ReverseMain)
 
-local reverseMinimized = false
+reverseMinimized = false
 ReverseMinBtn.MouseButton1Click:Connect(function()
     reverseMinimized = not reverseMinimized; ReverseMain:TweenSize(reverseMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     ReverseMinBtn.Text = reverseMinimized and "+" or "—"; ReverseFix.Visible = not reverseMinimized
 end)
 
-local isReverseActive = false; local reverseKeybind = nil; local isReverseBinding = false; local isMobileRewinding = false
-local flashbacklength = 500; local flashbackspeed = 2; local frames = {}
-local flashbackName = "CDT_FlashbackSystem"
-local flashback = { lastinput = false, canrevert = true }
+isReverseActive = false; reverseKeybind = nil; isReverseBinding = false; isMobileRewinding = false
+flashbacklength = 500; flashbackspeed = 2; frames = {}
+flashbackName = "CDT_FlashbackSystem"
+flashback = { lastinput = false, canrevert = true }
 
 local function CleanCharacterState(char, hrp, hum)
     if not char or not hrp or not hum then return end
@@ -1171,15 +1169,15 @@ FreecamSpeedPlus = Instance.new("TextButton", FreecamMain); FreecamSpeedPlus.Siz
 
 ApplyResponsiveScale(FreecamMain); MakeDraggable(FreecamTopBar, FreecamMain)
 
-local fcMinimized = false
+fcMinimized = false
 FreecamMinBtn.MouseButton1Click:Connect(function()
     fcMinimized = not fcMinimized; FreecamMain:TweenSize(fcMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     FreecamMinBtn.Text = fcMinimized and "+" or "—"; FreecamFix.Visible = not fcMinimized
 end)
 
-local isFreecamActive = false; local fcSpeed = 60; local fcSmoothness = 0.1; local fcKeybind = nil; local isFcBinding = false
-local fcTargetCFrame = CFrame.new(); local fcVelocity = Vector3.zero; local fcPitch, fcYaw = 0, 0
-local fcRenderConn, fcInputConn1, fcInputConn2; local isHoldingRightClick = false; local isShiftLocked = false
+isFreecamActive = false; fcSpeed = 60; fcSmoothness = 0.1; fcKeybind = nil; isFcBinding = false
+fcTargetCFrame = CFrame.new(); fcVelocity = Vector3.zero; fcPitch = 0; fcYaw = 0
+fcRenderConn = nil; fcInputConn1 = nil; fcInputConn2 = nil; isHoldingRightClick = false; isShiftLocked = false
 
 FreecamSpeedMinus.MouseButton1Click:Connect(function() fcSpeed = math.max(10, fcSpeed - 10); FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
 FreecamSpeedPlus.MouseButton1Click:Connect(function() fcSpeed = fcSpeed + 10; FreecamSpeedDisplay.Text = "SPEED: " .. fcSpeed end)
@@ -1616,14 +1614,14 @@ ThemeToggleBtn = Instance.new("TextButton", SetMain); ThemeToggleBtn.Size = UDim
 
 ApplyResponsiveScale(SetMain); MakeDraggable(SetTopBar, SetMain)
 
-local setMinimized = false
+setMinimized = false
 SetMinBtn.MouseButton1Click:Connect(function()
     setMinimized = not setMinimized; SetMain:TweenSize(setMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     SetMinBtn.Text = setMinimized and "+" or "—"; SetFix.Visible = not setMinimized
 end)
 SetCloseBtn.MouseButton1Click:Connect(function() SetMain.Visible = false end)
 
-local currentTheme = "Default"
+currentTheme = "Default"
 ThemeToggleBtn.MouseButton1Click:Connect(function()
     if currentTheme == "Default" then
         currentTheme = "Glass"
@@ -1666,7 +1664,7 @@ GenTitle = Instance.new("TextLabel", GenTopBar); GenTitle.Size = UDim2.new(1, -7
 GenMinBtn = Instance.new("TextButton", GenTopBar); GenMinBtn.Size = UDim2.new(0, 35, 1, 0); GenMinBtn.Position = UDim2.new(1, -70, 0, 0); GenMinBtn.BackgroundTransparency = 1; GenMinBtn.Text = "—"; GenMinBtn.TextColor3 = tGreen; GenMinBtn.Font = Enum.Font.GothamBlack; GenMinBtn.TextSize = 14
 GenCloseBtn = Instance.new("TextButton", GenTopBar); GenCloseBtn.Size = UDim2.new(0, 35, 1, 0); GenCloseBtn.Position = UDim2.new(1, -35, 0, 0); GenCloseBtn.BackgroundTransparency = 1; GenCloseBtn.Text = "X"; GenCloseBtn.TextColor3 = tRed; GenCloseBtn.Font = Enum.Font.GothamBlack; GenCloseBtn.TextSize = 12
 
-local GenInput = Instance.new("TextBox", GenMain)
+GenInput = Instance.new("TextBox", GenMain)
 GenInput.Size = UDim2.new(1, -20, 0, 30); GenInput.Position = UDim2.new(0, 10, 0, 45); GenInput.BackgroundColor3 = Color3.fromRGB(20, 20, 20); GenInput.TextColor3 = tWhite; GenInput.Text = ""; GenInput.PlaceholderText = "Nombre del objeto..."; GenInput.Font = Enum.Font.Gotham; GenInput.TextSize = 12; GenInput.ClearTextOnFocus = false; Instance.new("UICorner", GenInput).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", GenInput).Color = Color3.fromRGB(50, 50, 50); Instance.new("UIPadding", GenInput).PaddingLeft = UDim.new(0, 5)
 
 local function CreateCDTSlider(parent, name, yPos, defaultValue)
@@ -1693,16 +1691,16 @@ local function CreateCDTSlider(parent, name, yPos, defaultValue)
     return function() return value end
 end
 
-local getX = CreateCDTSlider(GenMain, "Ancho (X)", 85, 2)
-local getY = CreateCDTSlider(GenMain, "Alto (Y)", 135, 2)
-local getZ = CreateCDTSlider(GenMain, "Largo (Z)", 185, 2)
+getX = CreateCDTSlider(GenMain, "Ancho (X)", 85, 2)
+getY = CreateCDTSlider(GenMain, "Alto (Y)", 135, 2)
+getZ = CreateCDTSlider(GenMain, "Largo (Z)", 185, 2)
 
-local GenFireBtn = Instance.new("TextButton", GenMain)
+GenFireBtn = Instance.new("TextButton", GenMain)
 GenFireBtn.Size = UDim2.new(1, -20, 0, 40); GenFireBtn.Position = UDim2.new(0, 10, 0, 250); GenFireBtn.BackgroundColor3 = tGreen; GenFireBtn.TextColor3 = Color3.fromRGB(10, 10, 10); GenFireBtn.Text = "GENERAR OBJETO"; GenFireBtn.Font = Enum.Font.GothamBold; GenFireBtn.TextSize = 13; Instance.new("UICorner", GenFireBtn).CornerRadius = UDim.new(0, 6)
 
 ApplyResponsiveScale(GenMain); MakeDraggable(GenTopBar, GenMain)
 
-local genMinimized = false
+genMinimized = false
 GenMinBtn.MouseButton1Click:Connect(function()
     genMinimized = not genMinimized; GenMain:TweenSize(genMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 310), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true); GenMinBtn.Text = genMinimized and "+" or "—"; GenFix.Visible = not genMinimized
 end)
@@ -1738,14 +1736,14 @@ SpinSpeedPlus = Instance.new("TextButton", SpinMain); SpinSpeedPlus.Size = UDim2
 
 ApplyResponsiveScale(SpinMain); MakeDraggable(SpinTopBar, SpinMain)
 
-local spinMinimized = false
+spinMinimized = false
 SpinMinBtn.MouseButton1Click:Connect(function()
     spinMinimized = not spinMinimized; SpinMain:TweenSize(spinMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     SpinMinBtn.Text = spinMinimized and "+" or "—"; SpinFix.Visible = not spinMinimized
 end)
 
-local isSpinning = false; local spinSpeedNum = 30; local spinKeybind = nil; local isSpinBinding = false
-local spinDebounce = false
+isSpinning = false; spinSpeedNum = 30; spinKeybind = nil; isSpinBinding = false
+spinDebounce = false
 
 SpinSpeedMinus.MouseButton1Click:Connect(function() spinSpeedNum = math.max(1, spinSpeedNum - 5); SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
 SpinSpeedPlus.MouseButton1Click:Connect(function() spinSpeedNum = spinSpeedNum + 5; SpinSpeedDisplay.Text = "SPEED: " .. spinSpeedNum end)
@@ -1829,14 +1827,14 @@ AirKeyBtn = Instance.new("TextButton", AirMain); AirKeyBtn.Size = UDim2.new(0, 5
 
 ApplyResponsiveScale(AirMain); MakeDraggable(AirTopBar, AirMain)
 
-local airMinimized = false
+airMinimized = false
 AirMinBtn.MouseButton1Click:Connect(function()
     airMinimized = not airMinimized; AirMain:TweenSize(airMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 100), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     AirMinBtn.Text = airMinimized and "+" or "—"; AirFix.Visible = not airMinimized
 end)
 
-local isAirWalkActive = false; local airKeybind = nil; local isAirBinding = false; local airBaseplateFolder = nil
-local airPlantilla = Instance.new("Part"); airPlantilla.Size = Vector3.new(648, 16, 648); airPlantilla.Anchored = true; airPlantilla.CanCollide = true; airPlantilla.Transparency = 1; airPlantilla.Material = Enum.Material.SmoothPlastic
+isAirWalkActive = false; airKeybind = nil; isAirBinding = false; airBaseplateFolder = nil
+airPlantilla = Instance.new("Part"); airPlantilla.Size = Vector3.new(648, 16, 648); airPlantilla.Anchored = true; airPlantilla.CanCollide = true; airPlantilla.Transparency = 1; airPlantilla.Material = Enum.Material.SmoothPlastic
 
 local function getAirChunkKey(x, z) return x .. "_" .. z end
 
@@ -1929,16 +1927,16 @@ GlitchDistPlus = Instance.new("TextButton", GlitchMain); GlitchDistPlus.Size = U
 
 ApplyResponsiveScale(GlitchMain); MakeDraggable(GlitchTopBar, GlitchMain)
 
-local glitchMinimized = false
+glitchMinimized = false
 GlitchMinBtn.MouseButton1Click:Connect(function()
     glitchMinimized = not glitchMinimized; GlitchMain:TweenSize(glitchMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     GlitchMinBtn.Text = glitchMinimized and "+" or "—"; GlitchFix.Visible = not glitchMinimized
 end)
 
-isGlitching = false; local glitchDistNum = 4; local glitchKeybind = nil; local isGlitchBinding = false
-local glitchStep = 1; local lastGlitchOffset = Vector3.new()
-local glitchTickCounter = 0
-local UPDATE_RATE = 2 -- Velocidad agresiva (2 frames). Rompe la predicción visual del servidor.
+isGlitching = false; glitchDistNum = 4; glitchKeybind = nil; isGlitchBinding = false
+glitchStep = 1; lastGlitchOffset = Vector3.new()
+glitchTickCounter = 0
+UPDATE_RATE = 2 -- Velocidad agresiva (2 frames). Rompe la predicción visual del servidor.
 
 GlitchDistMinus.MouseButton1Click:Connect(function() glitchDistNum = math.max(1, glitchDistNum - 1); GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
 GlitchDistPlus.MouseButton1Click:Connect(function() glitchDistNum = glitchDistNum + 1; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
@@ -2039,7 +2037,7 @@ local function GetPlayer(nameString)
     return nil
 end
 
-local Comandos = {}
+Comandos = {}
 local function AddCmd(cmd, desc, action) Comandos[cmd] = {Desc = desc, Accion = action} end
 
 local function LogMessage(text, color)
@@ -2119,9 +2117,9 @@ AddCmd("tptool", "Te da una herramienta para hacer TP donde hagas click", functi
     LogMessage("TP Tool creado. Equípalo y toca donde quieras ir.", tGreen)
 end)
 
-local isClearModeActive = false
-local originalLightingProps = {}
-local disabledEffects = {}
+isClearModeActive = false
+originalLightingProps = {}
+disabledEffects = {}
 
 AddCmd("clear", "Hace de día, quita la niebla, efectos (bloom/blur) y mejora la visión", function()
     isClearModeActive = not isClearModeActive
@@ -2167,10 +2165,10 @@ end)
 -- ==================================================================
 -- LOGICA INFBASE REPARADA (MANTIENE BASE ORIGINAL)
 -- ==================================================================
-local infBaseActivo = false
-local baseplateFolder = nil
-local infPlantilla = nil
-local ORIGIN_POS = Vector3.new(0, -8, 0)
+infBaseActivo = false
+baseplateFolder = nil
+infPlantilla = nil
+ORIGIN_POS = Vector3.new(0, -8, 0)
 
 task.spawn(function()
     local baseplateOriginal = workspace:FindFirstChild("Baseplate")
@@ -2265,7 +2263,7 @@ AddCmd("infbase", "Genera baseplates infinitas alrededor de la original (Toggle 
     end
 end)
 
-local isAntiAfkActive = false; local afkConnection = nil
+isAntiAfkActive = false; afkConnection = nil
 AddCmd("afk", "Activa o desactiva el sistema Anti-AFK", function()
     isAntiAfkActive = not isAntiAfkActive
     if isAntiAfkActive then
@@ -2449,8 +2447,8 @@ end)
 -- ==================================================================
 -- MANEJADOR GLOBAL DE TECLAS (DEBE IR AL FINAL DEL SCRIPT)
 -- ==================================================================
-local inputBeganConn
-local inputEndedConn
+inputBeganConn = nil
+inputEndedConn = nil
 
 if inputBeganConn then inputBeganConn:Disconnect() end
 if inputEndedConn then inputEndedConn:Disconnect() end
@@ -2498,7 +2496,7 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
             if type(ToggleGlitch) == "function" then ToggleGlitch() end
         end
         
-        -- FIX DEL KEYBIND DE SPINBOT: Verifica que no estés escribiendo en un TextBox
+        -- FIX DEL KEYBIND DE SPINBOT
         if spinKeybind and input.KeyCode == spinKeybind and not UserInputService:GetFocusedTextBox() then
             if type(ToggleSpin) == "function" then ToggleSpin() end
         end
@@ -2539,7 +2537,7 @@ end)
 -- ==================================================================
 Main.Visible = false 
 
-local KeyScreen = Instance.new("ScreenGui", targetGuiParent)
+KeyScreen = Instance.new("ScreenGui", targetGuiParent)
 KeyScreen.Name = "CDT_KeySystem"
 KeyScreen.IgnoreGuiInset = true
 KeyScreen.ResetOnSpawn = false 
@@ -2608,7 +2606,6 @@ local function ProcessKey(inputKey, isAutoLogin)
                 if isAutoLogin then task.wait(2); KeyInputBox.Visible = true; VerifyBtn.Visible = true; GetKeyBtn.Visible = true; RememberCheck.Visible = true end
             end
         else
-            -- Si no hay función de request, saltar verificación por seguridad y dar acceso (Bypass temporal interno)
             SubTitle.Text = "Executor no soporta red. Bypass activado."; SubTitle.TextColor3 = tYellow
             task.wait(1.5); if KeyScreen then KeyScreen:Destroy() end
             Main.Visible = true; LogMessage("Executor Offline. Algunas funciones de nube pueden fallar.", tOrange)
