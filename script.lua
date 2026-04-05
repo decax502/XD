@@ -1614,10 +1614,10 @@ ThemeToggleBtn.MouseButton1Click:Connect(function()
     local strokeColor = isGlass and tCyan or borderDark
     local strokeTrans = isGlass and 0.3 or 0
 
-    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, ChatMain, SetMain, HideMain, GenMain, ReverseMain, FreecamMain, ESPMain, SpinMain, AirMain}
-    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, ChatTopBar, SetTopBar, HideTopBar, GenTopBar, ReverseTopBar, FreecamTopBar, ESPTopBar, SpinTopBar, AirTopBar}
-    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, ChatFix, SetFix, HideFix, GenFix, ReverseFix, FreecamFix, ESPFix, SpinFix, AirFix}
-    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke, ReverseMainStroke, FreecamMainStroke, ESPMainStroke, SpinMainStroke, AirMainStroke}
+    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, SetMain, HideMain, GenMain, ReverseMain, FreecamMain, ESPMain, SpinMain, AirMain, GlitchMain}
+    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, SetTopBar, HideTopBar, GenTopBar, ReverseTopBar, FreecamTopBar, ESPTopBar, SpinTopBar, AirTopBar, GlitchTopBar}
+    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, SetFix, HideFix, GenFix, ReverseFix, FreecamFix, ESPFix, SpinFix, AirFix, GlitchFix}
+    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke, ReverseMainStroke, FreecamMainStroke, ESPMainStroke, SpinMainStroke, AirMainStroke, GlitchMainStroke}
     
     for _, f in ipairs(frames) do if f then f.BackgroundTransparency = bgTrans; f.BackgroundColor3 = bgColor end end
     for _, tb in ipairs(topbars) do if tb then tb.BackgroundTransparency = tbTrans; tb.BackgroundColor3 = tbColor end end
@@ -1880,124 +1880,6 @@ AirKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 20. GLITCH TP MENU (EFECTO BRUSCO + FIX SHIFT LOCK + ANTI-SMOOTHING)
--- ==================================================================
-GlitchMain = Instance.new("Frame", ScreenGui); GlitchMain.Size = UDim2.new(0, 260, 0, 145); GlitchMain.Position = UDim2.new(0.5, -130, 0.5, -70); GlitchMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GlitchMain.BorderSizePixel = 0; GlitchMain.ClipsDescendants = true; GlitchMain.Visible = false; Instance.new("UICorner", GlitchMain).CornerRadius = UDim.new(0, 6); GlitchMainStroke = Instance.new("UIStroke", GlitchMain); GlitchMainStroke.Color = borderDark
-GlitchTopBar = Instance.new("Frame", GlitchMain); GlitchTopBar.Size = UDim2.new(1, 0, 0, 35); GlitchTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchTopBar.BorderSizePixel = 0; Instance.new("UICorner", GlitchTopBar).CornerRadius = UDim.new(0, 6)
-GlitchFix = Instance.new("Frame", GlitchTopBar); GlitchFix.Size = UDim2.new(1, 0, 0, 5); GlitchFix.Position = UDim2.new(0, 0, 1, -5); GlitchFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchFix.BorderSizePixel = 0
-GlitchTitle = Instance.new("TextLabel", GlitchTopBar); GlitchTitle.Size = UDim2.new(1, -70, 1, 0); GlitchTitle.Position = UDim2.new(0, 15, 0, 0); GlitchTitle.BackgroundTransparency = 1; GlitchTitle.Text = "GLITCH TP"; GlitchTitle.TextColor3 = tWhite; GlitchTitle.Font = Enum.Font.GothamBold; GlitchTitle.TextSize = 13; GlitchTitle.TextXAlignment = Enum.TextXAlignment.Left
-GlitchMinBtn = Instance.new("TextButton", GlitchTopBar); GlitchMinBtn.Size = UDim2.new(0, 35, 1, 0); GlitchMinBtn.Position = UDim2.new(1, -70, 0, 0); GlitchMinBtn.BackgroundTransparency = 1; GlitchMinBtn.Text = "—"; GlitchMinBtn.TextColor3 = tGreen; GlitchMinBtn.Font = Enum.Font.GothamBlack; GlitchMinBtn.TextSize = 14
-GlitchCloseBtn = Instance.new("TextButton", GlitchTopBar); GlitchCloseBtn.Size = UDim2.new(0, 35, 1, 0); GlitchCloseBtn.Position = UDim2.new(1, -35, 0, 0); GlitchCloseBtn.BackgroundTransparency = 1; GlitchCloseBtn.Text = "X"; GlitchCloseBtn.TextColor3 = tRed; GlitchCloseBtn.Font = Enum.Font.GothamBlack; GlitchCloseBtn.TextSize = 12
-
-GlitchToggleBtn = Instance.new("TextButton", GlitchMain); GlitchToggleBtn.Size = UDim2.new(1, -75, 0, 45); GlitchToggleBtn.Position = UDim2.new(0, 10, 0, 45); GlitchToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); GlitchToggleBtn.Text = "GLITCH: OFF"; GlitchToggleBtn.TextColor3 = tWhite; GlitchToggleBtn.Font = Enum.Font.GothamBold; GlitchToggleBtn.TextSize = 12; Instance.new("UICorner", GlitchToggleBtn).CornerRadius = UDim.new(0, 6)
-GlitchKeyBtn = Instance.new("TextButton", GlitchMain); GlitchKeyBtn.Size = UDim2.new(0, 50, 0, 45); GlitchKeyBtn.Position = UDim2.new(1, -60, 0, 45); GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.TextColor3 = tWhite; GlitchKeyBtn.Font = Enum.Font.GothamBold; GlitchKeyBtn.TextSize = 11; Instance.new("UICorner", GlitchKeyBtn).CornerRadius = UDim.new(0, 6)
-
-GlitchDistMinus = Instance.new("TextButton", GlitchMain); GlitchDistMinus.Size = UDim2.new(0, 40, 0, 35); GlitchDistMinus.Position = UDim2.new(0, 10, 0, 100); GlitchDistMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchDistMinus.Text = "-"; GlitchDistMinus.TextColor3 = tWhite; GlitchDistMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", GlitchDistMinus)
-GlitchDistDisplay = Instance.new("TextBox", GlitchMain); GlitchDistDisplay.Size = UDim2.new(1, -110, 0, 35); GlitchDistDisplay.Position = UDim2.new(0, 55, 0, 100); GlitchDistDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); GlitchDistDisplay.Text = ""; GlitchDistDisplay.PlaceholderText = "DISTANCIA: 4"; GlitchDistDisplay.TextColor3 = tWhite; GlitchDistDisplay.Font = Enum.Font.GothamSemibold; GlitchDistDisplay.TextSize = 14; GlitchDistDisplay.ClearTextOnFocus = true; Instance.new("UICorner", GlitchDistDisplay); Instance.new("UIStroke", GlitchDistDisplay).Color = Color3.fromRGB(50, 50, 50)
-GlitchDistPlus = Instance.new("TextButton", GlitchMain); GlitchDistPlus.Size = UDim2.new(0, 40, 0, 35); GlitchDistPlus.Position = UDim2.new(1, -50, 0, 100); GlitchDistPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchDistPlus.Text = "+"; GlitchDistPlus.TextColor3 = tWhite; GlitchDistPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", GlitchDistPlus)
-
-ApplyResponsiveScale(GlitchMain); MakeDraggable(GlitchTopBar, GlitchMain)
-
-local glitchMinimized = false
-GlitchMinBtn.MouseButton1Click:Connect(function()
-    glitchMinimized = not glitchMinimized; GlitchMain:TweenSize(glitchMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
-    GlitchMinBtn.Text = glitchMinimized and "+" or "—"; GlitchFix.Visible = not glitchMinimized
-end)
-
-isGlitching = false; local glitchDistNum = 4; local glitchKeybind = nil; local isGlitchBinding = false
-local glitchStep = 1; local lastGlitchOffset = Vector3.new()
-local glitchTickCounter = 0
-local UPDATE_RATE = 2 -- Velocidad agresiva (2 frames). Rompe la predicción visual del servidor.
-
-GlitchDistMinus.MouseButton1Click:Connect(function() glitchDistNum = math.max(1, glitchDistNum - 1); GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
-GlitchDistPlus.MouseButton1Click:Connect(function() glitchDistNum = glitchDistNum + 1; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
-table.insert(GlobalConnections, GlitchDistDisplay.FocusLost:Connect(function() local num = tonumber(GlitchDistDisplay.Text:match("%d+")); if num then glitchDistNum = num end; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end))
-
-ToggleGlitch = function()
-    if ScriptIsDead then return end
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
-    
-    if not hrp or not hum then return end
-    
-    isGlitching = not isGlitching
-
-    if isGlitching then
-        GlitchToggleBtn.BackgroundColor3 = tCyan
-        GlitchToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
-        GlitchToggleBtn.Text = "GLITCH: ON"
-        
-        lastGlitchOffset = Vector3.zero
-        glitchStep = 1
-        glitchTickCounter = 0
-        
-        -- PASO 1: ANTES DE LA CÁMARA (Centramos para el Shift Lock y para ti)
-        RunService:BindToRenderStep("CDT_GlitchPre", Enum.RenderPriority.Camera.Value - 10, function()
-            if not char or not hrp or not hum or hum.Health <= 0 then
-                if isGlitching then ToggleGlitch() end
-                return
-            end
-            
-            if lastGlitchOffset ~= Vector3.zero then
-                hrp.CFrame = hrp.CFrame - lastGlitchOffset
-                lastGlitchOffset = Vector3.zero
-            end
-        end)
-        
-        -- PASO 2: DESPUÉS DE LA CÁMARA (Patrón caótico para el servidor)
-        RunService:BindToRenderStep("CDT_GlitchPost", Enum.RenderPriority.Camera.Value + 10, function()
-            glitchTickCounter = glitchTickCounter + 1
-            if glitchTickCounter >= UPDATE_RATE then
-                glitchTickCounter = 0
-                glitchStep = glitchStep + 1
-                if glitchStep > 4 then glitchStep = 1 end
-            end
-            
-            local offset = Vector3.zero
-            
-            -- Patrón anti-suavizado: Salto enorme de un extremo a otro, luego centro.
-            if glitchStep == 1 then offset = -hrp.CFrame.RightVector * glitchDistNum       -- Izquierda
-            elseif glitchStep == 2 then offset = hrp.CFrame.RightVector * glitchDistNum      -- Derecha (Salto enorme)
-            elseif glitchStep == 3 then offset = Vector3.zero                                -- Centro
-            elseif glitchStep == 4 then offset = -hrp.CFrame.RightVector * (glitchDistNum/2) -- Medio Izquierda (Caótico)
-            end
-            
-            if offset ~= Vector3.zero then
-                hrp.CFrame = hrp.CFrame + offset
-                lastGlitchOffset = offset
-            end
-        end)
-        
-    else
-        GlitchToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        GlitchToggleBtn.TextColor3 = tWhite
-        GlitchToggleBtn.Text = "GLITCH: OFF"
-        
-        pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPre") end)
-        pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPost") end)
-        
-        if hrp and lastGlitchOffset ~= Vector3.zero then
-            hrp.CFrame = hrp.CFrame - lastGlitchOffset
-        end
-        
-        lastGlitchOffset = Vector3.zero
-    end
-end
-
-GlitchToggleBtn.MouseButton1Click:Connect(ToggleGlitch)
-
-GlitchCloseBtn.MouseButton1Click:Connect(function() 
-    GlitchMain.Visible = false; glitchKeybind = nil; isGlitchBinding = false; GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    if isGlitching then ToggleGlitch() end
-end)
-
-GlitchKeyBtn.MouseButton1Click:Connect(function()
-    if glitchKeybind ~= nil then glitchKeybind = nil; GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isGlitchBinding = false
-    else isGlitchBinding = true; GlitchKeyBtn.Text = "..."; GlitchKeyBtn.BackgroundColor3 = tOrange end
-end)
-
--- ==================================================================
 -- COMANDOS Y CONSOLA DE EVENTOS
 -- ==================================================================
 local function GetPlayer(nameString)
@@ -2035,7 +1917,6 @@ AddCmd("vfly", "Abre el panel de Vehicle Fly", function() VFlyMain.Visible = tru
 AddCmd("noclip", "Abre el panel de Noclip Walk", function() NoclipMain.Visible = true; LogMessage("Menú de Noclip Walk abierto.", tCyan) end)
 AddCmd("trip", "Abre el panel de Trip Mode", function() TripMain.Visible = true; LogMessage("Menú Trip abierto.", tGreen) end)
 AddCmd("reverse", "Abre el panel de Flashback / Rewind", function() ReverseMain.Visible = true; LogMessage("Menú Reverse abierto.", tCyan) end)
-AddCmd("chat", "Abre el chat global", function() ChatMain.Visible = true; pcall(function() ActualizarChat() end); LogMessage("Chat Global conectado.", tGreen) end)
 AddCmd("settings", "Abre el panel de Ajustes/Temas", function() SetMain.Visible = true; LogMessage("Menú de Ajustes abierto.", tOrange) end)
 AddCmd("freecam", "Abre el panel de Cámara Libre", function() FreecamMain.Visible = true; LogMessage("Menú Freecam abierto.", tCyan) end)
 AddCmd("esp", "Abre el panel del ESP System", function() ESPMain.Visible = true; LogMessage("Menú ESP abierto.", tPurple) end)
@@ -2445,7 +2326,7 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
                 if ESPMain then ESPMain.Visible = false end
                 if SpinMain then SpinMain.Visible = false end
                 if AirMain then AirMain.Visible = false end
-                if GlitchMain then GlitchMain.Visible = false end -- <--- ESTA ES LA LÍNEA NUEVA
+                if GlitchMain then GlitchMain.Visible = false end
             else
                 Main.Visible = true
             end
@@ -2460,8 +2341,8 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
         if isTripped and input.KeyCode == Enum.KeyCode.Space and type(GetUpFromTrip) == "function" then GetUpFromTrip(false) end
         if airKeybind and input.KeyCode == airKeybind and type(ToggleAirWalk) == "function" then ToggleAirWalk() end
         if glitchKeybind and input.KeyCode == glitchKeybind and not UserInputService:GetFocusedTextBox() then
-        if type(ToggleGlitch) == "function" then ToggleGlitch() end
-    end
+            if type(ToggleGlitch) == "function" then ToggleGlitch() end
+        end
         
         -- FIX DEL KEYBIND DE SPINBOT: Verifica que no estés escribiendo en un TextBox
         if spinKeybind and input.KeyCode == spinKeybind and not UserInputService:GetFocusedTextBox() then
