@@ -1676,43 +1676,40 @@ end)
 -- SISTEMA DE MENSAJERÍA PRIVADA (NOTIFICACIONES C.D.T)
 -- ==================================================================
 local function ProcesarMensajePrivado(sender, msg)
-    -- Detectamos si el mensaje tiene el formato de nuestro script
     local targetName, content = string.match(msg, "^!cdtmsg%s+(%S+)%s+(.+)")
     
     if targetName and content then
-        -- Comprobamos si el mensaje es para nosotros (coincidencia de nombre o displayname)
+        -- Verificamos si el mensaje es para nosotros
         if string.lower(string.sub(LocalPlayer.Name, 1, #targetName)) == string.lower(targetName) or 
            string.lower(string.sub(LocalPlayer.DisplayName, 1, #targetName)) == string.lower(targetName) then
             
-            -- Evitamos que nos llegue notificación si nos enviamos un mensaje a nosotros mismos
             if sender == LocalPlayer then return end 
 
-            -- 1. Reproducir el sonido solicitado
+            -- Reproducir sonido
             local sound = Instance.new("Sound")
             sound.SoundId = "rbxassetid://91271439961236"
             sound.Volume = 0.3
             sound.Parent = Workspace
             sound:Play()
-            game.Debris:AddItem(sound, 5) -- Se elimina automáticamente después de 5 seg
+            game.Debris:AddItem(sound, 5)
 
-            -- 2. Mostrar la notificación oficial de Roblox
+            -- Mostrar notificación con la cara del que lo envía
             StarterGui:SetCore("SendNotification", {
                 Title = sender.DisplayName,
                 Text = content,
+                Icon = "rbxthumb://type=AvatarHeadShot&id=" .. sender.UserId .. "&w=150&h=150",
                 Duration = 8
             })
         end
     end
 end
 
--- Escuchar mensajes de los jugadores que ya están en el servidor
 for _, player in ipairs(Players:GetPlayers()) do
     table.insert(GlobalConnections, player.Chatted:Connect(function(msg)
         if not ScriptIsDead then ProcesarMensajePrivado(player, msg) end
     end))
 end
 
--- Escuchar mensajes de los jugadores nuevos que entren
 table.insert(GlobalConnections, Players.PlayerAdded:Connect(function(player)
     table.insert(GlobalConnections, player.Chatted:Connect(function(msg)
         if not ScriptIsDead then ProcesarMensajePrivado(player, msg) end
@@ -1788,16 +1785,36 @@ AddCmd("re", "Fuerza el respawn y te devuelve a tu posición actual", function()
     end
 end)
 
-AddCmd("msg", "Envía mensaje privado a otro usuario del script (Ej: msg juan Hola bro)", function(args)
-    if #args >= 2 then
+AddCmd("smg", "Lista usuarios o envía MSJ (Ej: smg lista | smg juan Hola)", function(args)
+    if #args == 0 or args[1] == "lista" then
+        LogMessage("Obteniendo usuarios de SAFE DEV en este server...", tYellow)
+        task.spawn(function()
+            local s, res = pcall(function() return request({Url = BASE_URL .. "/api/active?t="..tostring(tick()), Method = "GET"}) end)
+            if s and res.StatusCode == 200 then
+                local sA, activeArray = pcall(function() return HttpService:JSONDecode(res.Body) end)
+                if sA and type(activeArray) == "table" then
+                    local count = 0
+                    LogMessage("--- USUARIOS ACTIVOS EN ESTE SERVER ---", tPurple)
+                    for _, uid in ipairs(activeArray) do
+                        local p = Players:GetPlayerByUserId(tonumber(uid))
+                        if p and p ~= LocalPlayer then
+                            LogMessage("🟢 " .. p.DisplayName .. " (@" .. p.Name .. ")", tGreen)
+                            count = count + 1
+                        end
+                    end
+                    if count == 0 then LogMessage("Nadie más en este servidor usa el script.", tOrange) end
+                end
+            else
+                LogMessage("Error al conectar con la API de usuarios.", tRed)
+            end
+        end)
+    elseif #args >= 2 then
         local target = args[1]
         table.remove(args, 1)
         local message = table.concat(args, " ")
         
-        -- Formato interno que solo el script detecta
         local chatString = "!cdtmsg " .. target .. " " .. message
         
-        -- Detección del sistema de chat del juego (Nuevo o Clásico)
         local textChat = game:GetService("TextChatService")
         if textChat and textChat.Version == Enum.ChatVersion.TextChatService then
             if textChat:FindFirstChild("TextChannels") and textChat.TextChannels:FindFirstChild("RBXGeneral") then
@@ -1811,9 +1828,9 @@ AddCmd("msg", "Envía mensaje privado a otro usuario del script (Ej: msg juan Ho
                 Players:Chat(chatString)
             end
         end
-        LogMessage("Mensaje enviado a " .. target .. " exitosamente.", tGreen)
+        LogMessage("Mensaje enviado a " .. target, tCyan)
     else
-        LogMessage("Uso correcto: msg [jugador] [mensaje]", tOrange)
+        LogMessage("Uso: smg lista | smg [jugador] [mensaje]", tOrange)
     end
 end)
 
