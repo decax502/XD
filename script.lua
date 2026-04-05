@@ -1577,6 +1577,83 @@ SpinKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
+-- 20. GLITCH TP MENU (EFECTO 3 SHADOWS / JITTER)
+-- ==================================================================
+GlitchMain = Instance.new("Frame", ScreenGui); GlitchMain.Size = UDim2.new(0, 260, 0, 145); GlitchMain.Position = UDim2.new(0, 20, 0, 1060); GlitchMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GlitchMain.BorderSizePixel = 0; GlitchMain.ClipsDescendants = true; GlitchMain.Visible = false; Instance.new("UICorner", GlitchMain).CornerRadius = UDim.new(0, 6); GlitchMainStroke = Instance.new("UIStroke", GlitchMain); GlitchMainStroke.Color = borderDark
+GlitchTopBar = Instance.new("Frame", GlitchMain); GlitchTopBar.Size = UDim2.new(1, 0, 0, 35); GlitchTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchTopBar.BorderSizePixel = 0; Instance.new("UICorner", GlitchTopBar).CornerRadius = UDim.new(0, 6)
+GlitchFix = Instance.new("Frame", GlitchTopBar); GlitchFix.Size = UDim2.new(1, 0, 0, 5); GlitchFix.Position = UDim2.new(0, 0, 1, -5); GlitchFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchFix.BorderSizePixel = 0
+GlitchTitle = Instance.new("TextLabel", GlitchTopBar); GlitchTitle.Size = UDim2.new(1, -70, 1, 0); GlitchTitle.Position = UDim2.new(0, 15, 0, 0); GlitchTitle.BackgroundTransparency = 1; GlitchTitle.Text = "GLITCH TP"; GlitchTitle.TextColor3 = tWhite; GlitchTitle.Font = Enum.Font.GothamBold; GlitchTitle.TextSize = 13; GlitchTitle.TextXAlignment = Enum.TextXAlignment.Left
+GlitchMinBtn = Instance.new("TextButton", GlitchTopBar); GlitchMinBtn.Size = UDim2.new(0, 35, 1, 0); GlitchMinBtn.Position = UDim2.new(1, -70, 0, 0); GlitchMinBtn.BackgroundTransparency = 1; GlitchMinBtn.Text = "—"; GlitchMinBtn.TextColor3 = tGreen; GlitchMinBtn.Font = Enum.Font.GothamBlack; GlitchMinBtn.TextSize = 14
+GlitchCloseBtn = Instance.new("TextButton", GlitchTopBar); GlitchCloseBtn.Size = UDim2.new(0, 35, 1, 0); GlitchCloseBtn.Position = UDim2.new(1, -35, 0, 0); GlitchCloseBtn.BackgroundTransparency = 1; GlitchCloseBtn.Text = "X"; GlitchCloseBtn.TextColor3 = tRed; GlitchCloseBtn.Font = Enum.Font.GothamBlack; GlitchCloseBtn.TextSize = 12
+
+GlitchToggleBtn = Instance.new("TextButton", GlitchMain); GlitchToggleBtn.Size = UDim2.new(1, -75, 0, 45); GlitchToggleBtn.Position = UDim2.new(0, 10, 0, 45); GlitchToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); GlitchToggleBtn.Text = "GLITCH: OFF"; GlitchToggleBtn.TextColor3 = tWhite; GlitchToggleBtn.Font = Enum.Font.GothamBold; GlitchToggleBtn.TextSize = 12; Instance.new("UICorner", GlitchToggleBtn).CornerRadius = UDim.new(0, 6)
+GlitchKeyBtn = Instance.new("TextButton", GlitchMain); GlitchKeyBtn.Size = UDim2.new(0, 50, 0, 45); GlitchKeyBtn.Position = UDim2.new(1, -60, 0, 45); GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.TextColor3 = tWhite; GlitchKeyBtn.Font = Enum.Font.GothamBold; GlitchKeyBtn.TextSize = 11; Instance.new("UICorner", GlitchKeyBtn).CornerRadius = UDim.new(0, 6)
+
+GlitchDistMinus = Instance.new("TextButton", GlitchMain); GlitchDistMinus.Size = UDim2.new(0, 40, 0, 35); GlitchDistMinus.Position = UDim2.new(0, 10, 0, 100); GlitchDistMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchDistMinus.Text = "-"; GlitchDistMinus.TextColor3 = tWhite; GlitchDistMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", GlitchDistMinus)
+GlitchDistDisplay = Instance.new("TextBox", GlitchMain); GlitchDistDisplay.Size = UDim2.new(1, -110, 0, 35); GlitchDistDisplay.Position = UDim2.new(0, 55, 0, 100); GlitchDistDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); GlitchDistDisplay.Text = ""; GlitchDistDisplay.PlaceholderText = "DIST: 3"; GlitchDistDisplay.TextColor3 = tWhite; GlitchDistDisplay.Font = Enum.Font.GothamSemibold; GlitchDistDisplay.TextSize = 14; GlitchDistDisplay.ClearTextOnFocus = true; Instance.new("UICorner", GlitchDistDisplay); Instance.new("UIStroke", GlitchDistDisplay).Color = Color3.fromRGB(50, 50, 50)
+GlitchDistPlus = Instance.new("TextButton", GlitchMain); GlitchDistPlus.Size = UDim2.new(0, 40, 0, 35); GlitchDistPlus.Position = UDim2.new(1, -50, 0, 100); GlitchDistPlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); GlitchDistPlus.Text = "+"; GlitchDistPlus.TextColor3 = tWhite; GlitchDistPlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", GlitchDistPlus)
+
+ApplyResponsiveScale(GlitchMain); MakeDraggable(GlitchTopBar, GlitchMain)
+
+local glitchMinimized = false
+GlitchMinBtn.MouseButton1Click:Connect(function()
+    glitchMinimized = not glitchMinimized; GlitchMain:TweenSize(glitchMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    GlitchMinBtn.Text = glitchMinimized and "+" or "—"; GlitchFix.Visible = not glitchMinimized
+end)
+
+local isGlitchActive = false; local glitchDist = 3; local glitchKeybind = nil; local isGlitchBinding = false
+local glitchConn = nil; local glitchState = 0; local rootJoint = nil; local originalC0 = nil
+
+GlitchDistMinus.MouseButton1Click:Connect(function() glitchDist = math.max(1, glitchDist - 1); GlitchDistDisplay.Text = "DIST: " .. glitchDist end)
+GlitchDistPlus.MouseButton1Click:Connect(function() glitchDist = glitchDist + 1; GlitchDistDisplay.Text = "DIST: " .. glitchDist end)
+GlitchDistDisplay.FocusLost:Connect(function() local num = tonumber(GlitchDistDisplay.Text:match("%d+")); if num then glitchDist = num end; GlitchDistDisplay.Text = "DIST: " .. glitchDist end)
+
+ToggleGlitch = function()
+    isGlitchActive = not isGlitchActive
+    local char = LocalPlayer.Character
+    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if isGlitchActive then
+        GlitchToggleBtn.BackgroundColor3 = tCyan; GlitchToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10); GlitchToggleBtn.Text = "GLITCH: ON"
+        
+        rootJoint = rootPart and rootPart:FindFirstChild("RootJoint")
+        if not rootJoint and char and char:FindFirstChild("LowerTorso") then
+            rootJoint = char.LowerTorso:FindFirstChild("Root")
+        end
+        
+        if rootJoint then
+            originalC0 = rootJoint.C0
+            glitchConn = RunService.RenderStepped:Connect(function()
+                if not char or not rootJoint or not rootPart then return end
+                local offset = CFrame.new(0, 0, 0)
+                
+                if glitchState == 0 then offset = CFrame.new(-glitchDist, 0, 0); glitchState = 1
+                elseif glitchState == 1 then offset = CFrame.new(0, 0, 0); glitchState = 2
+                elseif glitchState == 2 then offset = CFrame.new(glitchDist, 0, 0); glitchState = 3
+                elseif glitchState == 3 then offset = CFrame.new(0, 0, 0); glitchState = 0 end
+                
+                rootJoint.C0 = originalC0 * offset
+            end)
+        end
+    else
+        GlitchToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); GlitchToggleBtn.TextColor3 = tWhite; GlitchToggleBtn.Text = "GLITCH: OFF"
+        if glitchConn then glitchConn:Disconnect(); glitchConn = nil end
+        if rootJoint and originalC0 then rootJoint.C0 = originalC0 end
+        glitchState = 0; rootJoint = nil; originalC0 = nil
+    end
+end
+GlitchToggleBtn.MouseButton1Click:Connect(ToggleGlitch)
+
+GlitchCloseBtn.MouseButton1Click:Connect(function() 
+    GlitchMain.Visible = false; glitchKeybind = nil; isGlitchBinding = false; GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
+    if isGlitchActive then ToggleGlitch() end
+end)
+GlitchKeyBtn.MouseButton1Click:Connect(function()
+    if glitchKeybind ~= nil then glitchKeybind = nil; GlitchKeyBtn.Text = "KEY"; GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isGlitchBinding = false
+    else isGlitchBinding = true; GlitchKeyBtn.Text = "..."; GlitchKeyBtn.BackgroundColor3 = tOrange end
+end)
+
+-- ==================================================================
 -- 19. WALK ON AIR MENU (INVISIBLE DYNAMIC BASE)
 -- ==================================================================
 AirMain = Instance.new("Frame", ScreenGui); AirMain.Size = UDim2.new(0, 260, 0, 100); AirMain.Position = UDim2.new(0, 20, 0, 920); AirMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); AirMain.BorderSizePixel = 0; AirMain.ClipsDescendants = true; AirMain.Visible = false; Instance.new("UICorner", AirMain).CornerRadius = UDim.new(0, 6); AirMainStroke = Instance.new("UIStroke", AirMain); AirMainStroke.Color = borderDark
@@ -1717,6 +1794,10 @@ AddCmd("esp", "Abre el panel del ESP System", function() ESPMain.Visible = true;
 AddCmd("hide", "Abre el menú para ocultar avatares, sonidos locales y Voice Chat", function() HideSearchBox.Text = ""; RefreshHideMenu(); HideMain.Visible = true; LogMessage("Menú Ocultar Jugadores abierto.", tPurple) end)
 AddCmd("generacion", "Abre el panel del Generador de Objetos", function() GenMain.Visible = true; LogMessage("Generador C.D.T abierto.", tCyan) end)
 AddCmd("air", "Abre el panel de Walk on Air", function() AirMain.Visible = true; LogMessage("Menú Walk on Air abierto.", tCyan) end)
+
+AddCmd("glitch", "Abre el panel de Glitch TP (3 Shadows)", function()
+    GlitchMain.Visible = true; LogMessage("Menú Glitch abierto.", tCyan)
+end)
 
 AddCmd("spinstup", "Abre el panel del Spinbot", function()
     SpinMain.Visible = true; LogMessage("Menú Spinbot abierto.", tCyan)
@@ -1971,6 +2052,7 @@ DestruirScriptCompleto = function()
     if isClearModeActive then pcall(function() Comandos["clear"].Accion({}) end) end
     if isAntiAfkActive then pcall(function() Comandos["afk"].Accion({}) end) end
     if infBaseActivo then infBaseActivo = false end
+    if isGlitchActive and type(ToggleGlitch) == "function" then ToggleGlitch() end
     
     for _, conn in ipairs(GlobalConnections) do
         if conn and typeof(conn) == "RBXScriptConnection" and conn.Connected then
@@ -2105,7 +2187,16 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
     if isSpinBinding and input.UserInputType == Enum.UserInputType.Keyboard then spinKeybind = input.KeyCode; SpinKeyBtn.Text = input.KeyCode.Name; SpinKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isSpinBinding = false; return end
     if isReverseBinding and input.UserInputType == Enum.UserInputType.Keyboard then reverseKeybind = input.KeyCode; ReverseKeyBtn.Text = input.KeyCode.Name; ReverseKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isReverseBinding = false; return end
     if isAirBinding and input.UserInputType == Enum.UserInputType.Keyboard then airKeybind = input.KeyCode; AirKeyBtn.Text = input.KeyCode.Name; AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isAirBinding = false; return end
-    
+
+    -- En la asignación de teclas (debajo de `if isAirBinding...`)
+    if isGlitchBinding and input.UserInputType == Enum.UserInputType.Keyboard then glitchKeybind = input.KeyCode; GlitchKeyBtn.Text = input.KeyCode.Name; GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isGlitchBinding = false; return end
+
+    -- En la función de Ocultar/Mostrar Menú con el Botón Insert (debajo de `if AirMain then AirMain.Visible = false end`)
+    if GlitchMain then GlitchMain.Visible = false end
+
+    -- En la sección de Ejecución Segura (debajo de `if airKeybind and input.KeyCode...`)
+    if glitchKeybind and input.KeyCode == glitchKeybind and not UserInputService:GetFocusedTextBox() and type(ToggleGlitch) == "function" then ToggleGlitch() end
+
     if not gp then
         -- Ocultar/Mostrar Menú (Botón Insert)
         if input.KeyCode == Enum.KeyCode.Insert then 
