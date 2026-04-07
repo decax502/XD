@@ -1982,7 +1982,7 @@ AirKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 20. GLITCH TP MENU (FIX COMPATIBILIDAD UNIVERSAL + CAMERA ANTI-SHAKE)
+-- 20. GLITCH TP MENU (CAMERA ANCHOR FIX: 0% MAREOS Y VIBRACIONES)
 -- ==================================================================
 GlitchMain = Instance.new("Frame", ScreenGui); GlitchMain.Size = UDim2.new(0, 260, 0, 145); GlitchMain.Position = UDim2.new(0.5, -130, 0.5, -70); GlitchMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GlitchMain.BorderSizePixel = 0; GlitchMain.ClipsDescendants = true; GlitchMain.Visible = false; Instance.new("UICorner", GlitchMain).CornerRadius = UDim.new(0, 6); GlitchMainStroke = Instance.new("UIStroke", GlitchMain); GlitchMainStroke.Color = borderDark
 GlitchTopBar = Instance.new("Frame", GlitchMain); GlitchTopBar.Size = UDim2.new(1, 0, 0, 35); GlitchTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchTopBar.BorderSizePixel = 0; Instance.new("UICorner", GlitchTopBar).CornerRadius = UDim.new(0, 6)
@@ -2009,10 +2009,11 @@ end)
 isGlitching = false; glitchDistNum = 4; glitchKeybind = nil; isGlitchBinding = false
 glitchStep = 1; lastGlitchOffset = Vector3.new()
 glitchTickCounter = 0
-UPDATE_RATE = 2 -- Velocidad agresiva (2 frames)
+UPDATE_RATE = 2 
 
 local glitchConnPre = nil
 local glitchConnPost = nil
+local camPart = nil -- Anclaje de cámara para evitar mareos
 
 GlitchDistMinus.MouseButton1Click:Connect(function() glitchDistNum = math.max(1, glitchDistNum - 1); GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
 GlitchDistPlus.MouseButton1Click:Connect(function() glitchDistNum = glitchDistNum + 1; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
@@ -2037,23 +2038,38 @@ ToggleGlitch = function()
         glitchStep = 1
         glitchTickCounter = 0
         
-        -- PASO 1: RenderStepped estándar (Ahora corrigiendo el MAREO DE LA CÁMARA)
+        -- Crear cámara ancla (Invisible y suave)
+        camPart = Instance.new("Part")
+        camPart.Name = "CDT_CamAnchor"
+        camPart.Transparency = 1
+        camPart.CanCollide = false
+        camPart.Anchored = true
+        camPart.Size = Vector3.new(1, 1, 1)
+        camPart.Parent = char
+        
+        -- Engañar a la cámara para que siga a la parte ancla en vez del personaje real
+        Camera.CameraSubject = camPart
+        
+        -- PASO 1: RenderStepped - Restaura la vista justo antes de dibujar la pantalla (Para ti no hay glitch ni temblor)
         glitchConnPre = RunService.RenderStepped:Connect(function()
             if not char or not hrp or not hum or hum.Health <= 0 then
                 if isGlitching then ToggleGlitch() end
                 return
             end
             
+            -- Revertimos el glitch localmente
             if lastGlitchOffset ~= Vector3.zero then
-                -- Restauramos la posición real para que tú no lo notes
                 hrp.CFrame = hrp.CFrame - lastGlitchOffset
-                -- ¡FIX PARA LA CÁMARA! Le restamos el offset a la cámara para eliminar la vibración por completo
-                Camera.CFrame = Camera.CFrame - lastGlitchOffset
                 lastGlitchOffset = Vector3.zero
+            end
+            
+            -- Mantenemos la cámara ancla estable al nivel de la cabeza
+            if camPart then
+                camPart.CFrame = hrp.CFrame * CFrame.new(0, 1.5, 0)
             end
         end)
         
-        -- PASO 2: Heartbeat estándar para el patrón caótico en el servidor
+        -- PASO 2: Heartbeat - Aplica el glitch para el servidor
         glitchConnPost = RunService.Heartbeat:Connect(function()
             glitchTickCounter = glitchTickCounter + 1
             if glitchTickCounter >= UPDATE_RATE then
@@ -2087,6 +2103,10 @@ ToggleGlitch = function()
         if hrp and lastGlitchOffset ~= Vector3.zero then
             hrp.CFrame = hrp.CFrame - lastGlitchOffset
         end
+        
+        -- Limpiar y restaurar cámara
+        if camPart then camPart:Destroy(); camPart = nil end
+        if hum then Camera.CameraSubject = hum end
         
         lastGlitchOffset = Vector3.zero
     end
