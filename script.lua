@@ -2096,7 +2096,7 @@ GlitchKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 21. AIMBOT MENU (SIMPLE TWEEN ENGINE - CUSTOM SCRIPT)
+-- 21. AIMBOT MENU (SIMPLE TWEEN ENGINE - CUSTOM SCRIPT CORREGIDO)
 -- ==================================================================
 AimMain = Instance.new("Frame", ScreenGui); AimMain.Size = UDim2.new(0, 260, 0, 320); AimMain.Position = UDim2.new(0.5, 200, 0.5, -160); AimMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); AimMain.BorderSizePixel = 0; AimMain.ClipsDescendants = true; AimMain.Visible = false; Instance.new("UICorner", AimMain).CornerRadius = UDim.new(0, 6); AimMainStroke = Instance.new("UIStroke", AimMain); AimMainStroke.Color = borderDark
 AimTopBar = Instance.new("Frame", AimMain); AimTopBar.Size = UDim2.new(1, 0, 0, 35); AimTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); AimTopBar.BorderSizePixel = 0; Instance.new("UICorner", AimTopBar).CornerRadius = UDim.new(0, 6)
@@ -2210,7 +2210,7 @@ table.insert(GlobalConnections, UserInputService.InputChanged:Connect(function(i
     end
 end))
 
--- Función Custom GetClosestPlayer
+-- Función Custom GetClosestPlayer (Optimizada sin Wait)
 local function GetClosestPlayer()
     local MaximumDistance = aimShowFOV and aimFOVSize or math.huge
     local Target = nil
@@ -2225,7 +2225,8 @@ local function GetClosestPlayer()
             if v.Character ~= nil and v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
                 if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health > 0 then
                     
-                    local ScreenPoint, OnScreen = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", 1).Position)
+                    -- Le quité el WaitForChild que causaba lag severo.
+                    local ScreenPoint, OnScreen = Camera:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
                     
                     if OnScreen then
                         local VectorDistance = (Vector2.new(mouseLoc.X, mouseLoc.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
@@ -2244,18 +2245,24 @@ local function GetClosestPlayer()
     return Target
 end
 
--- Manejo de Activación (Holding)
+-- Manejo de Activación (Holding) - CORREGIDO PARA CLICK DERECHO ESTRICTO
 table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(Input, gp)
-    if isAimBinding and Input.UserInputType == Enum.UserInputType.Keyboard then
-        aimKeybind = Input.KeyCode; AimKeyBtn.Text = "KEYBIND: " .. Input.KeyCode.Name; AimKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); isAimBinding = false; return
-    elseif isAimBinding and Input.UserInputType == Enum.UserInputType.MouseButton3 then
-        aimKeybind = Input.UserInputType; AimKeyBtn.Text = "KEYBIND: MOUSE 3"; AimKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); isAimBinding = false; return
+    -- Sistema de Keybind: Ignora el Click Izquierdo para no arruinar el apuntado.
+    if isAimBinding then
+        if Input.UserInputType == Enum.UserInputType.Keyboard then
+            aimKeybind = Input.KeyCode; AimKeyBtn.Text = "KEYBIND: " .. Input.KeyCode.Name; AimKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); isAimBinding = false; return
+        elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
+            aimKeybind = Input.UserInputType; AimKeyBtn.Text = "KEYBIND: CLICK DERECHO"; AimKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); isAimBinding = false; return
+        elseif Input.UserInputType == Enum.UserInputType.MouseButton3 then
+            aimKeybind = Input.UserInputType; AimKeyBtn.Text = "KEYBIND: MOUSE 3"; AimKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); isAimBinding = false; return
+        end
     end
 
     if not gp and not UserInputService:GetFocusedTextBox() then
         if aimKeybind then
             if Input.KeyCode == aimKeybind or Input.UserInputType == aimKeybind then aimHolding = true end
         else
+            -- POR DEFECTO: Solo se activa con MouseButton2 (Click Derecho)
             if Input.UserInputType == Enum.UserInputType.MouseButton2 then aimHolding = true end
         end
     end
@@ -2266,6 +2273,7 @@ table.insert(GlobalConnections, UserInputService.InputEnded:Connect(function(Inp
         if aimKeybind then
             if Input.KeyCode == aimKeybind or Input.UserInputType == aimKeybind then aimHolding = false end
         else
+            -- POR DEFECTO: Solo se suelta al soltar MouseButton2 (Click Derecho)
             if Input.UserInputType == Enum.UserInputType.MouseButton2 then aimHolding = false end
         end
     end
