@@ -1,5 +1,5 @@
 --[[
-    C.D.T OPTIFINE - V10.9 PROJECT SAFE (MASTER EDITION)
+    C.D.T OPTIFINE - V10.9 PROJECT SAFE (MASTER EDITION) + HITBOX EXPANDER V5
     - Trip Mode Inteligente (Anti Shift-Lock Bug).
     - Inyección Segura (Bulletproof) y Responsive UI.
     - TP Menu & Map Points (Buscador dinámico).
@@ -7,11 +7,14 @@
     - Menú de Vuelo Normal & VEHICLE FLY (Lerp Suave).
     - REVERSE MODE (Flashback System).
     - FREECAM MODE (Shift-Lock Native Override).
-    - ESP SYSTEM (Highlights + Team Check).
+    - ESP SYSTEM (Highlights + SMART Team Check).
     - SPINBOT (Angular Velocity + Keybind Fix + Comando spinstup).
     - WALK ON AIR (Generación dinámica + Keybind).
+    - GLITCH TP (3 Clones + Anti-Smoothing).
+    - AIMBOT SYSTEM (Click Derecho + FOV).
+    - HITBOX EXPANDER (Expansión inteligente + Team Check Global).
     - GLOBAL CHAT SMART (Auto-Scroll).
-    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion, air, spinstup, destroy.
+    - Comandos: clear, afk, hop, rejoin, tptool, infbase, generacion, air, spinstup, hitbox, destroy.
     - Panel de Ajustes (⚙) con Temas Consistentes.
     - SISTEMA DE KEY, HWID Y AUTO-ACTUALIZACIÓN.
 ]]
@@ -118,6 +121,22 @@ ScreenGui.Parent = targetGuiParent
 local function AutoRestartScript()
     if DestruirScriptCompleto then DestruirScriptCompleto() end
     pcall(function() StarterGui:SetCore("SendNotification", { Title="SAFE DEV", Text="El servidor ha forzado una actualización Global. Por favor, reinyecta el script.", Duration=10 }) end)
+end
+
+-- ==================================================================
+-- SMART TEAM CHECK (GLOBAL FUNCTION PARA ESP, AIMBOT E HITBOX)
+-- ==================================================================
+local function IsSmartTeammate(player)
+    if not player then return false end
+    -- Método 1: Por objeto "Team" nativo de Roblox
+    if LocalPlayer.Team and player.Team and LocalPlayer.Team == player.Team then
+        return true
+    end
+    -- Método 2: Por color de equipo (Para juegos antiguos o custom)
+    if LocalPlayer.TeamColor and player.TeamColor and LocalPlayer.TeamColor == player.TeamColor then
+        return true
+    end
+    return false
 end
 
 -- ==================================================================
@@ -1510,7 +1529,7 @@ table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         
         local valid = isESPActive and hrp and hum and hum.Health > 0
-        if valid and espTeam and p.Team == LocalPlayer.Team then valid = false end
+        if valid and espTeam and IsSmartTeammate(p) then valid = false end
         if valid and espFriends and not IsFriend(p) then valid = false end
 
         -- Límite de distancia añadido aquí
@@ -1693,10 +1712,10 @@ ThemeToggleBtn.MouseButton1Click:Connect(function()
     local strokeColor = isGlass and tCyan or borderDark
     local strokeTrans = isGlass and 0.3 or 0
 
-    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, SetMain, HideMain, GenMain, ReverseMain, FreecamMain, ESPMain, SpinMain, AirMain, GlitchMain}
-    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, SetTopBar, HideTopBar, GenTopBar, ReverseTopBar, FreecamTopBar, ESPTopBar, SpinTopBar, AirTopBar, GlitchTopBar}
-    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, SetFix, HideFix, GenFix, ReverseFix, FreecamFix, ESPFix, SpinFix, AirFix, GlitchFix}
-    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke, ReverseMainStroke, FreecamMainStroke, ESPMainStroke, SpinMainStroke, AirMainStroke, GlitchMainStroke}
+    local frames = {Main, MPMain, TPMain, InvMain, FlyMain, VFlyMain, NoclipMain, TripMain, SetMain, HideMain, GenMain, ReverseMain, FreecamMain, ESPMain, SpinMain, AirMain, GlitchMain, HitboxMain}
+    local topbars = {TopBar, MPTopBar, TPTopBar, InvTopBar, FlyTopBar, VFlyTopBar, NoclipTopBar, TripTopBar, SetTopBar, HideTopBar, GenTopBar, ReverseTopBar, FreecamTopBar, ESPTopBar, SpinTopBar, AirTopBar, GlitchTopBar, HitboxTopBar}
+    local fixes = {Fix, MPFix, TPFix, InvFix, FlyFix, VFlyFix, NoclipFix, TripFix, SetFix, HideFix, GenFix, ReverseFix, FreecamFix, ESPFix, SpinFix, AirFix, GlitchFix, HitboxFix}
+    local strokes = {MainStroke, MPMainStroke, TPMainStroke, InvMainStroke, FlyMainStroke, VFlyMainStroke, NoclipMainStroke, TripMainStroke, SetMainStroke, HideMainStroke, GenMainStroke, ReverseMainStroke, FreecamMainStroke, ESPMainStroke, SpinMainStroke, AirMainStroke, GlitchMainStroke, HitboxMainStroke}
     
     for _, f in ipairs(frames) do if f then f.BackgroundTransparency = bgTrans; f.BackgroundColor3 = bgColor end end
     for _, tb in ipairs(topbars) do if tb then tb.BackgroundTransparency = tbTrans; tb.BackgroundColor3 = tbColor end end
@@ -2077,9 +2096,9 @@ GlitchKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 21. AIMBOT MENU (EXUNYS ENGINE ADAPTADO: CLICK DERECHO + FOV)
+-- 21. AIMBOT MENU (SIMPLE TWEEN ENGINE - CUSTOM SCRIPT)
 -- ==================================================================
-AimMain = Instance.new("Frame", ScreenGui); AimMain.Size = UDim2.new(0, 260, 0, 360); AimMain.Position = UDim2.new(0.5, 200, 0.5, -180); AimMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); AimMain.BorderSizePixel = 0; AimMain.ClipsDescendants = true; AimMain.Visible = false; Instance.new("UICorner", AimMain).CornerRadius = UDim.new(0, 6); AimMainStroke = Instance.new("UIStroke", AimMain); AimMainStroke.Color = borderDark
+AimMain = Instance.new("Frame", ScreenGui); AimMain.Size = UDim2.new(0, 260, 0, 320); AimMain.Position = UDim2.new(0.5, 200, 0.5, -160); AimMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); AimMain.BorderSizePixel = 0; AimMain.ClipsDescendants = true; AimMain.Visible = false; Instance.new("UICorner", AimMain).CornerRadius = UDim.new(0, 6); AimMainStroke = Instance.new("UIStroke", AimMain); AimMainStroke.Color = borderDark
 AimTopBar = Instance.new("Frame", AimMain); AimTopBar.Size = UDim2.new(1, 0, 0, 35); AimTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); AimTopBar.BorderSizePixel = 0; Instance.new("UICorner", AimTopBar).CornerRadius = UDim.new(0, 6)
 AimFix = Instance.new("Frame", AimTopBar); AimFix.Size = UDim2.new(1, 0, 0, 5); AimFix.Position = UDim2.new(0, 0, 1, -5); AimFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); AimFix.BorderSizePixel = 0
 AimTitle = Instance.new("TextLabel", AimTopBar); AimTitle.Size = UDim2.new(1, -70, 1, 0); AimTitle.Position = UDim2.new(0, 15, 0, 0); AimTitle.BackgroundTransparency = 1; AimTitle.Text = "AIMBOT SYSTEM"; AimTitle.TextColor3 = tWhite; AimTitle.Font = Enum.Font.GothamBold; AimTitle.TextSize = 13; AimTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -2099,16 +2118,12 @@ local function CreateAimToggle(name, defaultText, isMaster)
     return btn
 end
 
--- Toggles
+-- Toggles Básicos
 AimMasterBtn = CreateAimToggle("Master", "AIMBOT: OFF", true)
-AimTriggerBtn = CreateAimToggle("Trigger", "ACTIVACIÓN: CLICK DERECHO", false) 
-AimModeBtn = CreateAimToggle("Mode", "MODO: SEMI (SUAVE)", false)
-AimAutoFireBtn = CreateAimToggle("AutoFire", "AUTO-FIRE: OFF", false)
+AimModeBtn = CreateAimToggle("Mode", "MODO: BRUTO (INSTANT)", false)
+AimTeamBtn = CreateAimToggle("Team", "TEAM CHECK: OFF", false)
 AimShowFOVBtn = CreateAimToggle("ShowFOV", "MOSTRAR FOV: OFF", false)
-AimKeyBtn = CreateAimToggle("Key", "KEYBIND: NINGUNO", false)
-
-AimTriggerBtn.BackgroundColor3 = tOrange
-AimTriggerBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
+AimKeyBtn = CreateAimToggle("Key", "KEYBIND: CLICK DERECHO", false)
 
 -- FOV Slider
 AimFOVContainer = Instance.new("Frame", AimScroll); AimFOVContainer.Size = UDim2.new(1, -20, 0, 40); AimFOVContainer.BackgroundTransparency = 1
@@ -2121,16 +2136,23 @@ ApplyResponsiveScale(AimMain); MakeDraggable(AimTopBar, AimMain)
 
 aimMinimized = false
 AimMinBtn.MouseButton1Click:Connect(function()
-    aimMinimized = not aimMinimized; AimMain:TweenSize(aimMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 360), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    aimMinimized = not aimMinimized; AimMain:TweenSize(aimMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 320), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
     AimMinBtn.Text = aimMinimized and "+" or "—"; AimFix.Visible = not aimMinimized
 end)
 AimCloseBtn.MouseButton1Click:Connect(function() AimMain.Visible = false end)
 
--- Lógica y Variables
-aimEnabled = false; aimHoldToAim = true; aimBrutal = false; aimAutoFire = false; aimShowFOV = false; aimFOVSize = 150
-aimKeybind = nil; isAimBinding = false
+-- Variables de tu Custom Script Adaptadas
+aimEnabled = false
+aimHolding = false
+aimTeamCheck = false
+aimSensitivity = 0 -- 0 es bruto, > 0 es suave
+aimPart = "Head"
+aimFOVSize = 150
+aimShowFOV = false
+aimKeybind = nil
+isAimBinding = false
 
--- Universal FOV Circle
+-- Universal FOV Circle 
 FOVFolder = Instance.new("ScreenGui")
 FOVFolder.Name = "CDT_AimFOV"
 FOVFolder.IgnoreGuiInset = true
@@ -2143,7 +2165,7 @@ FOVCircle.AnchorPoint = Vector2.new(0.5, 0.5)
 FOVCircle.BackgroundTransparency = 1
 FOVCircle.Visible = false
 FOVCorner = Instance.new("UICorner", FOVCircle); FOVCorner.CornerRadius = UDim.new(1, 0)
-FOVStroke = Instance.new("UIStroke", FOVCircle); FOVStroke.Color = tWhite; FOVStroke.Thickness = 1.5; FOVStroke.Transparency = 0.3
+FOVStroke = Instance.new("UIStroke", FOVCircle); FOVStroke.Color = Color3.fromRGB(255, 255, 255); FOVStroke.Thickness = 1.2; FOVStroke.Transparency = 0.3
 
 local function updateAimToggle(btn, stateVar, nameOn, nameOff, colorOn)
     local state = not stateVar
@@ -2154,20 +2176,28 @@ local function updateAimToggle(btn, stateVar, nameOn, nameOff, colorOn)
 end
 
 AimMasterBtn.MouseButton1Click:Connect(function() aimEnabled = updateAimToggle(AimMasterBtn, aimEnabled, "AIMBOT: ON", "AIMBOT: OFF", tGreen) end)
-AimTriggerBtn.MouseButton1Click:Connect(function() aimHoldToAim = updateAimToggle(AimTriggerBtn, aimHoldToAim, "ACTIVACIÓN: CLICK DERECHO", "ACTIVACIÓN: SIEMPRE", tOrange) end)
-AimModeBtn.MouseButton1Click:Connect(function() aimBrutal = updateAimToggle(AimModeBtn, aimBrutal, "MODO: BRUTO (INSTANT)", "MODO: SEMI (SUAVE)", tRed) end)
-AimAutoFireBtn.MouseButton1Click:Connect(function() aimAutoFire = updateAimToggle(AimAutoFireBtn, aimAutoFire, "AUTO-FIRE: ON", "AUTO-FIRE: OFF", tPurple) end)
+AimModeBtn.MouseButton1Click:Connect(function() 
+    local state = not (aimSensitivity > 0)
+    if state then aimSensitivity = 0.15 else aimSensitivity = 0 end
+    AimModeBtn.BackgroundColor3 = state and tRed or Color3.fromRGB(30, 30, 30)
+    AimModeBtn.TextColor3 = state and tWhite or tWhite
+    AimModeBtn.Text = state and "MODO: SEMI (SUAVE)" or "MODO: BRUTO (INSTANT)"
+end)
+AimTeamBtn.MouseButton1Click:Connect(function() aimTeamCheck = updateAimToggle(AimTeamBtn, aimTeamCheck, "TEAM CHECK: ON", "TEAM CHECK: OFF", tPurple) end)
 AimShowFOVBtn.MouseButton1Click:Connect(function() 
     aimShowFOV = updateAimToggle(AimShowFOVBtn, aimShowFOV, "MOSTRAR FOV: ON", "MOSTRAR FOV: OFF") 
     FOVCircle.Visible = aimShowFOV
 end)
 
 AimKeyBtn.MouseButton1Click:Connect(function()
-    if aimKeybind ~= nil then aimKeybind = nil; AimKeyBtn.Text = "KEYBIND: NINGUNO"; AimKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); isAimBinding = false
-    else isAimBinding = true; AimKeyBtn.Text = "PRESIONA UNA TECLA..."; AimKeyBtn.BackgroundColor3 = tOrange end
+    if isAimBinding then
+        isAimBinding = false; aimKeybind = nil; AimKeyBtn.Text = "KEYBIND: CLICK DERECHO"; AimKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    else
+        isAimBinding = true; AimKeyBtn.Text = "PRESIONA UNA TECLA..."; AimKeyBtn.BackgroundColor3 = tOrange
+    end
 end)
 
--- Slider Logic
+-- Lógica del Slider FOV
 local draggingFOV = false
 table.insert(GlobalConnections, AimFOVSliderBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingFOV = true end end))
 table.insert(GlobalConnections, UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingFOV = false end end))
@@ -2180,44 +2210,75 @@ table.insert(GlobalConnections, UserInputService.InputChanged:Connect(function(i
     end
 end))
 
--- Exunys Aimbot Core Engine (Direct Hardware Check & Mouse Location)
-local function GetAimTarget()
-    local mousePos = UserInputService:GetMouseLocation()
-    local bestTarget = nil
-    local bestDist = aimFOVSize
+-- Función Custom GetClosestPlayer
+local function GetClosestPlayer()
+    local MaximumDistance = aimShowFOV and aimFOVSize or math.huge
+    local Target = nil
+    
+    local mouseLoc = UserInputService:GetMouseLocation()
 
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p == LocalPlayer then continue end
-        local char = p.Character
-        -- Detectamos la cabeza (Head) igual que Exunys para precisión letal
-        local targetPart = char and char:FindFirstChild("Head") or char and char:FindFirstChild("HumanoidRootPart")
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        
-        if targetPart and hum and hum.Health > 0 then
-            -- TeamCheck
-            if typeof(espTeam) ~= "nil" and espTeam and p.Team == LocalPlayer.Team then continue end
+    for _, v in next, Players:GetPlayers() do
+        if v.Name ~= LocalPlayer.Name then
+            -- Smart Team Check Global
+            if aimTeamCheck and typeof(espTeam) ~= "nil" and IsSmartTeammate(v) then continue end
             
-            local pos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
-            if onScreen then
-                -- Calcula la distancia desde el puntero real de tu mouse
-                local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
-                if dist < bestDist then
-                    bestDist = dist
-                    bestTarget = targetPart
+            if v.Character ~= nil and v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+                if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health > 0 then
+                    
+                    local ScreenPoint, OnScreen = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", 1).Position)
+                    
+                    if OnScreen then
+                        local VectorDistance = (Vector2.new(mouseLoc.X, mouseLoc.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+                        
+                        if VectorDistance < MaximumDistance then
+                            Target = v
+                            MaximumDistance = VectorDistance
+                        end
+                    end
+                    
                 end
             end
         end
     end
-    return bestTarget
+
+    return Target
 end
 
+-- Manejo de Activación (Holding)
+table.insert(GlobalConnections, UserInputService.InputBegan:Connect(function(Input, gp)
+    if isAimBinding and Input.UserInputType == Enum.UserInputType.Keyboard then
+        aimKeybind = Input.KeyCode; AimKeyBtn.Text = "KEYBIND: " .. Input.KeyCode.Name; AimKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); isAimBinding = false; return
+    elseif isAimBinding and Input.UserInputType == Enum.UserInputType.MouseButton3 then
+        aimKeybind = Input.UserInputType; AimKeyBtn.Text = "KEYBIND: MOUSE 3"; AimKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); isAimBinding = false; return
+    end
+
+    if not gp and not UserInputService:GetFocusedTextBox() then
+        if aimKeybind then
+            if Input.KeyCode == aimKeybind or Input.UserInputType == aimKeybind then aimHolding = true end
+        else
+            if Input.UserInputType == Enum.UserInputType.MouseButton2 then aimHolding = true end
+        end
+    end
+end))
+
+table.insert(GlobalConnections, UserInputService.InputEnded:Connect(function(Input, gp)
+    if not gp and not UserInputService:GetFocusedTextBox() then
+        if aimKeybind then
+            if Input.KeyCode == aimKeybind or Input.UserInputType == aimKeybind then aimHolding = false end
+        else
+            if Input.UserInputType == Enum.UserInputType.MouseButton2 then aimHolding = false end
+        end
+    end
+end))
+
+-- Motor Aimbot (Custom RenderStepped)
 table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
     AimScroll.CanvasSize = UDim2.new(0, 0, 0, AimListLayout.AbsoluteContentSize.Y + 20)
     if ScriptIsDead then return end
 
     local mousePos = UserInputService:GetMouseLocation()
 
-    -- Update FOV Circle (Sigue al mouse en PC y se centra si usas ShiftLock)
+    -- Dibuja el FOV
     if aimShowFOV then
         FOVCircle.Size = UDim2.new(0, aimFOVSize * 2, 0, aimFOVSize * 2)
         FOVCircle.Position = UDim2.new(0, mousePos.X, 0, mousePos.Y)
@@ -2226,38 +2287,116 @@ table.insert(GlobalConnections, RunService.RenderStepped:Connect(function()
         FOVCircle.Visible = false
     end
 
-    if aimEnabled then
-        local isAiming = true
-        
-        -- Detección de Hardware estricta: Ignora los eventos de Roblox y lee el estado real del Mouse
-        if aimHoldToAim then
-            isAiming = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
-        end
-        
-        if isAiming then
-            local target = GetAimTarget()
-            if target then
-                -- Color Exunys (Rojo cuando detecta)
-                if aimShowFOV then FOVStroke.Color = Color3.fromRGB(255, 70, 70) end 
-                
-                local targetPos = target.Position
-                local lookCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-                
-                if aimBrutal then
-                    Camera.CFrame = lookCFrame
-                else
-                    -- Exunys Smoothness style
-                    Camera.CFrame = Camera.CFrame:Lerp(lookCFrame, 0.15) 
-                end
-                
-                if aimAutoFire then
-                    pcall(function() VirtualUser:ClickButton1(Vector2.new()) end)
-                end
+    -- Dispara el Aim
+    if aimHolding and aimEnabled then
+        local Target = GetClosestPlayer()
+        if Target and Target.Character and Target.Character:FindFirstChild(aimPart) then
+            if aimShowFOV then FOVStroke.Color = Color3.fromRGB(255, 70, 70) end 
+            
+            local GoalCFrame = CFrame.new(Camera.CFrame.Position, Target.Character[aimPart].Position)
+            
+            if aimSensitivity > 0 then
+                TweenService:Create(Camera, TweenInfo.new(aimSensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = GoalCFrame}):Play()
             else
-                if aimShowFOV then FOVStroke.Color = tWhite end
+                Camera.CFrame = GoalCFrame
             end
         else
-            if aimShowFOV then FOVStroke.Color = tWhite end
+            if aimShowFOV then FOVStroke.Color = Color3.fromRGB(255, 255, 255) end
+        end
+    else
+        if aimShowFOV then FOVStroke.Color = Color3.fromRGB(255, 255, 255) end
+    end
+end))
+
+-- ==================================================================
+-- 22. HITBOX EXPANDER V5 (INTEGRACIÓN NATIVA C.D.T)
+-- ==================================================================
+HitboxMain = Instance.new("Frame", ScreenGui); HitboxMain.Size = UDim2.new(0, 260, 0, 145); HitboxMain.Position = UDim2.new(0.5, 200, 0.5, -30); HitboxMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); HitboxMain.BorderSizePixel = 0; HitboxMain.ClipsDescendants = true; HitboxMain.Visible = false; Instance.new("UICorner", HitboxMain).CornerRadius = UDim.new(0, 6); HitboxMainStroke = Instance.new("UIStroke", HitboxMain); HitboxMainStroke.Color = borderDark
+HitboxTopBar = Instance.new("Frame", HitboxMain); HitboxTopBar.Size = UDim2.new(1, 0, 0, 35); HitboxTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); HitboxTopBar.BorderSizePixel = 0; Instance.new("UICorner", HitboxTopBar).CornerRadius = UDim.new(0, 6)
+HitboxFix = Instance.new("Frame", HitboxTopBar); HitboxFix.Size = UDim2.new(1, 0, 0, 5); HitboxFix.Position = UDim2.new(0, 0, 1, -5); HitboxFix.BackgroundColor3 = Color3.fromRGB(22, 22, 22); HitboxFix.BorderSizePixel = 0
+HitboxTitle = Instance.new("TextLabel", HitboxTopBar); HitboxTitle.Size = UDim2.new(1, -70, 1, 0); HitboxTitle.Position = UDim2.new(0, 15, 0, 0); HitboxTitle.BackgroundTransparency = 1; HitboxTitle.Text = "HITBOX EXPANDER"; HitboxTitle.TextColor3 = tWhite; HitboxTitle.Font = Enum.Font.GothamBold; HitboxTitle.TextSize = 13; HitboxTitle.TextXAlignment = Enum.TextXAlignment.Left
+HitboxMinBtn = Instance.new("TextButton", HitboxTopBar); HitboxMinBtn.Size = UDim2.new(0, 35, 1, 0); HitboxMinBtn.Position = UDim2.new(1, -70, 0, 0); HitboxMinBtn.BackgroundTransparency = 1; HitboxMinBtn.Text = "—"; HitboxMinBtn.TextColor3 = tGreen; HitboxMinBtn.Font = Enum.Font.GothamBlack; HitboxMinBtn.TextSize = 14
+HitboxCloseBtn = Instance.new("TextButton", HitboxTopBar); HitboxCloseBtn.Size = UDim2.new(0, 35, 1, 0); HitboxCloseBtn.Position = UDim2.new(1, -35, 0, 0); HitboxCloseBtn.BackgroundTransparency = 1; HitboxCloseBtn.Text = "X"; HitboxCloseBtn.TextColor3 = tRed; HitboxCloseBtn.Font = Enum.Font.GothamBlack; HitboxCloseBtn.TextSize = 12
+
+HitboxToggleBtn = Instance.new("TextButton", HitboxMain); HitboxToggleBtn.Size = UDim2.new(1, -75, 0, 45); HitboxToggleBtn.Position = UDim2.new(0, 10, 0, 45); HitboxToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); HitboxToggleBtn.Text = "HITBOX: OFF"; HitboxToggleBtn.TextColor3 = tWhite; HitboxToggleBtn.Font = Enum.Font.GothamBold; HitboxToggleBtn.TextSize = 12; Instance.new("UICorner", HitboxToggleBtn).CornerRadius = UDim.new(0, 6)
+HitboxKeyBtn = Instance.new("TextButton", HitboxMain); HitboxKeyBtn.Size = UDim2.new(0, 50, 0, 45); HitboxKeyBtn.Position = UDim2.new(1, -60, 0, 45); HitboxKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); HitboxKeyBtn.Text = "KEY"; HitboxKeyBtn.TextColor3 = tWhite; HitboxKeyBtn.Font = Enum.Font.GothamBold; HitboxKeyBtn.TextSize = 11; Instance.new("UICorner", HitboxKeyBtn).CornerRadius = UDim.new(0, 6)
+
+HitboxSizeMinus = Instance.new("TextButton", HitboxMain); HitboxSizeMinus.Size = UDim2.new(0, 40, 0, 35); HitboxSizeMinus.Position = UDim2.new(0, 10, 0, 100); HitboxSizeMinus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); HitboxSizeMinus.Text = "-"; HitboxSizeMinus.TextColor3 = tWhite; HitboxSizeMinus.Font = Enum.Font.GothamBold; Instance.new("UICorner", HitboxSizeMinus)
+HitboxSizeDisplay = Instance.new("TextBox", HitboxMain); HitboxSizeDisplay.Size = UDim2.new(1, -110, 0, 35); HitboxSizeDisplay.Position = UDim2.new(0, 55, 0, 100); HitboxSizeDisplay.BackgroundColor3 = Color3.fromRGB(25, 25, 25); HitboxSizeDisplay.Text = ""; HitboxSizeDisplay.PlaceholderText = "SIZE: 15"; HitboxSizeDisplay.TextColor3 = tWhite; HitboxSizeDisplay.Font = Enum.Font.GothamSemibold; HitboxSizeDisplay.TextSize = 14; HitboxSizeDisplay.ClearTextOnFocus = true; Instance.new("UICorner", HitboxSizeDisplay); Instance.new("UIStroke", HitboxSizeDisplay).Color = Color3.fromRGB(50, 50, 50)
+HitboxSizePlus = Instance.new("TextButton", HitboxMain); HitboxSizePlus.Size = UDim2.new(0, 40, 0, 35); HitboxSizePlus.Position = UDim2.new(1, -50, 0, 100); HitboxSizePlus.BackgroundColor3 = Color3.fromRGB(40, 40, 40); HitboxSizePlus.Text = "+"; HitboxSizePlus.TextColor3 = tWhite; HitboxSizePlus.Font = Enum.Font.GothamBold; Instance.new("UICorner", HitboxSizePlus)
+
+ApplyResponsiveScale(HitboxMain); MakeDraggable(HitboxTopBar, HitboxMain)
+
+hbMinimized = false
+HitboxMinBtn.MouseButton1Click:Connect(function()
+    hbMinimized = not hbMinimized; HitboxMain:TweenSize(hbMinimized and UDim2.new(0, 260, 0, 35) or UDim2.new(0, 260, 0, 145), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3, true)
+    HitboxMinBtn.Text = hbMinimized and "+" or "—"; HitboxFix.Visible = not hbMinimized
+end)
+HitboxCloseBtn.MouseButton1Click:Connect(function() HitboxMain.Visible = false end)
+
+_G.HitboxEnabled = false
+_G.HitboxSize = 15
+hitboxKeybind = nil
+isHitboxBinding = false
+
+HitboxSizeMinus.MouseButton1Click:Connect(function() _G.HitboxSize = math.max(5, _G.HitboxSize - 1); HitboxSizeDisplay.Text = "SIZE: " .. _G.HitboxSize end)
+HitboxSizePlus.MouseButton1Click:Connect(function() _G.HitboxSize = math.min(50, _G.HitboxSize + 1); HitboxSizeDisplay.Text = "SIZE: " .. _G.HitboxSize end)
+table.insert(GlobalConnections, HitboxSizeDisplay.FocusLost:Connect(function() local num = tonumber(HitboxSizeDisplay.Text:match("%d+")); if num then _G.HitboxSize = math.clamp(num, 5, 50) end; HitboxSizeDisplay.Text = "SIZE: " .. _G.HitboxSize end))
+
+local function revertHitbox(player)
+    pcall(function()
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local hrp = char.HumanoidRootPart
+            hrp.Size = Vector3.new(2, 2, 1)
+            hrp.Transparency = 1
+        end
+    end)
+end
+
+ToggleHitbox = function()
+    _G.HitboxEnabled = not _G.HitboxEnabled
+    if _G.HitboxEnabled then
+        HitboxToggleBtn.BackgroundColor3 = tCyan
+        HitboxToggleBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
+        HitboxToggleBtn.Text = "HITBOX: ON"
+    else
+        HitboxToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        HitboxToggleBtn.TextColor3 = tWhite
+        HitboxToggleBtn.Text = "HITBOX: OFF"
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then revertHitbox(player) end
+        end
+    end
+end
+HitboxToggleBtn.MouseButton1Click:Connect(ToggleHitbox)
+
+HitboxKeyBtn.MouseButton1Click:Connect(function()
+    if hitboxKeybind ~= nil then hitboxKeybind = nil; HitboxKeyBtn.Text = "KEY"; HitboxKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isHitboxBinding = false
+    else isHitboxBinding = true; HitboxKeyBtn.Text = "..."; HitboxKeyBtn.BackgroundColor3 = tOrange end
+end)
+
+table.insert(GlobalConnections, RunService.Heartbeat:Connect(function()
+    if _G.HitboxEnabled and not ScriptIsDead then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                -- Utilizamos el Smart Team Check global (mismo switch del ESP)
+                if typeof(espTeam) ~= "nil" and espTeam and IsSmartTeammate(player) then
+                    revertHitbox(player)
+                else
+                    pcall(function()
+                        local char = player.Character
+                        if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                            local hrp = char.HumanoidRootPart
+                            hrp.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
+                            hrp.Transparency = 0.5
+                            hrp.BrickColor = BrickColor.new("Bright red")
+                            hrp.Material = Enum.Material.ForceField
+                            hrp.CanCollide = false
+                        end
+                    end)
+                end
+            end
         end
     end
 end))
@@ -2308,10 +2447,8 @@ AddCmd("generacion", "Abre el panel del Generador de Objetos", function() GenMai
 AddCmd("air", "Abre el panel de Walk on Air", function() AirMain.Visible = true; LogMessage("Menú Walk on Air abierto.", tCyan) end)
 AddCmd("glitch", "Abre el panel de Glitch TP (3 Clones)", function() GlitchMain.Visible = true; LogMessage("Menú Glitch TP abierto.", tCyan) end)
 AddCmd("aim", "Abre el panel de Aimbot (AutoFire, FOV, Brutal/Semi)", function() AimMain.Visible = true; LogMessage("Menú Aimbot abierto.", tCyan) end)
-
-AddCmd("spinstup", "Abre el panel del Spinbot", function()
-    SpinMain.Visible = true; LogMessage("Menú Spinbot abierto.", tCyan)
-end)
+AddCmd("spinstup", "Abre el panel del Spinbot", function() SpinMain.Visible = true; LogMessage("Menú Spinbot abierto.", tCyan) end)
+AddCmd("hitbox", "Abre el panel del Hitbox Expander", function() HitboxMain.Visible = true; LogMessage("Menú Hitbox Expander abierto.", tCyan) end)
 
 AddCmd("speed", "Cambia la velocidad", function(args)
     if args[1] and tonumber(args[1]) then LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(args[1]); LogMessage("Velocidad -> " .. args[1], tGreen) end
@@ -2565,6 +2702,7 @@ DestruirScriptCompleto = function()
     if isAntiAfkActive then pcall(function() Comandos["afk"].Accion({}) end) end
     if infBaseActivo then infBaseActivo = false end
     if isGlitching and type(ToggleGlitch) == "function" then ToggleGlitch() end
+    if _G.HitboxEnabled and type(ToggleHitbox) == "function" then ToggleHitbox() end
     
     for _, conn in ipairs(GlobalConnections) do
         if conn and type(conn) == "table" and conn.Disconnect then
@@ -2704,6 +2842,7 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
     if isAirBinding and input.UserInputType == Enum.UserInputType.Keyboard then airKeybind = input.KeyCode; AirKeyBtn.Text = input.KeyCode.Name; AirKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isAirBinding = false; return end
     if isGlitchBinding and input.UserInputType == Enum.UserInputType.Keyboard then glitchKeybind = input.KeyCode; GlitchKeyBtn.Text = input.KeyCode.Name; GlitchKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isGlitchBinding = false; return end
     if isAimBinding and input.UserInputType == Enum.UserInputType.Keyboard then aimKeybind = input.KeyCode; AimKeyBtn.Text = "KEYBIND: " .. input.KeyCode.Name; AimKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); isAimBinding = false; return end
+    if isHitboxBinding and input.UserInputType == Enum.UserInputType.Keyboard then hitboxKeybind = input.KeyCode; HitboxKeyBtn.Text = input.KeyCode.Name; HitboxKeyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); isHitboxBinding = false; return end
 
     if not gp then
        -- Ocultar/Mostrar Menú (Botón Insert)
@@ -2717,7 +2856,8 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
                 if SpinMain then SpinMain.Visible = false end
                 if AirMain then AirMain.Visible = false end
                 if GlitchMain then GlitchMain.Visible = false end
-                if AimMain then AimMain.Visible = false end -- <--- ¡AQUÍ VA LA LÍNEA NUEVA!
+                if AimMain then AimMain.Visible = false end
+                if HitboxMain then HitboxMain.Visible = false end
             else
                 Main.Visible = true
             end
@@ -2737,15 +2877,12 @@ inputBeganConn = UserInputService.InputBegan:Connect(function(input, gp)
         if aimKeybind and input.KeyCode == aimKeybind and not UserInputService:GetFocusedTextBox() then
             aimEnabled = updateAimToggle(AimMasterBtn, aimEnabled, "AIMBOT: ON", "AIMBOT: OFF", tGreen)
         end
-        
-        -- FIX DEL KEYBIND DE SPINBOT
-        if spinKeybind and input.KeyCode == spinKeybind and not UserInputService:GetFocusedTextBox() then
-            if type(ToggleSpin) == "function" then ToggleSpin() end
+        if hitboxKeybind and input.KeyCode == hitboxKeybind and not UserInputService:GetFocusedTextBox() then
+            if type(ToggleHitbox) == "function" then ToggleHitbox() end
         end
         
-        -- FIX REVERSE: Activación por Teclado
-        if reverseKeybind and input.KeyCode == reverseKeybind and isReverseActive then
-            -- El Rewind se activa mientras se mantenga presionada la tecla (Manejado en el RenderStepped de Reverse)
+        if spinKeybind and input.KeyCode == spinKeybind and not UserInputService:GetFocusedTextBox() then
+            if type(ToggleSpin) == "function" then ToggleSpin() end
         end
         
         -- Controles Vuelo
