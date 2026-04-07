@@ -1982,7 +1982,7 @@ AirKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 20. GLITCH TP MENU (FIX COMPATIBILIDAD UNIVERSAL + ANTI-SMOOTHING)
+-- 20. GLITCH TP MENU (FIX COMPATIBILIDAD UNIVERSAL + CAMERA ANTI-SHAKE)
 -- ==================================================================
 GlitchMain = Instance.new("Frame", ScreenGui); GlitchMain.Size = UDim2.new(0, 260, 0, 145); GlitchMain.Position = UDim2.new(0.5, -130, 0.5, -70); GlitchMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GlitchMain.BorderSizePixel = 0; GlitchMain.ClipsDescendants = true; GlitchMain.Visible = false; Instance.new("UICorner", GlitchMain).CornerRadius = UDim.new(0, 6); GlitchMainStroke = Instance.new("UIStroke", GlitchMain); GlitchMainStroke.Color = borderDark
 GlitchTopBar = Instance.new("Frame", GlitchMain); GlitchTopBar.Size = UDim2.new(1, 0, 0, 35); GlitchTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchTopBar.BorderSizePixel = 0; Instance.new("UICorner", GlitchTopBar).CornerRadius = UDim.new(0, 6)
@@ -2011,7 +2011,6 @@ glitchStep = 1; lastGlitchOffset = Vector3.new()
 glitchTickCounter = 0
 UPDATE_RATE = 2 -- Velocidad agresiva (2 frames)
 
--- CORRECCIÓN: Variables de conexión estándar para compatibilidad universal
 local glitchConnPre = nil
 local glitchConnPost = nil
 
@@ -2038,7 +2037,7 @@ ToggleGlitch = function()
         glitchStep = 1
         glitchTickCounter = 0
         
-        -- PASO 1: RenderStepped estándar en lugar de BindToRenderStep (Soporta todos los executors)
+        -- PASO 1: RenderStepped estándar (Ahora corrigiendo el MAREO DE LA CÁMARA)
         glitchConnPre = RunService.RenderStepped:Connect(function()
             if not char or not hrp or not hum or hum.Health <= 0 then
                 if isGlitching then ToggleGlitch() end
@@ -2046,12 +2045,15 @@ ToggleGlitch = function()
             end
             
             if lastGlitchOffset ~= Vector3.zero then
+                -- Restauramos la posición real para que tú no lo notes
                 hrp.CFrame = hrp.CFrame - lastGlitchOffset
+                -- ¡FIX PARA LA CÁMARA! Le restamos el offset a la cámara para eliminar la vibración por completo
+                Camera.CFrame = Camera.CFrame - lastGlitchOffset
                 lastGlitchOffset = Vector3.zero
             end
         end)
         
-        -- PASO 2: Heartbeat estándar para el patrón caótico
+        -- PASO 2: Heartbeat estándar para el patrón caótico en el servidor
         glitchConnPost = RunService.Heartbeat:Connect(function()
             glitchTickCounter = glitchTickCounter + 1
             if glitchTickCounter >= UPDATE_RATE then
@@ -2079,7 +2081,6 @@ ToggleGlitch = function()
         GlitchToggleBtn.TextColor3 = tWhite
         GlitchToggleBtn.Text = "GLITCH: OFF"
         
-        -- CORRECCIÓN: Desconectar limpiamente
         if glitchConnPre then glitchConnPre:Disconnect(); glitchConnPre = nil end
         if glitchConnPost then glitchConnPost:Disconnect(); glitchConnPost = nil end
         
