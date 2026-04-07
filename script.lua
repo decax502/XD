@@ -896,7 +896,7 @@ NoclipKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 7. VEHICLE FLY (ZACH'S SCRIPT LERP)
+-- 7. VEHICLE FLY (ZACH'S SCRIPT LERP - FIX APAGADO/KEYBIND)
 -- ==================================================================
 VFlyMain = Instance.new("Frame", ScreenGui); VFlyMain.Size = UDim2.new(0, 260, 0, 145); VFlyMain.Position = UDim2.new(0, 20, 0, 380); VFlyMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); VFlyMain.BorderSizePixel = 0; VFlyMain.ClipsDescendants = true; VFlyMain.Visible = false; Instance.new("UICorner", VFlyMain).CornerRadius = UDim.new(0, 6); VFlyMainStroke = Instance.new("UIStroke", VFlyMain); VFlyMainStroke.Color = borderDark
 VFlyTopBar = Instance.new("Frame", VFlyMain); VFlyTopBar.Size = UDim2.new(1, 0, 0, 35); VFlyTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); VFlyTopBar.BorderSizePixel = 0; Instance.new("UICorner", VFlyTopBar).CornerRadius = UDim.new(0, 6)
@@ -924,7 +924,7 @@ isVFlying = false; vFlySpeedNum = 256; vFlyAccel = 4; vFlyTurn = 16; vFlyMultipl
 
 VFlySpeedMinus.MouseButton1Click:Connect(function() vFlySpeedNum = math.max(1, vFlySpeedNum - 10); VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end)
 VFlySpeedPlus.MouseButton1Click:Connect(function() vFlySpeedNum = vFlySpeedNum + 10; VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end)
-VFlySpeedDisplay.FocusLost:Connect(function() local num = tonumber(VFlySpeedDisplay.Text:match("%d+")); if num then vFlySpeedNum = math.max(1, num) end; VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end)
+table.insert(GlobalConnections, VFlySpeedDisplay.FocusLost:Connect(function() local num = tonumber(VFlySpeedDisplay.Text:match("%d+")); if num then vFlySpeedNum = math.max(1, num) end; VFlySpeedDisplay.Text = "SPEED: " .. vFlySpeedNum end))
 
 local function VFlyLoop(delta)
     local char = LocalPlayer.Character; if not char then return end
@@ -952,9 +952,13 @@ ToggleVFly = function()
     isVFlying = not isVFlying; local char = LocalPlayer.Character; local root = char and char:FindFirstChild("HumanoidRootPart")
     if isVFlying then
         VFlyToggleBtn.BackgroundColor3 = tPurple; VFlyToggleBtn.Text = "V-FLY: ON"
-        if root then vFlyCurrentVel = root.Velocity end; table.insert(GlobalConnections, RunService.Heartbeat:Connect(VFlyLoop))
+        if root then vFlyCurrentVel = root.Velocity end
+        -- CORRECCIÓN: Asignar la conexión a la variable para poder apagarla después
+        vFlyConn = RunService.Heartbeat:Connect(VFlyLoop)
+        table.insert(GlobalConnections, vFlyConn)
     else
         VFlyToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); VFlyToggleBtn.Text = "V-FLY: OFF"
+        -- CORRECCIÓN: Desconectar y limpiar
         if vFlyConn then vFlyConn:Disconnect(); vFlyConn = nil end
     end
 end
@@ -1978,7 +1982,7 @@ AirKeyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ==================================================================
--- 20. GLITCH TP MENU (EFECTO BRUSCO + FIX SHIFT LOCK + ANTI-SMOOTHING)
+-- 20. GLITCH TP MENU (FIX COMPATIBILIDAD UNIVERSAL + ANTI-SMOOTHING)
 -- ==================================================================
 GlitchMain = Instance.new("Frame", ScreenGui); GlitchMain.Size = UDim2.new(0, 260, 0, 145); GlitchMain.Position = UDim2.new(0.5, -130, 0.5, -70); GlitchMain.BackgroundColor3 = Color3.fromRGB(15, 15, 15); GlitchMain.BorderSizePixel = 0; GlitchMain.ClipsDescendants = true; GlitchMain.Visible = false; Instance.new("UICorner", GlitchMain).CornerRadius = UDim.new(0, 6); GlitchMainStroke = Instance.new("UIStroke", GlitchMain); GlitchMainStroke.Color = borderDark
 GlitchTopBar = Instance.new("Frame", GlitchMain); GlitchTopBar.Size = UDim2.new(1, 0, 0, 35); GlitchTopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22); GlitchTopBar.BorderSizePixel = 0; Instance.new("UICorner", GlitchTopBar).CornerRadius = UDim.new(0, 6)
@@ -2005,7 +2009,11 @@ end)
 isGlitching = false; glitchDistNum = 4; glitchKeybind = nil; isGlitchBinding = false
 glitchStep = 1; lastGlitchOffset = Vector3.new()
 glitchTickCounter = 0
-UPDATE_RATE = 2 -- Velocidad agresiva (2 frames). Rompe la predicción visual del servidor.
+UPDATE_RATE = 2 -- Velocidad agresiva (2 frames)
+
+-- CORRECCIÓN: Variables de conexión estándar para compatibilidad universal
+local glitchConnPre = nil
+local glitchConnPost = nil
 
 GlitchDistMinus.MouseButton1Click:Connect(function() glitchDistNum = math.max(1, glitchDistNum - 1); GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
 GlitchDistPlus.MouseButton1Click:Connect(function() glitchDistNum = glitchDistNum + 1; GlitchDistDisplay.Text = "DISTANCIA: " .. glitchDistNum end)
@@ -2030,8 +2038,8 @@ ToggleGlitch = function()
         glitchStep = 1
         glitchTickCounter = 0
         
-        -- PASO 1: ANTES DE LA CÁMARA (Centramos para el Shift Lock y para ti)
-        RunService:BindToRenderStep("CDT_GlitchPre", Enum.RenderPriority.Camera.Value - 10, function()
+        -- PASO 1: RenderStepped estándar en lugar de BindToRenderStep (Soporta todos los executors)
+        glitchConnPre = RunService.RenderStepped:Connect(function()
             if not char or not hrp or not hum or hum.Health <= 0 then
                 if isGlitching then ToggleGlitch() end
                 return
@@ -2043,8 +2051,8 @@ ToggleGlitch = function()
             end
         end)
         
-        -- PASO 2: DESPUÉS DE LA CÁMARA (Patrón caótico para el servidor)
-        RunService:BindToRenderStep("CDT_GlitchPost", Enum.RenderPriority.Camera.Value + 10, function()
+        -- PASO 2: Heartbeat estándar para el patrón caótico
+        glitchConnPost = RunService.Heartbeat:Connect(function()
             glitchTickCounter = glitchTickCounter + 1
             if glitchTickCounter >= UPDATE_RATE then
                 glitchTickCounter = 0
@@ -2054,11 +2062,10 @@ ToggleGlitch = function()
             
             local offset = Vector3.zero
             
-            -- Patrón anti-suavizado: Salto enorme de un extremo a otro, luego centro.
-            if glitchStep == 1 then offset = -hrp.CFrame.RightVector * glitchDistNum       -- Izquierda
-            elseif glitchStep == 2 then offset = hrp.CFrame.RightVector * glitchDistNum      -- Derecha (Salto enorme)
-            elseif glitchStep == 3 then offset = Vector3.zero                                -- Centro
-            elseif glitchStep == 4 then offset = -hrp.CFrame.RightVector * (glitchDistNum/2) -- Medio Izquierda (Caótico)
+            if glitchStep == 1 then offset = -hrp.CFrame.RightVector * glitchDistNum
+            elseif glitchStep == 2 then offset = hrp.CFrame.RightVector * glitchDistNum
+            elseif glitchStep == 3 then offset = Vector3.zero
+            elseif glitchStep == 4 then offset = -hrp.CFrame.RightVector * (glitchDistNum/2)
             end
             
             if offset ~= Vector3.zero then
@@ -2072,8 +2079,9 @@ ToggleGlitch = function()
         GlitchToggleBtn.TextColor3 = tWhite
         GlitchToggleBtn.Text = "GLITCH: OFF"
         
-        pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPre") end)
-        pcall(function() RunService:UnbindFromRenderStep("CDT_GlitchPost") end)
+        -- CORRECCIÓN: Desconectar limpiamente
+        if glitchConnPre then glitchConnPre:Disconnect(); glitchConnPre = nil end
+        if glitchConnPost then glitchConnPost:Disconnect(); glitchConnPost = nil end
         
         if hrp and lastGlitchOffset ~= Vector3.zero then
             hrp.CFrame = hrp.CFrame - lastGlitchOffset
